@@ -16,11 +16,11 @@ const fs = require('fs');
 function getBonks(userId) {
     var bonk = 1
     try {
-        if (!fs.existsSync(`../bonk.json`)) {
+        if (!fs.existsSync(`bonk.json`)) {
             bonkFile = new Object();
         }
         else {
-            bonkFile = JSON.parse(fs.readFileSync(`../bonk.json`, 'utf8'));
+            bonkFile = JSON.parse(fs.readFileSync(`bonk.json`, 'utf8'));
         }
 
         if (userId in bonkFile) {
@@ -32,7 +32,7 @@ function getBonks(userId) {
 
         bonk = bonkFile[userId]
 
-        fs.writeFile(`../bonk.json`, JSON.stringify(bonkFile), err => {
+        fs.writeFile(`bonk.json`, JSON.stringify(bonkFile), err => {
             if (err) {
                 console.log('Error writing Bonk', err);
             } else {

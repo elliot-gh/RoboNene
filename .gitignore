@@ -9,6 +9,9 @@
 # config
 config.json
 
+# bonk
+bonk.json
+
 # logs, databses, and game data
 /logs
 /databases
