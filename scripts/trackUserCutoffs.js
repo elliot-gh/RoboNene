@@ -51,7 +51,6 @@ async function getCutoffs(discordClient) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
-                console.log(response);
                 let accountId = response['rankings'][0]['userId'];
                 const users = discordClient.db.prepare('SELECT * FROM users WHERE ' +
                     'sekai_id=@sekaiId').all({
@@ -92,7 +91,6 @@ async function getCutoffs(discordClient) {
             return -1;
         } else {
             const ids = discordClient.db.prepare('Select sekai_id FROM users').all()
-            console.log(ids);
             ids.forEach(id => {
                 discordClient.addPrioritySekaiRequest('ranking', {
                     eventId: event,
