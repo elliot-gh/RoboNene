@@ -202,8 +202,6 @@ module.exports = {
         }
       });
     } else if (user) {
-      console.log("user input")
-      console.log(user.id);
       try {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
           'WHERE (discord_id=@discord_id AND EventID=@eventID)').all({
