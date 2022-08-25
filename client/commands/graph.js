@@ -6,6 +6,7 @@
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
+const fs = require('fs');
 
 const COMMAND = require('../command_data/graph')
 
@@ -22,7 +23,7 @@ const generateEmbed = require('../methods/generateEmbed')
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   const graphEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
-    .setTitle(`T${tier} Cutoff Graph`)
+    .setTitle(`${tier}`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
     .setThumbnail(discordClient.client.user.displayAvatarURL())
     .setImage(graphUrl)
@@ -70,7 +71,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
       'type': 'line', 
       'data': {
         'datasets': [{
-          'label': `T${tier} cutoff`, 
+          'label': `${tier}`, 
           "fill": false,
           'data': graphData
         }]
@@ -132,6 +133,22 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   req.end()
 }
 
+function getEventName(eventID) 
+{
+  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+  let currentEventIdx = -1;
+  let currentDate = new Date();
+
+  for (let i = 0; i < data.length; i++) {
+    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
+      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
+      currentEventIdx = i;
+    }
+  }
+  
+  return data[currentEventIdx].name
+}
+
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
@@ -155,10 +172,10 @@ module.exports = {
       return
     }
 
+    const eventName = getEventName(event.id)
+
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
-
-    console.log(tier, user)
 
     if(tier)
     {
@@ -178,7 +195,7 @@ module.exports = {
           if (res.statusCode === 200) {
             try {
               const rankData = JSON.parse(json);
-              postQuickChart(interaction, tier, rankData.data.eventRankings, discordClient);
+              postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData.data.eventRankings, discordClient);
             } catch (err) {
               // Error parsing JSON: ${err}`
             }
@@ -196,7 +213,7 @@ module.exports = {
             });
           let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           console.log(rankData);
-          postQuickChart(interaction, tier, rankData, discordClient);
+          postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
         } catch (err) {
           // Error parsing JSON: ${err}`
         }
@@ -210,15 +227,13 @@ module.exports = {
           });
         if (data.length)
         {
-          console.log(data);
-          let name = user.name;
+          let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-          console.log(rankData);
-          postQuickChart(interaction, name, rankData, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, discordClient);
         }
         else
         {
-          interaction.editReply('Discord id not found (are you sure that account is linked?)')
+          interaction.editReply({content: 'Discord User not found (are you sure that account is linked?)'})
         }
       } catch (err) {
         // Error parsing JSON: ${err}`
