@@ -5,34 +5,6 @@
 
 const { CUTOFF_INTERVAL, CUTOFF_DATA } = require('../constants');
 const fs = require('fs');
-
-//Cutoffs we store
-const cutoffs = [
-    1,
-    2,
-    3,
-    10,
-    20,
-    30,
-    40,
-    50,
-    100,
-    200,
-    300,
-    400,
-    500,
-    1000,
-    2000,
-    3000,
-    4000,
-    5000,
-    10000,
-    20000,
-    30000,
-    40000,
-    50000,
-];
-
 /**
  * Writes JSON response from Project Sekai servers to local JSON
  * @param {Object} response from project sekai client
@@ -51,8 +23,8 @@ async function getCutoffs(discordClient) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
-                let accountId = response['rankings'][0]['userId'];
-                const users = discordClient.db.prepare('SELECT * FROM users WHERE ' +
+                let accountId = response['rankings'][0]['userId'].toString();
+                const users = discordClient.db.prepare('SELECT discord_id FROM users WHERE ' +
                     'sekai_id=@sekaiId').all({
                         sekaiId: accountId
                     });
@@ -62,24 +34,23 @@ async function getCutoffs(discordClient) {
                 if (users.length) {
                     // User is already linked
                     discordID = users[0].discord_id;
-                }
-                let name = response['rankings'][0]['name'];
-                let score = response['rankings'][0]['score'];
-                let rank = response['rankings'][0]['rank'];
-                let timestamp = new Date().toISOString();
+                    let name = response['rankings'][0]['name'];
+                    let score = response['rankings'][0]['score'];
+                    let rank = response['rankings'][0]['rank'];
+                    let timestamp = new Date().toISOString();
 
-
-                if (discordID != undefined) {
                     discordClient.cutoffdb.prepare('INSERT INTO users ' +
                         '(discord_id, sekai_id, Tier, EventID, Timestamp, Score) ' +
-                        'VALUES(@discordID, @accountId, @tier, @event, @timestamp, @score, @name)').run({
+                        'VALUES(@discordID, @accountId, @tier, @event, @timestamp, @score)').run({
+                            discordID: discordID,
+                            accountId: accountId,
                             score: score,
                             eventID: event,
                             tier: rank,
                             timestamp: timestamp,
                             name: name
                         });
-                }
+                    }
             }
         } catch (e) {
             console.log('Error occured while adding cutoffs: ', e);
@@ -90,7 +61,7 @@ async function getCutoffs(discordClient) {
         if (event == -1) {
             return -1;
         } else {
-            const ids = discordClient.db.prepare('Select sekai_id FROM users').all()
+            const ids = discordClient.db.prepare('Select sekai_id FROM users').all();
             ids.forEach(id => {
                 discordClient.addPrioritySekaiRequest('ranking', {
                     eventId: event,

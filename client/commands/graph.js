@@ -155,8 +155,10 @@ module.exports = {
       return
     }
 
-    const tier = interaction.options._hoistedOptions[0].value
+    const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
+
+    console.log(tier, user)
 
     if(tier)
     {
@@ -200,17 +202,18 @@ module.exports = {
         }
       });
     } else if (user) {
-      console.log(user);
+      console.log("user input")
+      console.log(user.id);
       try {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
           'WHERE (discord_id=@discord_id AND EventID=@eventID)').all({
-            discord_id: user,
+            discord_id: user.id,
             eventID: event.id
           });
         if (data.length)
         {
           console.log(data);
-          let name = data[data.length-1].name;
+          let name = user.name;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           console.log(rankData);
           postQuickChart(interaction, name, rankData, discordClient);
