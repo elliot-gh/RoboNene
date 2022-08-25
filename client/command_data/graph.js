@@ -15,7 +15,7 @@ module.exports = {
       {
         'type': 'integer',
         'name': 'tier',
-        'required': true,
+        'required': false,
         'description': 'The cutoff tier specified',
         'choices': [
           ['T1', 1],
@@ -42,6 +42,12 @@ module.exports = {
           ['T40000', 40000],
           ['T50000', 50000]
         ]
+      },
+      {
+        'type': 'user',
+        'name': 'user',
+        'required': false,
+        'description': 'A linked User that has been tracked',
       }
     ]
   },

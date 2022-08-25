@@ -156,45 +156,72 @@ module.exports = {
     }
 
     const tier = interaction.options._hoistedOptions[0].value
+    const user = interaction.options.getUser('user');
 
-    const options = {
-      host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
-      path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
-      headers: {'User-Agent': 'request'},
-      timeout: 5000
-    };
-  
-    const request = https.request(options, (res) => {
-      let json = '';
-      res.on('data', (chunk) => {
-        json += chunk;
-      });
-      res.on('end', async () => {
-        if (res.statusCode === 200) {
-          try {
-            const rankData = JSON.parse(json);
-            postQuickChart(interaction, tier, rankData.data.eventRankings, discordClient);
-          } catch (err) {
-            // Error parsing JSON: ${err}`
+    if(tier)
+    {
+      const options = {
+        host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
+        path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
+        headers: { 'User-Agent': 'request' },
+        timeout: 5000
+      };
+
+      const request = https.request(options, (res) => {
+        let json = '';
+        res.on('data', (chunk) => {
+          json += chunk;
+        });
+        res.on('end', async () => {
+          if (res.statusCode === 200) {
+            try {
+              const rankData = JSON.parse(json);
+              postQuickChart(interaction, tier, rankData.data.eventRankings, discordClient);
+            } catch (err) {
+              // Error parsing JSON: ${err}`
+            }
+          } else {
+            // Error retrieving via HTTPS. Status: ${res.statusCode}
           }
-        } else {
-          // Error retrieving via HTTPS. Status: ${res.statusCode}
+        });
+      }).on('error', (err) => { });
+      request.setTimeout(5000, () => {
+        try {
+          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND Tier=@tier)').all({
+              eventID: event.id,
+              tier: tier
+            });
+          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+          console.log(rankData);
+          postQuickChart(interaction, tier, rankData, discordClient);
+        } catch (err) {
+          // Error parsing JSON: ${err}`
         }
       });
-    }).on('error', (err) => {});
-    request.setTimeout(5000, () => {
+    } else if (user) {
+      console.log(user);
       try {
-        let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-          'WHERE (EventID=@eventID AND Tier=@tier)').all({
-            eventID: event.id,
-            tier: tier
+        let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
+          'WHERE (discord_id=@discord_id AND EventID=@eventID)').all({
+            discord_id: user,
+            eventID: event.id
           });
-        let rankData = cutoffs.map(x => ({timestamp: x.Timestamp, score: x.Score}));
-        console.log(rankData);
-        postQuickChart(interaction, tier, rankData, discordClient);
+        if (data.length)
+        {
+          console.log(data);
+          let name = data[data.length-1].name;
+          let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+          console.log(rankData);
+          postQuickChart(interaction, name, rankData, discordClient);
+        }
+        else
+        {
+          interaction.editReply('Discord id not found (are you sure that account is linked?)')
+        }
       } catch (err) {
         // Error parsing JSON: ${err}`
       }
-    });
+    }
   }
 };

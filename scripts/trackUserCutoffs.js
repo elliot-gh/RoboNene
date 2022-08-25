@@ -51,32 +51,34 @@ async function getCutoffs(discordClient) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
-                print(response)
+                console.log(response);
                 let accountId = response['rankings'][0]['userId'];
-                const users = db.prepare('SELECT * FROM users WHERE ' +
+                const users = discordClient.db.prepare('SELECT * FROM users WHERE ' +
                     'sekai_id=@sekaiId').all({
                         sekaiId: accountId
-                    })
+                    });
 
-                var discordID = undefined
+                var discordID = undefined;
 
                 if (users.length) {
                     // User is already linked
-                    discordID = users[0].discord_id
+                    discordID = users[0].discord_id;
+                }
+                let name = response['rankings'][0]['name'];
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
                 let timestamp = new Date().toISOString();
 
-                
-                if(discordID != undefined)
-                {
+
+                if (discordID != undefined) {
                     discordClient.cutoffdb.prepare('INSERT INTO users ' +
-                        '(discord_id, sekai_id, Tier, EventID, Timestamp, SAcore) ' +
-                        'VALUES(@discordID, @accountId, @tier, @event, @timestamp, @score)').run({
+                        '(discord_id, sekai_id, Tier, EventID, Timestamp, Score) ' +
+                        'VALUES(@discordID, @accountId, @tier, @event, @timestamp, @score, @name)').run({
                             score: score,
                             eventID: event,
                             tier: rank,
-                            timestamp: timestamp
+                            timestamp: timestamp,
+                            name: name
                         });
                 }
             }
@@ -89,12 +91,12 @@ async function getCutoffs(discordClient) {
         if (event == -1) {
             return -1;
         } else {
-            const ids = discordClient.db.prepare('Select sekai_id FROM users')
-            console.log(ids)
+            const ids = discordClient.db.prepare('Select sekai_id FROM users').all()
+            console.log(ids);
             ids.forEach(id => {
                 discordClient.addPrioritySekaiRequest('ranking', {
                     eventId: event,
-                    targetId: id,
+                    targetUserId: id.sekai_id,
                     lowerLimit: 0
                 }, logResults, (err) => {
                     discordClient.logger.log({
