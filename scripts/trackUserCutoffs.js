@@ -29,10 +29,9 @@ async function getCutoffs(discordClient) {
                 let timestamp = new Date().toISOString();
 
                 discordClient.cutoffdb.prepare('INSERT INTO users ' +
-                    '(discord_id, sekai_id, Tier, EventID, Timestamp, Score) ' +
-                    'VALUES(@discordID, @accountId, @tier, @EventID, @timestamp, @score)').run({
+                    '(discord_id, Tier, EventID, Timestamp, Score) ' +
+                    'VALUES(@discordID, @tier, @EventID, @timestamp, @score)').run({
                         discordID: discord_id,
-                        accountId: sekai_id,
                         score: score,
                         EventID: event,
                         tier: rank,

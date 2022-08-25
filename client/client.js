@@ -168,7 +168,7 @@ class DiscordClient {
 
     // Initialize User Tracking
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
-      '(discord_id TEXT, sekai_id TEXT, Tier INTEGER, EventID INTEGER,' +
+      '(discord_id TEXT, Tier INTEGER, EventID INTEGER,' +
       'Timestamp TEXT, Score INTEGER,' +
       'PRIMARY KEY(discord_id, EventID, Timestamp))').run();
   }
