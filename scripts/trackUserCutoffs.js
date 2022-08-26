@@ -26,7 +26,7 @@ async function getCutoffs(discordClient) {
                 // User is already linked
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
-                let timestamp = new Date().toISOString();
+                let timestamp = Date.now();
 
                 discordClient.cutoffdb.prepare('INSERT INTO users ' +
                     '(discord_id, Tier, EventID, Timestamp, Score) ' +
