@@ -8,14 +8,30 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/graph')
+const COMMAND = require('../command_data/statistics');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed')
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed');
+const calculateTeam = require('../methods/calculateTeam');
 
 const HOUR = 3600000;
+const SONGBIAS = 3.36 * 4.0; //Multiplier for Talent to get score
 
-function getEventName(eventID) {
+const energyBoost = [
+    1,
+    5,
+    10,
+    15,
+    19,
+    23,
+    26,
+    29,
+    31,
+    33,
+    35
+];
+
+function getEventData(eventID) {
     const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     let currentEventIdx = -1;
     let currentDate = new Date();
@@ -27,7 +43,37 @@ function getEventName(eventID) {
         }
     }
 
-    return data[currentEventIdx].name
+    return data[currentEventIdx];
+}
+
+function generateEnergyTable(eventPoints)
+{
+    return energyBoost.map(x => x * eventPoints);
+}
+
+function calculateEventPoints(score, multiscore, eventBoost, isCheerful=false)
+{
+    let scorePoints = score / 20000;
+    let multiPoints = Math.min(multiscore, 11000000) / 1000000;
+    let cheerfulPoints = isCheerful ? 50 : 0;
+    return (100 + scorePoints + multiPoints + cheerfulPoints) * eventBoost;
+}
+
+function calculateScore(talent)
+{
+    return talent * SONGBIAS;
+}
+
+function getEnergyPerGame(energyTable, eventPoints)
+{
+    let index = 0;
+    energyTable.forEach((points, i) => {
+        if(Math.abs(eventPoints - points) < Math.abs(eventPoints - energyTable[index])){
+            index = i;
+        }
+    });
+
+    return index;
 }
 
 function bisect(sortedList, el) {
@@ -82,9 +128,9 @@ module.exports = {
     async execute(interaction, discordClient) {
         await interaction.deferReply({
             ephemeral: COMMAND.INFO.ephemeral
-        })
+        });
 
-        const event = discordClient.getCurrentEvent()
+        const event = discordClient.getCurrentEvent();
         if (event.id === -1) {
             await interaction.editReply({
                 embeds: [
@@ -95,10 +141,10 @@ module.exports = {
                     })
                 ]
             });
-            return
+            return;
         }
 
-        const eventName = getEventName(event.id)
+        const eventData = getEventData(event.id);
 
         const user = interaction.options.getUser('user');
 
@@ -109,31 +155,54 @@ module.exports = {
                         discord_id: user.id,
                         eventID: event.id
                     });
-                if (data.length) {
-                    let name = user.username;
-                    let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));\
-                    let lastTimestamp = rankData[rankData.length - 1].timestamp
-                    console.log(lastTimestamp)
-                    let lastHour = rankData[rankData.length - 60] //Assume since data stored every minute one hour is 60 indexes
-                    let lastHourIndex = bisect(rankData.map(element => {Data.parse(element.Timestamp)}), )
-                    let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score
-
-                    let lastScore = rankData.pop(0)
-                    var gamesPlayed = 0
-
-                    rankData.forEach(dataPoint => {
-                        if(dataPoint.score > lastScore){
-                            gamesPlayed++;
-                            lastScore = dataPoint.score;
-                        }
+                let userData = discordClient.db.prepare('Select * FROM users WHERE ' +
+                    'discord_id=@discordid').all({
+                        discordid: user.id
                     });
-                    interaction.editReply({ content: `"Score Gained in the Last Hour: ${scoreLastHour}` })
+                if (data.length && userData.length) {
+                    discordClient.addSekaiRequest('profile', {
+                        userId: userData[0].sekai_id
+                    }, async(response) => {
+                        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+                        let lastTimestamp = rankData[rankData.length - 1].timestamp;
+                        let timestamps = rankData.map(x => x.timestamp);
+                        let lastHourIndex = bisect(timestamps, lastTimestamp - HOUR);
+                        let lastHour = rankData[lastHourIndex];
+                        let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+
+                        let teamData = calculateTeam(response, event.id);
+                        console.log(teamData);
+                        let score = calculateScore(teamData.talent);
+                        let multiscore = score * 5;
+                        let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus, eventData.eventType === 'cheerful_carnival');
+                        let pointTable = generateEnergyTable(eventPoints);
+
+                        let lastPoint = rankData[0].score;
+
+                        let energyUsed = 0;
+                        let gamesPlayed = 0;
+
+                        rankData.slice(1).forEach(point => {
+                            if(lastPoint != point.score)
+                            {
+                                energyUsed += getEnergyPerGame(pointTable, point.score - lastPoint);
+                                gamesPlayed++;
+                            }
+                            lastPoint = point.score;
+                        });
+                        
+                        let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                        `Games Played in the Last Hour: ${gamesPlayed}\n` +
+                        `Predicted Energy Used (with current main team): ${energyUsed}`;
+
+                        interaction.editReply({ content: reply});
+                    });
                 }
                 else {
-                    interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' })
+                    interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
                 }
             } catch (err) {
-                // Error parsing JSON: ${err}`
+                console.log(err);
             }
         }
     }
