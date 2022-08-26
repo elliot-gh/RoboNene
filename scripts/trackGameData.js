@@ -20,7 +20,10 @@ const GAME_CONSTANTS = {
     "areaItemLevels",
     "events",
     "eventCards",
-    "cards"
+    "cards",
+    "cardEpisodes",
+    "musics",
+    "eventDeckBonuses"
   ]
 }
 
