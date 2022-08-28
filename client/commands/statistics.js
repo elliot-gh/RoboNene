@@ -177,7 +177,6 @@ module.exports = {
                             let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                                 `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                                    `Predicted Energy Used (with current main team): ${energyUsedHr} (${energyUsed} total)\n` +
                                 `Sanity Lost: ${sanity} <:sparkles:1012729567615656066>\n` + 
                                 `Updated: <t:${timestamp}:T>`;
 
