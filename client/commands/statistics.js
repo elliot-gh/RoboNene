@@ -85,7 +85,7 @@ function getLastHour(sortedList, el) {
     return 0
 }
 
-function sanityLost(gamesPlayed, energyUsed, finalPoint)
+function sanityLost(gamesPlayed, finalPoint)
 {
     return Math.pow(finalPoint, 0.75) * gamesPlayed
 }
@@ -170,7 +170,7 @@ module.exports = {
 
                             let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
 
-                            let sanity = sanityLost(gamesPlayed, energyUsed, rankData[rankData.length - 1].score)
+                            let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
 
                             let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
