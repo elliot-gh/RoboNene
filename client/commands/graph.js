@@ -13,6 +13,8 @@ const COMMAND = require('../command_data/graph')
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateEmbed = require('../methods/generateEmbed') 
 
+const HOUR = 3600000;
+
 /**
  * Create a graph embed to be sent to the discord interaction
  * @param {string} graphUrl url of the graph we are trying to embed
@@ -85,7 +87,8 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
               "displayFormats": {
                 "day": "MMM DD YYYY HH:mm"
               },
-              "unit": 'day'
+              "unit": 'hour',
+              "stepSize": 6
             }
           }]
         }

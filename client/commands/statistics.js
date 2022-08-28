@@ -76,49 +76,18 @@ function getEnergyPerGame(energyTable, eventPoints)
     return index;
 }
 
-function bisect(sortedList, el) {
-    if (!sortedList.length) return 0;
-
-    if (sortedList.length == 1) {
-        return el > sortedList[0] ? 1 : 0;
+function getLastHour(sortedList, el) {
+    for(let i = 0; i < sortedList.length; i++) {
+        if(sortedList[i] > el) {
+            return i;
+        }
     }
+    return 0
+}
 
-    let lbound = 0;
-    let rbound = sortedList.length - 1;
-    return bisect(lbound, rbound);
-
-    function bisect(lb, rb) {
-        if (rb - lb == 1) {
-            if (sortedList[lb] < el && sortedList[rb] >= el) {
-                return lb + 1;
-            }
-
-            if (sortedList[lb] == el) {
-                return lb;
-            }
-        }
-
-        if (sortedList[lb] > el) {
-            return 0;
-        }
-
-        if (sortedList[rb] < el) {
-            return sortedList.length
-        }
-
-        let midPoint = lb + (Math.floor((rb - lb) / 2));
-        let midValue = sortedList[midPoint];
-
-        if (el <= midValue) {
-            rbound = midPoint
-        }
-
-        else if (el > midValue) {
-            lbound = midPoint
-        }
-
-        return bisect(lbound, rbound);
-    }
+function sanityLost(gamesPlayed, energyUsed, finalPoint)
+{
+    return Math.pow(finalPoint, 0.75) * gamesPlayed
 }
 
 module.exports = {
@@ -147,6 +116,7 @@ module.exports = {
         const eventData = getEventData(event.id);
 
         const user = interaction.options.getUser('user');
+        const tier = interaction.options.getInteger('tier');
 
         if (user) {
             try {
@@ -163,43 +133,118 @@ module.exports = {
                     discordClient.addSekaiRequest('profile', {
                         userId: userData[0].sekai_id
                     }, async(response) => {
-                        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-                        let lastTimestamp = rankData[rankData.length - 1].timestamp;
-                        let timestamps = rankData.map(x => x.timestamp);
-                        let lastHourIndex = bisect(timestamps, lastTimestamp - HOUR);
-                        let lastHour = rankData[lastHourIndex];
-                        let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+                        try{
+                            let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+                            let lastTimestamp = rankData[rankData.length - 1].timestamp;
+                            let timestamps = rankData.map(x => x.timestamp);
+                            let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+                            console.log(lastHourIndex)
+                            
+                            let lastHour = rankData[lastHourIndex];
+                            let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
 
-                        let teamData = calculateTeam(response, event.id);
-                        console.log(teamData);
-                        let score = calculateScore(teamData.talent);
-                        let multiscore = score * 5;
-                        let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus, eventData.eventType === 'cheerful_carnival');
-                        let pointTable = generateEnergyTable(eventPoints);
+                            let teamData = calculateTeam(response, event.id);
+                            let score = calculateScore(teamData.talent);
+                            let multiscore = score * 5;
+                            let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus, eventData.eventType === 'cheerful_carnival');
+                            let pointTable = generateEnergyTable(eventPoints);
 
-                        let lastPoint = rankData[0].score;
+                            let lastPoint = rankData[0].score;
 
-                        let energyUsed = 0;
-                        let gamesPlayed = 0;
+                            let energyUsed = 0;
+                            let gamesPlayed = 0;
+                            let energyUsedHr = 0;
+                            let gamesPlayedHr = 0;
 
-                        rankData.slice(1).forEach(point => {
-                            if(lastPoint != point.score)
-                            {
-                                energyUsed += getEnergyPerGame(pointTable, point.score - lastPoint);
-                                gamesPlayed++;
-                            }
-                            lastPoint = point.score;
-                        });
-                        
-                        let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-                        `Games Played in the Last Hour: ${gamesPlayed}\n` +
-                        `Predicted Energy Used (with current main team): ${energyUsed}`;
+                            rankData.slice(1).forEach((point, i) => {
+                                if (lastPoint != point.score) {
+                                    energyUsed += getEnergyPerGame(pointTable, point.score - lastPoint);
+                                    gamesPlayed++;
+                                    if (i >= lastHourIndex) {
+                                        energyUsedHr += getEnergyPerGame(pointTable, point.score - lastPoint);
+                                        gamesPlayedHr++;
+                                    }
+                                }
+                                lastPoint = point.score;
+                            });
 
-                        interaction.editReply({ content: reply});
+                            let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
+
+                            let sanity = sanityLost(gamesPlayed, energyUsed, rankData[rankData.length - 1].score)
+
+                            let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+
+                            let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                                `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+                                `Average Score per Game over the hour: ` + scorePerGame + '\n' +
+                                    `Predicted Energy Used (with current main team): ${energyUsedHr} (${energyUsed} total)\n` +
+                                `Sanity Lost: ${sanity} <:sparkles:1012729567615656066>\n` + 
+                                `Updated: <t:${timestamp}:T>`;
+
+                            interaction.editReply({ content: reply });
+                        }
+                        catch (err) {
+                            console.log(err);
+                        }
                     });
                 }
                 else {
                     interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        else if (tier) {
+            try {
+                let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+                    'WHERE (Tier=@tier AND EventID=@eventID)').all({
+                        tier: tier,
+                        eventID: event.id
+                    });
+                try {
+                    let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+                    let lastTimestamp = rankData[rankData.length - 1].timestamp;
+                    let timestamps = rankData.map(x => x.timestamp);
+                    let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+                    console.log(lastHourIndex)
+
+                    let lastHour = rankData[lastHourIndex];
+                    let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+
+                    let lastPoint = rankData[0].score;
+
+                    let gamesPlayed = 0;
+                    let gamesPlayedHr = 0;
+
+                    rankData.slice(1).forEach((point, i) => {
+                        if (lastPoint != point.score) {
+                            gamesPlayed++;
+                            if (i >= lastHourIndex) {
+                
+                                gamesPlayedHr++;
+                            }
+                        }
+                        lastPoint = point.score;
+                    });
+
+                    let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
+
+                    let sanity = sanityLost(gamesPlayed, energyUsed, rankData[rankData.length - 1].score)
+
+                    let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+
+                    let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                        `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+                        `Average Score per Game over the hour: ` + scorePerGame + '\n' +
+                        `Sanity Lost: ${sanity} <:sparkles:1012729567615656066>\n` +
+                        `Updated: <t:${timestamp}:T>`;
+
+                    interaction.editReply({ content: reply });
+                }
+                catch (err) {
+                    console.log(err);
                 }
             } catch (err) {
                 console.log(err);
