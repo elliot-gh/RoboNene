@@ -151,7 +151,7 @@ const getEventBonus = (cards, eventBonusCards, eventID) => {
         else {
             bonus = eventBonusCards.find(param => {
                 if (param.eventId == eventID) {
-                    return param.gameCharacterUnitId === card.characterId || param.cardAttr === card.type;
+                    return (param.gameCharacterUnitId === card.characterId || param.cardAttr === card.type) && param.bonusRate < 50;
                 }
             });
             if (bonus) {

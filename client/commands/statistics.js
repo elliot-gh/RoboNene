@@ -51,7 +51,7 @@ function generateEnergyTable(eventPoints)
     return energyBoost.map(x => x * eventPoints);
 }
 
-function calculateEventPoints(score, multiscore, eventBoost, isCheerful=false)
+function calculateEventPoints(score, multiscore, eventBoost, isCheerful)
 {
     let scorePoints = score / 20000;
     let multiPoints = Math.min(multiscore, 11000000) / 1000000;
@@ -85,7 +85,7 @@ function getLastHour(sortedList, el) {
     return 0
 }
 
-function sanityLost(gamesPlayed, energyUsed, finalPoint)
+function sanityLost(gamesPlayed, finalPoint)
 {
     return Math.pow(finalPoint, 0.75) * gamesPlayed
 }
@@ -116,7 +116,7 @@ module.exports = {
         const eventData = getEventData(event.id);
 
         const user = interaction.options.getUser('user');
-        const tier = interaction.options.getInteger('tier');
+        const tier = interaction.options.getInteger('tier');        
 
         if (user) {
             try {
@@ -146,7 +146,10 @@ module.exports = {
                             let teamData = calculateTeam(response, event.id);
                             let score = calculateScore(teamData.talent);
                             let multiscore = score * 5;
-                            let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus, eventData.eventType === 'cheerful_carnival');
+                            console.log(teamData)
+                            console.log(eventData.eventType)
+                            console.log(eventData.eventType === 'cheerful_carnival')
+                            let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
                             let pointTable = generateEnergyTable(eventPoints);
 
                             let lastPoint = rankData[0].score;
@@ -170,14 +173,19 @@ module.exports = {
 
                             let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
 
-                            let sanity = sanityLost(gamesPlayed, energyUsed, rankData[rankData.length - 1].score)
+                            let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
+                            let sanityNum = parseInt(Math.log(sanity) / Math.log(1000));
+                            sanity /= Math.pow(1000, sanityNum)
+                            let suffix = sanityNum * 3;
+                            sanity = sanity.toFixed(6);
 
                             let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
                             let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                                 `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                                `Sanity Lost: ${sanity} <:sparkles:1012729567615656066>\n` + 
+                                `Estimated Energy used over the hour ${energyUsedHr} (${energyUsed} Total)\n` +
+                                `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                                 `Updated: <t:${timestamp}:T>`;
 
                             interaction.editReply({ content: reply });
@@ -207,7 +215,6 @@ module.exports = {
                     let lastTimestamp = rankData[rankData.length - 1].timestamp;
                     let timestamps = rankData.map(x => x.timestamp);
                     let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
-                    console.log(lastHourIndex)
 
                     let lastHour = rankData[lastHourIndex];
                     let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
@@ -230,14 +237,18 @@ module.exports = {
 
                     let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
 
-                    let sanity = sanityLost(gamesPlayed, energyUsed, rankData[rankData.length - 1].score)
+                    let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
+                    let sanityNum = parseInt(Math.log(sanity)/Math.log(1000));
+                    sanity /= Math.pow(1000, sanityNum)
+                    let suffix = sanityNum * 3;
+                    sanity = sanity.toFixed(6);
 
                     let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
                     let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                         `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                         `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                        `Sanity Lost: ${sanity} <:sparkles:1012729567615656066>\n` +
+                        `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                         `Updated: <t:${timestamp}:T>`;
 
                     interaction.editReply({ content: reply });

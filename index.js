@@ -10,6 +10,7 @@ const trackGameData = require('./scripts/trackGameData');
 const trackRankingData = require('./scripts/trackRankingData');
 const trackCutoffData = require('./scripts/trackCutoffData');
 const trackUserCutoffs = require('./scripts/trackUserCutoffs');
+const trackTierData = require('./scripts/trackTierData')
 
 loadMusicMeta(0);
 loadGameData(0, async () => {
@@ -29,4 +30,5 @@ loadGameData(0, async () => {
   trackRankingData(client);
   trackCutoffData(client);
   trackUserCutoffs(client);
+  trackTierData(client);
 });

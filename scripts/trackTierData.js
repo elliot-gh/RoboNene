@@ -3,43 +3,93 @@
  * @author Ai0796
  */
 
-const { CUTOFF_INTERVAL, CUTOFF_DATA} = require('../constants');
+const { CUTOFF_INTERVAL, CUTOFF_DATA } = require('../constants');
 const fs = require('fs');
-
-//Cutoffs we store
-const cutoffs = [
-    1,
-    2,
-    3,
-    10,
-    20,
-    21,
-    30,
-    40,
-    50,
-    100,
-    200,
-    300,
-    400,
-    500,
-    1000,
-    2000,
-    3000,
-    4000,
-    5000,
-    10000,
-    20000,
-    30000,
-    40000,
-    50000,
-];
 
 /**
  * Writes JSON response from Project Sekai servers to local JSON
  * @param {Object} response from project sekai client
 */
 
+function clearFile() {
+    try {
+        if (fs.existsSync(`track.json`)) {
+            fs.unlink('track.json')
+        }
+    } catch (e) {
+        console.log('Error occured while writing Tracking: ', e);
+    }
+}
 
+function readTiers() {
+    var trackFile;
+    try {
+        if (!fs.existsSync(`track.json`)) {
+            trackFile = new Object();
+        }
+        else {
+            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+        }
+
+        console.log(trackFile)
+
+        return Object.keys(trackFile)
+
+    } catch (e) {
+        console.log('Error occured while writing Tracking: ', e);
+    }
+}
+
+function readScores(tier) {
+    tier = tier.toString();
+    var trackFile;
+    try {
+        if (!fs.existsSync(``)) {
+            trackFile = new Object();
+        }
+        else {
+            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+        }
+
+        if (tier in trackFile) {
+            users = trackFile[tier]["score"]
+        }
+
+    } catch (e) {
+        console.log('Error occured while writing Tracking: ', e);
+    }
+}
+
+function getUsers(tier) {
+    tier = tier.toString();
+    var users = [];
+    var trackFile;
+    try {
+        if (!fs.existsSync(`track.json`)) {
+            trackFile = new Object();
+        }
+        else {
+            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+        }
+
+        if (tier in trackFile) {
+            users = trackFile[tier]["users"]
+            delete trackFile[tier]
+        }
+
+        fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
+            if (err) {
+                console.log('Error writing Tracking', err);
+            } else {
+                console.log(`Wrote Tracking Successfully`);
+            }
+        });
+    } catch (e) {
+        console.log('Error occured while writing Tracking: ', e);
+    }
+
+    return users
+}
 
 /**
  * Recurvsively adds cutoff tracks to queue
@@ -48,22 +98,24 @@ const cutoffs = [
  * @param {DiscordClient} discordClient the client we are using 
 */
 async function getCutoffs(discordClient) {
-    async function logResults(response) {
+    async function checkResults(response) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
-                let timestamp = Date.now();
+                let oldScore = readScores(rank)
 
-                discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
-                    '(EventID, Tier, Timestamp, Score) ' + 
-                    'VALUES(@eventID, @tier, @timestamp, @score)').run({
-                        score: score,
-                        eventID: event,
-                        tier: rank,
-                        timestamp: timestamp
-                    });
+                if(score != oldScore) {
+                    let users = getUsers(rank)
+
+                    if(users != undefined) {
+                        users.forEach((pair) => {
+                            let channel = discordClient.client.channels.cache.get(pair[0])
+                            channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score} EP`)
+                        })
+                    }
+                }
             }
         } catch (e) {
             console.log('Error occured while adding cutoffs: ', e);
@@ -72,20 +124,22 @@ async function getCutoffs(discordClient) {
     try {
         let event = getRankingEvent().id;
         if (event == -1) {
+            clearFile()
             return -1;
         } else {
-            cutoffs.forEach(cutoff => {
+            let tiers = readTiers();
+            tiers.forEach(cutoff => {
                 discordClient.addPrioritySekaiRequest('ranking', {
                     eventId: event,
                     targetRank: cutoff,
                     lowerLimit: 0
-                }, logResults, (err) => {
+                }, checkResults, (err) => {
                     discordClient.logger.log({
                         level: 'error',
                         message: err.toString()
                     });
                 });
-            }); 
+            });
         }
     } catch (error) {
         console.log(error);
@@ -129,9 +183,9 @@ const getRankingEvent = () => {
  * Continaully grabs and updates the Cutoff data
  * @param {DiscordClient} discordClient the client we are using 
  */
-const trackCutoffData = async (discordClient) => {
+const trackTierData = async (discordClient) => {
     let dataUpdater = setInterval(getCutoffs, CUTOFF_INTERVAL, discordClient);
     getCutoffs(discordClient); //Run function once since setInterval waits an interval to run it
 };
 
-module.exports = trackCutoffData;
+module.exports = trackTierData;
