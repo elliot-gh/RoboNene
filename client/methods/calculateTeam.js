@@ -64,12 +64,15 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
         group = chars.unit;
     }
     
+    let id = gameCharacters.find((char) => char.gameCharacterId == data.characterId && char.unit == group).id;
+    
     return {
         baseTalent : talent,
         talent : talent,
         type : data.attr,
         group : group,
         characterId: data.characterId,
+        unitId: id,
         mastery: card.masterRank,
         rarity: card.rarity
     };
@@ -142,7 +145,7 @@ const getEventBonus = (cards, eventBonusCards, eventID) => {
     cards.forEach(card => {
         let bonus = eventBonusCards.find(param => {
             if (param.eventId == eventID) {
-                return param.gameCharacterUnitId === card.characterId && param.cardAttr === card.type;
+                return param.gameCharacterUnitId === card.unitId && param.cardAttr === card.type;
             }
         });
         if (bonus) {
@@ -151,7 +154,7 @@ const getEventBonus = (cards, eventBonusCards, eventID) => {
         else {
             bonus = eventBonusCards.find(param => {
                 if (param.eventId == eventID) {
-                    return (param.gameCharacterUnitId === card.characterId || param.cardAttr === card.type) && param.bonusRate < 50;
+                    return (param.gameCharacterUnitId === card.unitId || param.cardAttr === card.type) && param.bonusRate < 50;
                 }
             });
             if (bonus) {
@@ -177,7 +180,7 @@ const calculateTeam = (data, eventID) => {
     const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
     const eventBonusCards = JSON.parse(fs.readFileSync('./sekai_master/eventDeckBonuses.json'));
     const episodes = JSON.parse(fs.readFileSync('./sekai_master/cardEpisodes.json'));
-    const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
+    const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacterUnits.json'));
     let deck = data.userDecks[0];
 
     var cardIDs = Object.keys(deck).map((key) => {

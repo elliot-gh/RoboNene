@@ -14,6 +14,7 @@ const GAME_CONSTANTS = {
   "PATH": "/Sekai-World/sekai-master-db-en-diff/main/",
   "JSON": [
     "gameCharacters",
+    "gameCharacterUnits",
     "characterProfiles",
     "areas",
     "areaItems",
@@ -21,7 +22,6 @@ const GAME_CONSTANTS = {
     "events",
     "eventCards",
     "cards",
-    "cardEpisodes",
     "musics",
     "eventDeckBonuses"
   ]
