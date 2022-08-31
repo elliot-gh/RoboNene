@@ -24,11 +24,14 @@ function addTrack(tier, score, mention, channel) {
             trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
         }
 
-        if (tier in trackFile) {
+        if (tier in trackFile && score in trackFile[tier]) {
             trackFile[tier][score].push([channel, mention]);
         }
         else {
-            trackFile[tier] = new Object();
+            if(!(tier in trackFile))
+            {
+                trackFile[tier] = new Object();
+            }
             trackFile[tier][score] = [[channel, mention]];
         }
 
@@ -103,6 +106,8 @@ module.exports = {
         const tier = interaction.options.getInteger('tier');
         const cutoff = interaction.options.getInteger('cutoff');
 
+        console.log(cutoff)
+
         if(tier > 110) {
             await interaction.editReply({
                 embeds: [
@@ -134,7 +139,7 @@ module.exports = {
 
                         let message = {
                             'type': 'Success',
-                            'message': `Starting to track tier ${tier} for ${mention}`
+                            'message': `Starting to track tier ${tier} for ${mention}\nCutoff: ${score.toLocaleString() }`
                         };
 
                         await interaction.editReply({

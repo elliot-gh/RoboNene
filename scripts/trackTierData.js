@@ -111,8 +111,8 @@ async function getCutoffs(discordClient) {
                 let rank = response['rankings'][0]['rank'];
                 let scoreList = readScores(rank);
 
-                scoreList.forEach(oldScore => {
-                    if (score != oldScore) {
+                scoreList.forEach((oldScore) => {
+                    if (score >= parseInt(oldScore)) {
                         let users = getUsers(rank, oldScore);
 
                         if (users != undefined) {
