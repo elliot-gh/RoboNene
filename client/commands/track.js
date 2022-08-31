@@ -15,6 +15,7 @@ const generateEmbed = require('../methods/generateEmbed');
 
 function addTrack(tier, score, mention, channel) {
     tier = tier.toString();
+    var trackFile;
     try {
         if (!fs.existsSync(`track.json`)) {
             trackFile = new Object();
@@ -24,15 +25,14 @@ function addTrack(tier, score, mention, channel) {
         }
 
         if (tier in trackFile) {
-            trackFile[tier]["users"].push([channel, mention])
+            trackFile[tier][score].push([channel, mention]);
         }
         else {
-            trackFile[tier] = new Object()
-            trackFile[tier]["score"] = score
-            trackFile[tier]["users"] = [[channel, mention]]
+            trackFile[tier] = new Object();
+            trackFile[tier][score] = [[channel, mention]];
         }
 
-        console.log(trackFile)
+        console.log(trackFile);
 
         fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
             if (err) {
@@ -101,8 +101,7 @@ module.exports = {
         }
 
         const tier = interaction.options.getInteger('tier');
-
-        console.log(tier)
+        const cutoff = interaction.options.getInteger('cutoff');
 
         if(tier > 110) {
             await interaction.editReply({
@@ -125,10 +124,13 @@ module.exports = {
                 }, async (response) => {
                     try {
                         let score = response['rankings'][0]['score'];
+                        if(cutoff != undefined){
+                            score = cutoff;
+                        }
                         let id = interaction.member.user.id;
-                        let mention = "<@" + id + ">";
+                        let mention = '<@' + id + '>';
                         let channel = interaction.channelId;
-                        addTrack(tier, score, mention, channel)
+                        addTrack(tier, score, mention, channel);
 
                         let message = {
                             'type': 'Success',
