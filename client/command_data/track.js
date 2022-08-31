@@ -16,7 +16,13 @@ module.exports = {
                 'type': 'integer',
                 'name': 'tier',
                 'required': true,
-                'description': 'The tier specified',
+                'description': 'The tier specified'
+            },
+            {
+                'type': 'integer',
+                'name': 'cutoff',
+                'required': false,
+                'description': 'Optional cutoff to track e.g. 2,500,000 will alert you when the tier moves past 2.5mil'
             }
         ]
     },

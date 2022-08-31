@@ -14,7 +14,7 @@ const fs = require('fs');
 function clearFile() {
     try {
         if (fs.existsSync(`track.json`)) {
-            fs.unlink('track.json')
+            fs.unlink('track.json');
         }
     } catch (e) {
         console.log('Error occured while writing Tracking: ', e);
@@ -31,9 +31,9 @@ function readTiers() {
             trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
         }
 
-        console.log(trackFile)
+        console.log(trackFile);
 
-        return Object.keys(trackFile)
+        return Object.keys(trackFile);
 
     } catch (e) {
         console.log('Error occured while writing Tracking: ', e);
@@ -44,7 +44,7 @@ function readScores(tier) {
     tier = tier.toString();
     var trackFile;
     try {
-        if (!fs.existsSync(``)) {
+        if (!fs.existsSync(`track.json`)) {
             trackFile = new Object();
         }
         else {
@@ -52,15 +52,17 @@ function readScores(tier) {
         }
 
         if (tier in trackFile) {
-            users = trackFile[tier]["score"]
+            return Object.keys(trackFile[tier]);
         }
 
     } catch (e) {
         console.log('Error occured while writing Tracking: ', e);
     }
+
+    return [];
 }
 
-function getUsers(tier) {
+function getUsers(tier, score) {
     tier = tier.toString();
     var users = [];
     var trackFile;
@@ -73,8 +75,11 @@ function getUsers(tier) {
         }
 
         if (tier in trackFile) {
-            users = trackFile[tier]["users"]
-            delete trackFile[tier]
+            users = trackFile[tier][score];
+            delete trackFile[tier][score];
+            if (trackFile[tier].length <= 0) {
+                delete trackFile[tier];
+            }
         }
 
         fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
@@ -88,7 +93,7 @@ function getUsers(tier) {
         console.log('Error occured while writing Tracking: ', e);
     }
 
-    return users
+    return users;
 }
 
 /**
@@ -104,18 +109,20 @@ async function getCutoffs(discordClient) {
             if (response['rankings'][0] != null && event != -1) {
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
-                let oldScore = readScores(rank)
+                let scoreList = readScores(rank);
 
-                if(score != oldScore) {
-                    let users = getUsers(rank)
+                scoreList.forEach(oldScore => {
+                    if (score != oldScore) {
+                        let users = getUsers(rank, oldScore);
 
-                    if(users != undefined) {
-                        users.forEach((pair) => {
-                            let channel = discordClient.client.channels.cache.get(pair[0])
-                            channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score} EP`)
-                        })
+                        if (users != undefined) {
+                            users.forEach((pair) => {
+                                let channel = discordClient.client.channels.cache.get(pair[0]);
+                                channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score} EP\nYou tracked ${oldScore}`);
+                            });
+                        }
                     }
-                }
+                });
             }
         } catch (e) {
             console.log('Error occured while adding cutoffs: ', e);
@@ -124,7 +131,7 @@ async function getCutoffs(discordClient) {
     try {
         let event = getRankingEvent().id;
         if (event == -1) {
-            clearFile()
+            clearFile();
             return -1;
         } else {
             let tiers = readTiers();
