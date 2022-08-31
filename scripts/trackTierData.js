@@ -118,7 +118,7 @@ async function getCutoffs(discordClient) {
                         if (users != undefined) {
                             users.forEach((pair) => {
                                 let channel = discordClient.client.channels.cache.get(pair[0]);
-                                channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score} EP\nYou tracked ${oldScore}`);
+                                channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score.toLocaleString()} EP\nYou tracked ${oldScore.toLocaleString() }`);
                             });
                         }
                     }
