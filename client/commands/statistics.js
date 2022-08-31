@@ -146,9 +146,6 @@ module.exports = {
                             let teamData = calculateTeam(response, event.id);
                             let score = calculateScore(teamData.talent);
                             let multiscore = score * 5;
-                            console.log(teamData)
-                            console.log(eventData.eventType)
-                            console.log(eventData.eventType === 'cheerful_carnival')
                             let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
                             let pointTable = generateEnergyTable(eventPoints);
 
@@ -184,7 +181,7 @@ module.exports = {
                             let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                                 `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                                `Estimated Energy used over the hour ${energyUsedHr} (${energyUsed} Total)\n` +
+                                `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
                                 `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                                 `Updated: <t:${timestamp}:T>`;
 
