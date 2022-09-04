@@ -11,6 +11,7 @@ config.json
 
 # bonk
 bonk.json
+backup bonk.json
 track.json
 
 # logs, databses, and game data
