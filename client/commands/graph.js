@@ -36,6 +36,15 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
 }
 
 /**
+ * Ensures a string is ASCII to be sent through HTML
+ * @param {String} str the string to be converted to ASCII 
+ * @returns 
+ */
+function ensureASCII(str) {
+  return str.replace(/[^a-z0-9]/gi, ' ')
+}
+
+/**
  * Operates on a http request and returns the url embed of the graph using quickchart.io
  * @param {Object} interaction object provided via discord
  * @param {Integer} tier the ranking that the user wants to find
@@ -57,6 +66,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
     return
   }
 
+  tier = ensureASCII(tier)
   graphData = []
 
   rankData.forEach(point => {
@@ -127,7 +137,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
         }
       } else {
         // Error retrieving via HTTPS. Status: ${res.statusCode}
-        console.log(`Error retrieving via HTTPS ${res.statusCode}}`)
+        console.log(`Error retrieving via HTTPS ${res.statusCode}`)
       }
     });
   }).on('error', (err) => {});
