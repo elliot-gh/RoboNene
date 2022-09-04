@@ -206,7 +206,7 @@ module.exports = {
                     'WHERE (Tier=@tier AND EventID=@eventID)').all({
                         tier: tier,
                         eventID: event.id
-                    });
+                    });                
                 try {
                     let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
                     let lastTimestamp = rankData[rankData.length - 1].timestamp;
