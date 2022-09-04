@@ -39,6 +39,14 @@ function getBonks(userId) {
                 console.log(`Wrote Bonk Successfully`);
             }
         });
+
+        fs.writeFile(`backup bonk.json`, JSON.stringify(bonkFile), err => {
+            if (err) {
+                console.log('Error writing Bonk', err);
+            } else {
+                console.log(`Wrote Bonk Successfully`);
+            }
+        });
     } catch (e) {
         console.log('Error occured while writing cutoffs: ', e);
     }
