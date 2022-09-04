@@ -41,7 +41,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
  * @returns 
  */
 function ensureASCII(str) {
-  return str.replace(/[^a-z0-9]/gi, ' ')
+  return str.replace(/[^a-z0-9&]/gi, ' ')
 }
 
 /**
