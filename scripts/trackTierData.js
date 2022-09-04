@@ -77,7 +77,7 @@ function getUsers(tier, score) {
         if (tier in trackFile) {
             users = trackFile[tier][score];
             delete trackFile[tier][score];
-            if (trackFile[tier].length <= 0) {
+            if (Object.keys(trackFile[tier]).length === 0) {
                 delete trackFile[tier];
             }
         }
