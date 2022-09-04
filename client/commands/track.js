@@ -131,6 +131,8 @@ module.exports = {
                         let score = response['rankings'][0]['score'];
                         if(cutoff != undefined){
                             score = cutoff;
+                        } else {
+                            score += 1;
                         }
                         let id = interaction.member.user.id;
                         let mention = '<@' + id + '>';
