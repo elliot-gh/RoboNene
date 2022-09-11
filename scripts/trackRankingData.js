@@ -81,11 +81,7 @@ const getNextCheck = () => {
   nextCheck.setMinutes(nextCheck.getMinutes() + Math.round(nextCheck.getSeconds()/60));
   nextCheck.setSeconds(0, 0)
 
-  if (nextCheck.getMinutes() % 2 !== 0) {
-    nextCheck.setMinutes(nextCheck.getMinutes() + 1);
-  } else {
-    nextCheck.setMinutes(nextCheck.getMinutes() + 2);
-  }
+  nextCheck.setMinutes(nextCheck.getMinutes() + 1);
   return nextCheck.getTime() - Date.now();
 }
 
@@ -100,6 +96,22 @@ const requestRanking = async (event, discordClient) => {
     // TODO: Add a check here if response is not available
     // EX: { httpStatus: 403, errorCode: 'session_error', errorMessage: '' }
     const timestamp = Date.now()
+    response.rankings.forEach(ranking => {
+      if (ranking != null && event != -1) {
+        // User is already linked
+        let score = ranking['score'];
+        let rank = ranking['rank'];
+
+        discordClient.cutoffdb.prepare('INSERT INTO leaderboard ' +
+          '(EventID, Tier, Timestamp, Score) ' +
+          'VALUES(@eventID, @tier, @timestamp, @score)').run({
+            score: score,
+            eventID: event.id,
+            tier: rank,
+            timestamp: timestamp
+          });
+      }
+    })
     sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
   }
 

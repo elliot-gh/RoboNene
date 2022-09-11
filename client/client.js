@@ -171,6 +171,11 @@ class DiscordClient {
       '(discord_id TEXT, Tier INTEGER, EventID INTEGER,' +
       'Timestamp INTEGER, Score INTEGER,' +
       'PRIMARY KEY(discord_id, EventID, Timestamp))').run();
+
+    // Initialize Leaderboard Tracking
+    this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS leaderboard ' +
+      '(EventID INTEGER, Tier TEXT, Timestamp INTEGER, Score INTEGER,' +
+      'PRIMARY KEY(EventID, Tier, Timestamp))').run();
   }
 
   /**

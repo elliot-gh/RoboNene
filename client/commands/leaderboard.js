@@ -12,8 +12,19 @@ const COMMAND = require('../command_data/leaderboard')
 const MAX_PAGE = Math.ceil(100 / RESULTS_PER_PAGE) -1
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateRankingText = require('../methods/generateRankingText')
+const generateRankingText = require('../methods/generateRankingTextChanges')
 const generateEmbed = require('../methods/generateEmbed') 
+
+function getLastHour(sortedList, el) {
+  for (let i = 0; i < sortedList.length; i++) {
+    if (sortedList[i] > el) {
+      return i;
+    }
+  }
+  return 0
+}
+
+const HOUR = 3600000;
 
 module.exports = {
   ...COMMAND.INFO,
@@ -113,13 +124,45 @@ module.exports = {
 
       let start = page * RESULTS_PER_PAGE;
       let end = start + RESULTS_PER_PAGE;
-    
-      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target)
+
+      let data = discordClient.cutoffdb.prepare('SELECT * FROM leaderboard ' +
+        'WHERE (EventID=@eventID AND Tier=@tier)').all({
+          eventID: event.id,
+          tier: 1
+        });
+
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      let timestamps = rankData.map(x => x.timestamp);
+      let lastHourIndex = getLastHour(timestamps, timestamp - HOUR);
+      let timestampIndex = timestamps[lastHourIndex]
+
+      let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM leaderboard ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: timestampIndex
+        });
+
+      let lastHourCutoffs = []
+
+      if(lastHourData.length > 99) {
+        lastHourData.forEach(element => {
+          lastHourCutoffs.push(parseInt(element.Score));
+        });
+      }
+      else {
+        for(let i = 0; i++; i < 100) {
+          lastHourCutoffs.push(0)
+        }
+      }
+
+      lastHourCutoffs.sort(function (a, b) {return b - a;});
+
+      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end))
       
       let leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
+        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange at <t:${Math.floor(timestampIndex / 1000)}>`)
         .addField(`Page ${page+1}`, leaderboardText, false)
         .setThumbnail(event.banner)
         .setTimestamp()
@@ -186,11 +229,11 @@ module.exports = {
 
         start = page * RESULTS_PER_PAGE;
         end = start + RESULTS_PER_PAGE;
-        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target)
+        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end))
         leaderboardEmbed = new MessageEmbed()
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
-          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
+          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange at <t:${Math.floor(timestampIndex / 1000)}>`)
           .addField(`Page ${page+1} / ${MAX_PAGE+1}`, leaderboardText, false)
           .setThumbnail(event.banner)
           .setTimestamp()
