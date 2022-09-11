@@ -108,7 +108,7 @@ module.exports = {
 
         console.log(cutoff)
 
-        if(tier > 110) {
+        if(tier > 100000) {
             await interaction.editReply({
                 embeds: [
                     generateEmbed({

@@ -40,7 +40,7 @@ module.exports = {
 
         'TIER_ERR': {
             'type': 'Error',
-            'message': 'Please choose a cutoff Tier Less than or Equal to 110'
+            'message': 'Please choose a cutoff Tier Less than or Equal to 100000'
         },
 
         'SEKAI_BEST_HOST': 'api.sekai.best'
