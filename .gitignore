@@ -13,6 +13,7 @@ config.json
 bonk.json
 backup bonk.json
 track.json
+blessings.json
 
 # logs, databses, and game data
 /logs
