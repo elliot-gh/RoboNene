@@ -56,6 +56,7 @@ module.exports = {
     'INTERACTION_TIME': 60000,
   
     'LEFT': '⬅️',
-    'RIGHT': '➡️'
+    'RIGHT': '➡️',
+    'MOBILE': '📲'
   }
 }

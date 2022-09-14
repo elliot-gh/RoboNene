@@ -157,12 +157,14 @@ module.exports = {
 
       lastHourCutoffs.sort(function (a, b) {return b - a;});
 
-      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end))
+      let mobile = false;
+
+      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
       
       let leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange at <t:${Math.floor(timestampIndex / 1000)}>`)
+        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
         .addField(`Page ${page+1}`, leaderboardText, false)
         .setThumbnail(event.banner)
         .setTimestamp()
@@ -179,7 +181,12 @@ module.exports = {
             .setCustomId(`next`)
             .setLabel('NEXT')
             .setStyle('SECONDARY')
-            .setEmoji(COMMAND.CONSTANTS.RIGHT))
+            .setEmoji(COMMAND.CONSTANTS.RIGHT),
+          new MessageButton()
+            .setCustomId(`mobile`)
+            .setLabel('MOBILE')
+            .setStyle('SECONDARY')
+            .setEmoji(COMMAND.CONSTANTS.MOBILE))
 
       const leaderboardMessage = await interaction.editReply({ 
         embeds: [leaderboardEmbed], 
@@ -189,7 +196,7 @@ module.exports = {
 
       // Create a filter for valid responses
       const filter = (i) => {
-        return i.customId == `prev` || i.customId == `next`
+        return i.customId == `prev` || i.customId == `next` || i.customId == `mobile`
       }
 
       const collector = leaderboardMessage.createMessageComponentCollector({ 
@@ -225,15 +232,17 @@ module.exports = {
           } else {
             page += 1;
           }
+        } else if (i.customId === `mobile`) {
+          mobile = !mobile
         }
 
         start = page * RESULTS_PER_PAGE;
         end = start + RESULTS_PER_PAGE;
-        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end))
+        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
         leaderboardEmbed = new MessageEmbed()
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
-          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange at <t:${Math.floor(timestampIndex / 1000)}>`)
+          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
           .addField(`Page ${page+1} / ${MAX_PAGE+1}`, leaderboardText, false)
           .setThumbnail(event.banner)
           .setTimestamp()
