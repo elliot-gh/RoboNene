@@ -46,7 +46,6 @@ const generateRankingText = (data, page, target, changes, mobile) => {
     })
 
     let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength * 2) - MAXLENGTH)
-    console.log(maxRankLength, maxNameLength, maxScoreLength)
     maxNameLength -= difference
 
     let leaderboardText = '';
@@ -77,9 +76,6 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         }
         leaderboardText += '\n';
     }
-
-    console.log(leaderboardText)
-    console.log(leaderboardText.length);
 
     return leaderboardText
 }
