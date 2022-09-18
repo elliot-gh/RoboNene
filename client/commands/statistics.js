@@ -116,7 +116,7 @@ module.exports = {
         const eventData = getEventData(event.id);
 
         const user = interaction.options.getUser('user');
-        const tier = interaction.options.getInteger('tier');        
+        const tier = interaction.options.getInteger('tier');
 
         if (user) {
             try {
@@ -185,7 +185,24 @@ module.exports = {
                                 `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                                 `Updated: <t:${timestamp}:T>`;
 
-                            interaction.editReply({ content: reply });
+                            let title = `${user.username} Statistics`
+
+                            if (user.id == '475083312772415489') {
+                                reply += '\nPeople Killed: 1';
+                            }
+
+                            await interaction.editReply({
+                                embeds: [
+                                    generateEmbed({
+                                        name: title,
+                                        content: {
+                                            'type': 'Statistics',
+                                            'message': reply
+                                        },
+                                        client: discordClient.client
+                                    })
+                                ]
+                            });
                         }
                         catch (err) {
                             console.log(err);
@@ -202,11 +219,37 @@ module.exports = {
 
         else if (tier) {
             try {
-                let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+                var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
                     'WHERE (Tier=@tier AND EventID=@eventID)').all({
                         tier: tier,
                         eventID: event.id
-                    });                
+                    });
+                if(data.length == 0) {
+                    let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
+
+                    let title = `Tier Not Found`;
+
+                    await interaction.editReply({
+                        embeds: [
+                            generateEmbed({
+                                name: title,
+                                content: {
+                                    'type': 'ERROR',
+                                    'message': reply
+                                },
+                                client: discordClient.client
+                            })
+                        ]
+                    });
+                }
+                else {
+                    let userId = data[data.length-1].ID
+                    data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+                        'WHERE (ID=@id AND EventID=@eventID)').all({
+                            id: userId,
+                            eventID: event.id
+                        });
+                }
                 try {
                     let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
                     let lastTimestamp = rankData[rankData.length - 1].timestamp;
@@ -248,7 +291,20 @@ module.exports = {
                         `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                         `Updated: <t:${timestamp}:T>`;
 
-                    interaction.editReply({ content: reply });
+                    let title = `T${tier} Statistics`;
+
+                    await interaction.editReply({
+                        embeds: [
+                            generateEmbed({
+                                name: title,
+                                content: {
+                                    'type': 'Statistics',
+                                    'message': reply
+                                },
+                                client: discordClient.client
+                            })
+                        ]
+                    });
                 }
                 catch (err) {
                     console.log(err);

@@ -8,21 +8,6 @@ const fs = require('fs');
 
 //Cutoffs we store
 const cutoffs = [
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    20,
-    30,
-    40,
-    50,
-    100,
     200,
     300,
     400,
@@ -60,14 +45,16 @@ async function getCutoffs(discordClient) {
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
                 let timestamp = Date.now();
+                let id = response['rankings'][0]['userId'];
 
                 discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
-                    '(EventID, Tier, Timestamp, Score) ' + 
-                    'VALUES(@eventID, @tier, @timestamp, @score)').run({
+                    '(EventID, Tier, Timestamp, Score, ID) ' +
+                    'VALUES(@eventID, @tier, @timestamp, @score, @id)').run({
                         score: score,
                         eventID: event,
                         tier: rank,
-                        timestamp: timestamp
+                        timestamp: timestamp,
+                        id: id
                     });
             }
         } catch (e) {

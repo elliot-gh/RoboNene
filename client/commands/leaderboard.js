@@ -125,37 +125,46 @@ module.exports = {
       let start = page * RESULTS_PER_PAGE;
       let end = start + RESULTS_PER_PAGE;
 
-      let data = discordClient.cutoffdb.prepare('SELECT * FROM leaderboard ' +
+      let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (EventID=@eventID AND Tier=@tier)').all({
           eventID: event.id,
           tier: 1
         });
 
+      let lastHourCutoffs = []
+
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
       let lastHourIndex = getLastHour(timestamps, timestamp - HOUR);
       let timestampIndex = timestamps[lastHourIndex]
+      let lastTimestamp = timestamps[timestamps.length - 1]
 
-      let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM leaderboard ' +
-        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
-          eventID: event.id,
-          timestamp: timestampIndex
-        });
+      for(let i = 1; i < 101; i++) {
+        let idData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (EventID=@eventID AND Timestamp=@timestamp AND Tier=@tier)').all({
+            eventID: event.id,
+            timestamp: lastTimestamp,
+            tier: i
+          });
+        if(idData.length > 0) {
+          let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND Timestamp=@timestamp AND ID=@id)').all({
+              eventID: event.id,
+              timestamp: timestampIndex,
+              id: idData[0].ID
+          });
 
-      let lastHourCutoffs = []
+          if (lastHourData.length > 0) {
+            lastHourCutoffs.push(lastHourData[0].Score);
+          } else {
+            lastHourCutoffs.push(0);
+          }
+        }
 
-      if(lastHourData.length > 99) {
-        lastHourData.forEach(element => {
-          lastHourCutoffs.push(parseInt(element.Score));
-        });
-      }
-      else {
-        for(let i = 0; i++; i < 100) {
-          lastHourCutoffs.push(0)
+        else {
+          lastHourCutoffs.push(0);
         }
       }
-
-      lastHourCutoffs.sort(function (a, b) {return b - a;});
 
       let mobile = false;
 

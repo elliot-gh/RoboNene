@@ -67,10 +67,11 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   }
 
   graphData = []
+  const event = discordClient.getCurrentEvent()
 
   rankData.forEach(point => {
     graphData.push({
-      x: point.timestamp,
+      x: point.timestamp - event.startAt,
       y: point.score
     })
   });
@@ -94,10 +95,10 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
             "distribution": 'linear',
             "time": {
               "displayFormats": {
-                "day": "MMM DD YYYY HH:mm"
+                "hour": "[Day] D HH"
               },
               "unit": 'hour',
-              "stepSize": 6
+              "stepSize": 3
             }
           }]
         }
@@ -191,45 +192,41 @@ module.exports = {
 
     if(tier)
     {
-      const options = {
-        host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
-        path: `/event/${event.id}/rankings/graph?rank=${tier}&region=en`,
-        headers: { 'User-Agent': 'request' },
-        timeout: 5000
-      };
+      var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (Tier=@tier AND EventID=@eventID)').all({
+          tier: tier,
+          eventID: event.id
+        });
+      if (data.length == 0) {
+          let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
 
-      const request = https.request(options, (res) => {
-        let json = '';
-        res.on('data', (chunk) => {
-          json += chunk;
-        });
-        res.on('end', async () => {
-          if (res.statusCode === 200) {
-            try {
-              const rankData = JSON.parse(json);
-              postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData.data.eventRankings, discordClient);
-            } catch (err) {
-              // Error parsing JSON: ${err}`
-            }
-          } else {
-            // Error retrieving via HTTPS. Status: ${res.statusCode}
-          }
-        });
-      }).on('error', (err) => { });
-      request.setTimeout(5000, () => {
-        try {
-          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-            'WHERE (EventID=@eventID AND Tier=@tier)').all({
-              eventID: event.id,
-              tier: tier
-            });
-          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-          console.log(rankData);
-          postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
-        } catch (err) {
-          // Error parsing JSON: ${err}`
-        }
-      });
+          let title = `Tier Not Found`;
+
+          await interaction.editReply({
+            embeds: [
+              generateEmbed({
+                name: title,
+                content: {
+                  'type': 'ERROR',
+                  'message': reply
+                },
+                client: discordClient.client
+              })
+            ]
+          });
+
+          return;
+      } else {
+        let userId = data[data.length - 1].ID
+        data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (ID=@id AND EventID=@eventID)').all({
+            id: userId,
+            eventID: event.id
+          });
+      }
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      console.log(rankData);
+      postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
     } else if (user) {
       try {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +

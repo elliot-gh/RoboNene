@@ -101,14 +101,16 @@ const requestRanking = async (event, discordClient) => {
         // User is already linked
         let score = ranking['score'];
         let rank = ranking['rank'];
+        let id = ranking['userId'];
 
-        discordClient.cutoffdb.prepare('INSERT INTO leaderboard ' +
-          '(EventID, Tier, Timestamp, Score) ' +
-          'VALUES(@eventID, @tier, @timestamp, @score)').run({
+        discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
+          '(EventID, Tier, Timestamp, Score, ID) ' +
+          'VALUES(@eventID, @tier, @timestamp, @score, @id)').run({
             score: score,
             eventID: event.id,
             tier: rank,
-            timestamp: timestamp
+            timestamp: timestamp,
+            id: id
           });
       }
     })
