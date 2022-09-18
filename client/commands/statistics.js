@@ -259,73 +259,84 @@ module.exports = {
                             eventID: event.id
                         });
                 }
-                try {
-                    let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-                    rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-                    let lastTimestamp = rankData[rankData.length - 1].timestamp;
-                    let timestamps = rankData.map(x => x.timestamp);
-                    let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+                discordClient.addPrioritySekaiRequest('ranking', {
+                    eventId: event.id,
+                    targetRank: tier,
+                    lowerLimit: 0
+                }, async (response) => {
+                    try {
+                        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+                        rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+                        let lastTimestamp = rankData[rankData.length - 1].timestamp;
+                        let timestamps = rankData.map(x => x.timestamp);
+                        let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
 
-                    let lastHour = rankData[lastHourIndex];
-                    let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+                        let lastHour = rankData[lastHourIndex];
+                        let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
 
-                    let lastPoint = rankData[0].score;
+                        let lastPoint = rankData[0].score;
 
-                    let gamesPlayed = 0;
-                    let gamesPlayedHr = 0;
-                    let pointsPerGame = []
+                        let gamesPlayed = 0;
+                        let gamesPlayedHr = 0;
+                        let pointsPerGame = []
 
-                    rankData.slice(1).forEach((point, i) => {
-                        if (lastPoint != point.score) {
-                            gamesPlayed++;
-                            pointsPerGame.push(point.score - lastPoint)
-                            if (i >= lastHourIndex) {
-                                gamesPlayedHr++;
+                        rankData.slice(1).forEach((point, i) => {
+                            if (lastPoint != point.score) {
+                                gamesPlayed++;
+                                pointsPerGame.push(point.score - lastPoint)
+                                if (i >= lastHourIndex) {
+                                    gamesPlayedHr++;
+                                }
                             }
+                            lastPoint = point.score;
+                        });
+
+                        let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
+
+                        let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
+                        let sanityNum = parseInt(Math.log(sanity)/Math.log(1000));
+                        sanity /= Math.pow(1000, sanityNum)
+                        let suffix = sanityNum * 3;
+                        sanity = sanity.toFixed(6);
+
+                        let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+
+                        let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                            `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+                            `Average Score per Game over the hour: ` + scorePerGame + '\n' +
+                            `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
+                            `Last 5 Games:\n`
+
+                        for(let i = 1; i < 6; i++) {
+                            reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
                         }
-                        lastPoint = point.score;
-                    });
 
-                    let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
+                        reply += `Updated: <t:${timestamp}:T>`
 
-                    let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
-                    let sanityNum = parseInt(Math.log(sanity)/Math.log(1000));
-                    sanity /= Math.pow(1000, sanityNum)
-                    let suffix = sanityNum * 3;
-                    sanity = sanity.toFixed(6);
+                        let title = `T${tier} ${response["rankings"][0].name} Statistics`;
 
-                    let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
-
-                    let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-                        `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-                        `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                        `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
-                        `Last 5 Games:\n`
-
-                    for(let i = 1; i < 6; i++) {
-                        reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
+                        await interaction.editReply({
+                            embeds: [
+                                generateEmbed({
+                                    name: title,
+                                    content: {
+                                        'type': 'Statistics',
+                                        'message': reply
+                                    },
+                                    client: discordClient.client
+                                })
+                            ]
+                        });
+                    } catch (err) {
+                        console.log(err);
                     }
-
-                    reply += `Updated: <t:${timestamp}:T>`
-
-                    let title = `T${tier} Statistics`;
-
-                    await interaction.editReply({
-                        embeds: [
-                            generateEmbed({
-                                name: title,
-                                content: {
-                                    'type': 'Statistics',
-                                    'message': reply
-                                },
-                                client: discordClient.client
-                            })
-                        ]
+                },
+                (err) => {
+                    discordClient.logger.log({
+                        level: 'error',
+                        message: err.toString()
                     });
-                }
-                catch (err) {
-                    console.log(err);
-                }
+                });
             } catch (err) {
                 console.log(err);
             }
