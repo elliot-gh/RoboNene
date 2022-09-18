@@ -157,12 +157,11 @@ module.exports = {
           if (lastHourData.length > 0) {
             lastHourCutoffs.push(lastHourData[0].Score);
           } else {
-            lastHourCutoffs.push(0);
+            lastHourCutoffs.push(-1);
           }
         }
-
         else {
-          lastHourCutoffs.push(0);
+          lastHourCutoffs.push(-1);
         }
       }
 

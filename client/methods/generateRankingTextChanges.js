@@ -31,7 +31,8 @@ const generateRankingText = (data, page, target, changes, mobile) => {
 
     let maxRankLength = rankLabel.length;
     let maxNameLength = nameLabel.length;
-    let maxScoreLength = Math.max(scoreLabel.length, changeLabel.length);
+    let maxScoreLength = scoreLabel.length;
+    let maxChangeLength = changeLabel.length;
 
     data.forEach((user) => {
         if (user.rank.toString().length > maxRankLength) {
@@ -45,14 +46,14 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         }
     })
 
-    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength * 2) - MAXLENGTH)
+    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH)
     maxNameLength -= difference
 
     let leaderboardText = '';
     let rank = " ".repeat(maxRankLength - rankLabel.length) + rankLabel
     let name = nameLabel + " ".repeat(maxNameLength - nameLabel.length)
     let score = scoreLabel + " ".repeat(maxScoreLength - scoreLabel.length)
-    let change = " ".repeat(maxScoreLength - changeLabel.length) + changeLabel
+    let change = " ".repeat(maxChangeLength - changeLabel.length) + changeLabel
     leaderboardText += `\`${rank} ${name} ${score} ${change}\``;
     leaderboardText += '\n';
     for (i = 0; i < RESULTS_PER_PAGE; i++) {
@@ -66,8 +67,14 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         let name = nameStr + " ".repeat(maxNameLength - nameStr.length)
         let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) +
             data[i].score.toLocaleString()
-        let changeStr = (data[i].score - changes[i]).toLocaleString();
-        let change = " ".repeat(maxScoreLength - changeStr.length) + 
+
+        let changeStr = ""
+        if(changes[i] === -1) {
+            changeStr = "NaN";
+        } else {
+            changeStr = (data[i].score - changes[i]).toLocaleString();
+        }
+        let change = " ".repeat(maxChangeLength - changeStr.length) + 
             changeStr;
 
         leaderboardText += `\`${rank} ${name} ${score} ${change}\``;
