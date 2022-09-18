@@ -154,11 +154,13 @@ module.exports = {
                             let gamesPlayed = 0;
                             let energyUsedHr = 0;
                             let gamesPlayedHr = 0;
+                            let pointsPerGame = []
 
                             rankData.slice(1).forEach((point, i) => {
                                 if (lastPoint != point.score) {
                                     energyUsed += getEnergyPerGame(pointTable, point.score - lastPoint);
-                                    gamesPlayed++;
+                                    gamesPlayed++
+                                    pointsPerGame.push(point.score - lastPoint);
                                     if (i >= lastHourIndex) {
                                         energyUsedHr += getEnergyPerGame(pointTable, point.score - lastPoint);
                                         gamesPlayedHr++;
@@ -182,7 +184,13 @@ module.exports = {
                                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                                 `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
                                 `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
-                                `Updated: <t:${timestamp}:T>`;
+                                `Last 5 Games:\n`
+
+                            for (let i = 1; i < 6; i++) {
+                                reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
+                            }
+
+                            reply += `Updated: <t:${timestamp}:T>`
 
                             let title = `${user.username} Statistics`
 
@@ -265,12 +273,13 @@ module.exports = {
 
                     let gamesPlayed = 0;
                     let gamesPlayedHr = 0;
+                    let pointsPerGame = []
 
                     rankData.slice(1).forEach((point, i) => {
                         if (lastPoint != point.score) {
                             gamesPlayed++;
+                            pointsPerGame.push(point.score - lastPoint)
                             if (i >= lastHourIndex) {
-                
                                 gamesPlayedHr++;
                             }
                         }
@@ -291,7 +300,13 @@ module.exports = {
                         `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                         `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                         `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
-                        `Updated: <t:${timestamp}:T>`;
+                        `Last 5 Games:\n`
+
+                    for(let i = 1; i < 6; i++) {
+                        reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
+                    }
+
+                    reply += `Updated: <t:${timestamp}:T>`
 
                     let title = `T${tier} Statistics`;
 
