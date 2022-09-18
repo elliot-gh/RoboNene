@@ -69,11 +69,11 @@ function getEnergyPerGame(energyTable, eventPoints)
     let index = 0;
     energyTable.forEach((points, i) => {
         if(Math.abs(eventPoints - points[1]) < Math.abs(eventPoints - energyTable[index][1])){
-            index = energyTable[i][0];
+            index = i;
         }
     });
 
-    return index;
+    return energyTable[index][0];
 }
 
 function getLastHour(sortedList, el) {
