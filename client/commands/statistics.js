@@ -68,8 +68,8 @@ function getEnergyPerGame(energyTable, eventPoints)
 {
     let index = 0;
     energyTable.forEach((points, i) => {
-        if(Math.abs(eventPoints - points) < Math.abs(eventPoints - energyTable[index])){
-            index = i;
+        if(Math.abs(eventPoints - points[1]) < Math.abs(eventPoints - energyTable[index][1])){
+            index = energyTable[i][0];
         }
     });
 
@@ -158,11 +158,19 @@ module.exports = {
 
                             rankData.slice(1).forEach((point, i) => {
                                 if (lastPoint != point.score) {
-                                    energyUsed += getEnergyPerGame(pointTable, point.score - lastPoint);
+                                    let tempEnergyTable = [];
+                                    let gain = point.score - lastPoint
+                                    energyBoost.forEach((x, i) => {
+                                        if(gain % x == 0) {
+                                            tempEnergyTable.push([i, pointTable[i]]);
+                                        }
+                                    })
+                                    let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
+                                    energyUsed += energyUsedGame;
                                     gamesPlayed++
-                                    pointsPerGame.push(point.score - lastPoint);
+                                    pointsPerGame.push(gain);
                                     if (i >= lastHourIndex) {
-                                        energyUsedHr += getEnergyPerGame(pointTable, point.score - lastPoint);
+                                        energyUsedHr += energyUsedGame;
                                         gamesPlayedHr++;
                                     }
                                 }
