@@ -225,7 +225,7 @@ module.exports = {
           });
       }
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      console.log(rankData);
+      rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
     } else if (user) {
       try {

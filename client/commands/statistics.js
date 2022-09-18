@@ -138,7 +138,6 @@ module.exports = {
                             let lastTimestamp = rankData[rankData.length - 1].timestamp;
                             let timestamps = rankData.map(x => x.timestamp);
                             let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
-                            console.log(lastHourIndex)
                             
                             let lastHour = rankData[lastHourIndex];
                             let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
@@ -241,6 +240,8 @@ module.exports = {
                             })
                         ]
                     });
+
+                    return
                 }
                 else {
                     let userId = data[data.length-1].ID
@@ -252,6 +253,7 @@ module.exports = {
                 }
                 try {
                     let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+                    rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
                     let lastTimestamp = rankData[rankData.length - 1].timestamp;
                     let timestamps = rankData.map(x => x.timestamp);
                     let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
