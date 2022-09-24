@@ -149,7 +149,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                         let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
                         energyUsed += energyUsedGame;
                         gamesPlayed++
-                        pointsPerGame.push(gain);
+                        pointsPerGame.push({points: gain, energy: energyUsedGame});
                         if (i >= lastHourIndex) {
                             energyUsedHr += energyUsedGame;
                             gamesPlayedHr++;
@@ -171,8 +171,10 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                     `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
                     `Last 5 Games:\n`
 
+                var game;
                 for (let i = 1; i < 6; i++) {
-                    reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
+                    game = pointsPerGame[pointsPerGame.length - i]
+                    reply += `**Game ${i}:** ${game.points} (Energy Used: ${game.energy})\n`
                 }
 
                 reply += `Updated: <t:${timestamp}:R>`
@@ -293,7 +295,7 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
                 `Last 5 Games:\n`
 
             for (let i = 1; i < 6; i++) {
-                reply += `Game ${i}: ${pointsPerGame[pointsPerGame.length - i]}\n`
+                reply += `**Game ${i}:** ${pointsPerGame[pointsPerGame.length - i]}\n`
             }
 
             reply += `Updated: <t:${timestamp}:R>`
