@@ -11,10 +11,10 @@ const fs = require('fs');
  * @param {Object} response from project sekai client
 */
 
-function clearFile() {
+async function clearFile() {
     try {
         if (fs.existsSync(`track.json`)) {
-            fs.unlink('track.json');
+            await fs.unlinkSync('track.json');
         }
     } catch (e) {
         console.log('Error occured while writing Tracking: ', e);
@@ -131,7 +131,7 @@ async function getCutoffs(discordClient) {
     try {
         let event = getRankingEvent().id;
         if (event == -1) {
-            clearFile();
+            await clearFile();
             return -1;
         } else {
             let tiers = readTiers();

@@ -92,7 +92,7 @@ function sanityLost(gamesPlayed, finalPoint)
     sanity /= Math.pow(1000, sanityNum)
     let suffix = sanityNum * 3;
     sanity = sanity.toFixed(6);
-    return sanity, suffix
+    return {sanity : sanity, suffix: suffix}
 }
 
 async function userStatistics(user, event, eventData, discordClient, interaction) {
@@ -160,7 +160,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
 
                 let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
 
-                let sanity, suffix = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
+                let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
 
                 let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
@@ -168,7 +168,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                     `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                     `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                     `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
-                    `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
+                    `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
                     `Last 5 Games:\n`
 
                 var game;
@@ -291,7 +291,7 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
             let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                 `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                `Sanity Lost: ${sanity}e${suffix} <:sparkles:1012729567615656066>\n` +
+                `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
                 `Last 5 Games:\n`
 
             for (let i = 1; i < 6; i++) {

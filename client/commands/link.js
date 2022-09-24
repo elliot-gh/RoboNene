@@ -46,6 +46,15 @@ const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
   return linkEmbed
 }
 
+function isAdmin(msg) {
+  try{
+    return msg.member.permissionsIn(msg.channel).has('Administrator')
+  }
+  catch {
+    return false;
+  }
+}
+
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
@@ -57,6 +66,19 @@ module.exports = {
 
     const db = discordClient.db
     const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
+    var userId = interaction.options.getString('discordid');
+
+    if (userId && isAdmin(interaction)) {
+      // userId = userId.replace(/\D/g, '');
+      console.log(userId, accountId);
+      db.prepare('REPLACE INTO users (discord_id, sekai_id) ' +
+        'VALUES(@discordId, @sekaiId)').run({
+          discordId: userId,
+          sekaiId: accountId
+        });
+      await interaction.editReply("Added")
+      return;
+    }
 
     if (!accountId) {
       // Do something because there is an empty account id input
@@ -69,7 +91,7 @@ module.exports = {
           })
         ]
       })
-      return
+      return;
     }
 
     const users = db.prepare('SELECT * FROM users WHERE ' + 

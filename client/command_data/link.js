@@ -17,6 +17,12 @@ module.exports = {
         'name': 'id',
         'required': true,
         'description': 'The ID of the Project Sekai account you are trying to link.'
+      },
+      {
+        'type': 'string',
+        'name': 'discordid',
+        'required': false,
+        'description': 'The Discord ID of the account you are trying to link. (ADMIN ONLY)'
       }
     ]
   },

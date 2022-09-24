@@ -135,9 +135,11 @@ module.exports = {
 
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
-      let lastHourIndex = getLastHour(timestamps, timestamp - HOUR);
-      let timestampIndex = timestamps[lastHourIndex]
       let lastTimestamp = timestamps[timestamps.length - 1]
+
+      let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+      let timestampIndex = timestamps[lastHourIndex]
+      
 
       for(let i = 1; i < 101; i++) {
         let idData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
