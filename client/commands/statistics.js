@@ -164,7 +164,8 @@ async function userStatistics(user, event, eventData, discordClient, interaction
 
                 let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
-                let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+                    `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                     `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                     `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                     `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
@@ -288,7 +289,8 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
 
             let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
 
-            let reply = `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+            let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+                `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                 `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                 `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                 `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
