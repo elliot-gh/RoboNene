@@ -131,41 +131,35 @@ module.exports = {
           tier: 1
         });
 
-      let lastHourCutoffs = []
-
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
       let lastTimestamp = timestamps[timestamps.length - 1]
 
       let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
       let timestampIndex = timestamps[lastHourIndex]
-      
 
-      for(let i = 1; i < 101; i++) {
-        let idData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-          'WHERE (EventID=@eventID AND Timestamp=@timestamp AND Tier=@tier)').all({
-            eventID: event.id,
-            timestamp: lastTimestamp,
-            tier: i
-          });
-        if(idData.length > 0) {
-          let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-            'WHERE (EventID=@eventID AND Timestamp=@timestamp AND ID=@id)').all({
-              eventID: event.id,
-              timestamp: timestampIndex,
-              id: idData[0].ID
-          });
+      let lastHourCutoffs = []
+      let userIds = []
 
-          if (lastHourData.length > 0) {
-            lastHourCutoffs.push(lastHourData[0].Score);
-          } else {
-            lastHourCutoffs.push(-1);
-          }
-        }
-        else {
-          lastHourCutoffs.push(-1);
-        }
+      for(let i = 0; i < 100; i++) {
+        lastHourCutoffs.push(-1)
+        userIds.push(rankingData[i].userId)
       }
+
+      let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: timestampIndex,
+        });
+
+      lastHourData.forEach(data => {
+        // console.log(data.ID)
+        let index = userIds.indexOf(data.ID)
+
+        if (index != -1) {
+          lastHourCutoffs[index] = data.Score;
+        }
+      });
 
       let mobile = false;
 
