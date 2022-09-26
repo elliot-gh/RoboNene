@@ -14,6 +14,10 @@ bonk.json
 backup bonk.json
 track.json
 blessings.json
+silver.json
+
+# silver
+silver.js
 
 # logs, databses, and game data
 /logs
