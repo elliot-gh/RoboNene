@@ -22,6 +22,7 @@ const GAME_CONSTANTS = {
     "events",
     "eventCards",
     "cards",
+    "cardEpisodes",
     "musics",
     "eventDeckBonuses"
   ]
