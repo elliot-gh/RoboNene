@@ -7,6 +7,7 @@ const fs = require('fs');
 
 const MASTERYRANKREWARDS = [0, 50, 100, 150, 200];
 const V2MASTERYREWARDS = [0.1, 0.2, 1, 1.5, 2];
+const CARDRARITIES = ["rarity_1", "rarity_2", "rarity_3", "rarity_birthday", "rarity_4"]
 
 /**
  * @typedef {Object} Team
@@ -65,7 +66,7 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
     }
     
     let id = gameCharacters.find((char) => char.gameCharacterId == data.characterId && char.unit == group).id;
-    
+
     return {
         baseTalent : talent,
         talent : talent,
@@ -73,8 +74,9 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
         group : group,
         characterId: data.characterId,
         unitId: id,
+        cardId: card.cardId,
         mastery: card.masterRank,
-        rarity: card.rarity
+        rarity: CARDRARITIES.indexOf(data.cardRarityType)
     };
 };
 
@@ -139,7 +141,7 @@ const getCharacterRanks = (cards, data) => {
     });
 };
 
-const getEventBonus = (cards, eventBonusCards, eventID) => {
+const getEventBonus = (cards, eventBonusCards, eventCards, eventID) => {
     let eventBonus = 0;
     //Look for a perfect match
     cards.forEach(card => {
@@ -154,12 +156,21 @@ const getEventBonus = (cards, eventBonusCards, eventID) => {
         else {
             bonus = eventBonusCards.find(param => {
                 if (param.eventId == eventID) {
-                    return (param.gameCharacterUnitId === card.unitId || param.cardAttr === card.type) && param.bonusRate < 50;
+                    return (param.gameCharacterUnitId === card.unitId || param.cardAttr === card.type) && param.bonusRate < 30;
                 }
             });
             if (bonus) {
                 eventBonus += bonus.bonusRate;
             }
+        }
+
+        let gachaBonus = eventCards.find(param => {
+            if (param.eventId == eventID) {
+                return param.cardId === card.cardId;
+            }
+        })
+        if (gachaBonus) {
+            eventBonus += gachaBonus.bonusRate;
         }
 
         if (eventID >= 36) {
@@ -179,6 +190,7 @@ const calculateTeam = (data, eventID) => {
     const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
     const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
     const eventBonusCards = JSON.parse(fs.readFileSync('./sekai_master/eventDeckBonuses.json'));
+    const eventCards = JSON.parse(fs.readFileSync('./sekai_master/eventCards.json'));
     const episodes = JSON.parse(fs.readFileSync('./sekai_master/cardEpisodes.json'));
     const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacterUnits.json'));
     let deck = data.userDecks[0];
@@ -229,7 +241,7 @@ const calculateTeam = (data, eventID) => {
     let totalTalent = 0;
 
     cardData.forEach(card => totalTalent += card.talent);
-    let eventBonus = getEventBonus(cardData, eventBonusCards, eventID);
+    let eventBonus = getEventBonus(cardData, eventBonusCards, eventCards, eventID);
 
     return {
         talent: totalTalent,
