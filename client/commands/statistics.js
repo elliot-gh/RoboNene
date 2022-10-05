@@ -115,6 +115,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                 targetUserId: userData[0].sekai_id,
                 lowerLimit: 0
             }, async (response) => {
+                rankData.unshift({ timestamp: eventData.startAt, score: 0})
                 rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
                 let lastTimestamp = rankData[rankData.length - 1].timestamp;
                 let timestamps = rankData.map(x => x.timestamp);
@@ -138,7 +139,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                 let pointsPerGame = []
 
                 rankData.slice(1).forEach((point, i) => {
-                    if (lastPoint < point.score) {
+                    if (lastPoint < point.score && point.score - lastPoint >= 100) {
                         let tempEnergyTable = [];
                         let gain = point.score - lastPoint
                         energyBoost.forEach((x, i) => {
@@ -149,7 +150,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                         let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
                         energyUsed += energyUsedGame;
                         gamesPlayed++
-                        pointsPerGame.push({points: gain, energy: energyUsedGame});
+                        pointsPerGame.push({points: gain, energy: energyUsedGame, timestamp: parseInt(point.timestamp/1000)});
                         if (i >= lastHourIndex) {
                             energyUsedHr += energyUsedGame;
                             gamesPlayedHr++;
@@ -170,19 +171,21 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                     `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                     `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
                     `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
+                    `Estimated Talent: ${Math.round(teamData.talent)}\n` +
+                    `Estimated Event Bonus: ${(teamData.eventBonus * 100).toFixed(2)}%\n` +
                     `Last 5 Games:\n`
 
                 var game;
-                for (let i = 1; i < 6; i++) {
+                for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
                     game = pointsPerGame[pointsPerGame.length - i]
-                    reply += `**Game ${i}:** ${game.points} (Energy Used: ${game.energy})\n`
+                    reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> (Energy Used: ${game.energy})\n`
                 }
 
                 reply += `Updated: <t:${timestamp}:R>`
 
                 let title = `${user.username} Statistics`
 
-                if (user.id == '475083312772415489') {
+                if (user.id == '475083312772415489' || user.id == '327997209666912256') {
                     reply += '\nPeople Killed: 1';
                 }
 
@@ -252,78 +255,86 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
         lowerLimit: 0
     }, async (response) => {
         let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-        discordClient.addPrioritySekaiRequest('ranking', {
-            eventId: event,
-            targetRank: tier,
-            lowerLimit: 0
-        }, async (response) => {
-            rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score']});
-            rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-            let lastTimestamp = rankData[rankData.length - 1].timestamp;
-            let timestamps = rankData.map(x => x.timestamp);
-            let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+        rankData.unshift({ timestamp: eventData.startAt, score: 0 })
+        rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
+        rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+            
+        let lastTimestamp = rankData[rankData.length - 1].timestamp;
+        let timestamps = rankData.map(x => x.timestamp);
+        let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
 
-            let lastHour = rankData[lastHourIndex];
-            let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+        let lastHour = rankData[lastHourIndex];
+        let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
 
-            let lastPoint = rankData[0].score;
+        let lastPoint = rankData[0].score;
 
-            let gamesPlayed = 0;
-            let gamesPlayedHr = 0;
-            let pointsPerGame = []
+        let gamesPlayed = 0;
+        let gamesPlayedHr = 0;
+        let pointsPerGame = []
+        let energyPossibilities = energyBoost.map((x) => 0)
+        let energyPossiblitiesHour = energyBoost.map((x) => 0)
 
-            rankData.slice(1).forEach((point, i) => {
-                if (lastPoint < point.score) {
-                    gamesPlayed++;
-                    pointsPerGame.push(point.score - lastPoint)
-                    if (i >= lastHourIndex) {
-                        gamesPlayedHr++;
+        rankData.slice(1).forEach((point, i) => {
+            if (lastPoint < point.score && point.score - lastPoint >= 100) {
+                let gain = point.score - lastPoint
+                energyBoost.forEach((x, idx) => {
+                    if(x == 1) {}
+                    else if (gain % x == 0 && gain < 2000 * x) {
+                        energyPossibilities[idx] += 1;
+                        if (i >= lastHourIndex) {
+                            energyPossiblitiesHour[idx] += 1;
+                        }
                     }
+                })
+                gamesPlayed++;
+                pointsPerGame.push({ points: gain, timestamp: parseInt(point.timestamp / 1000) });
+                if (i >= lastHourIndex) {
+                    gamesPlayedHr++;
                 }
-                lastPoint = point.score;
-            });
-
-            let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
-
-            let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
-
-            let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
-
-            let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
-                `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-                `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-                `Average Score per Game over the hour: ` + scorePerGame + '\n' +
-                `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
-                `Last 5 Games:\n`
-
-            for (let i = 1; i < 6; i++) {
-                reply += `**Game ${i}:** ${pointsPerGame[pointsPerGame.length - i]}\n`
             }
-
-            reply += `Updated: <t:${timestamp}:R>`
-
-            let title = `T${tier} ${response["rankings"][0].name} Statistics`;
-
-            await interaction.editReply({
-                embeds: [
-                    generateEmbed({
-                        name: title,
-                        content: {
-                            'type': 'Statistics',
-                            'message': reply
-                        },
-                        client: discordClient.client
-                    })
-                ]
-            });
-        }, (err) => {
-            discordClient.logger.log({
-                level: 'error',
-                message: err.toString()
-            });
+            lastPoint = point.score;
         });
-    },
-    (err) => {
+
+        let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
+
+        let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
+
+        let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+
+        let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
+        let estimatedEnergyHour = energyPossiblitiesHour.indexOf(Math.max(...energyPossiblitiesHour));
+
+        let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+            `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+            `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+            `Average Score per Game over the hour: ` + scorePerGame + '\n' +
+            `Estimated Energy usage: ${estimatedEnergy}\n` +
+            `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
+            `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
+            `Last 5 Games:\n`
+
+        for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
+            let game = pointsPerGame[pointsPerGame.length - i]
+            reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> \n`
+        }
+
+        reply += `Updated: <t:${timestamp}:R>`
+
+        let title = `T${tier} ${response["rankings"][0].name} Statistics`;
+
+        await interaction.editReply({
+            embeds: [
+                generateEmbed({
+                    name: title,
+                    content: {
+                        'type': 'Statistics',
+                        'message': reply
+                    },
+                    client: discordClient.client
+                })
+            ]
+        });
+    }, (err) => {
         discordClient.logger.log({
             level: 'error',
             message: err.toString()

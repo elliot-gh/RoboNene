@@ -185,7 +185,7 @@ module.exports = {
       return
     }
 
-    const eventName = getEventName(event.id)
+    const eventName = getEventName( p.id)
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
@@ -225,6 +225,7 @@ module.exports = {
           });
       }
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      rankData.unshift({ timestamp: event.startAt, score: 0 })
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
     } else if (user) {
@@ -238,6 +239,7 @@ module.exports = {
         {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+          rankData.unshift({ timestamp: event.startAt, score: 0 })
           postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, discordClient);
         }
         else
