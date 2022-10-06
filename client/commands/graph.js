@@ -185,7 +185,7 @@ module.exports = {
       return
     }
 
-    const eventName = getEventName( p.id)
+    const eventName = getEventName(event.id)
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
