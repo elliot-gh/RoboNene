@@ -92,9 +92,9 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
 
   rankData.forEach(point => {
     if(point.score > lastPoint) {
-      if (point.score - lastPoint < 75000 && point.score - lastPoint >= 100)
+      let gain = point.score - lastPoint
+      if (gain < 75000 && gain >= 100)
       {
-        let gain = point.score - lastPoint
         pointsPerGame.push(gain);
         energyBoost.forEach((x, idx) => {
           if (x == 1) { }
