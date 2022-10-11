@@ -67,7 +67,8 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   }
 
   graphData = []
-  const event = discordClient.getCurrentEvent()
+  const event = discordClient.getCurrentEvent();
+  tier = ensureASCII(tier);
 
   rankData.forEach(point => {
     graphData.push({
@@ -83,7 +84,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
       'type': 'line', 
       'data': {
         'datasets': [{
-          'label': `${ensureASCII(tier)}`, 
+          'label': `${tier}`, 
           "fill": false,
           'data': graphData
         }]
