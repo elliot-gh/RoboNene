@@ -216,45 +216,47 @@ async function userStatistics(user, event, eventData, discordClient, interaction
 }
 
 async function tierStatistics(tier, event, eventData, discordClient, interaction) {
-    var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-        'WHERE (Tier=@tier AND EventID=@eventID)').all({
-            tier: tier,
-            eventID: event.id
-        });
-    if (data.length == 0) {
-        let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
 
-        let title = `Tier Not Found`;
-
-        await interaction.editReply({
-            embeds: [
-                generateEmbed({
-                    name: title,
-                    content: {
-                        'type': 'ERROR',
-                        'message': reply
-                    },
-                    client: discordClient.client
-                })
-            ]
-        });
-
-        return
-    }
-    else {
-        let userId = data[data.length - 1].ID
-        data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-            'WHERE (ID=@id AND EventID=@eventID)').all({
-                id: userId,
-                eventID: event.id
-            });
-    }
     discordClient.addPrioritySekaiRequest('ranking', {
         eventId: event.id,
         targetRank: tier,
         lowerLimit: 0
     }, async (response) => {
-        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+        let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND ID=@id)').all({
+                id: response['rankings'][0]['userId'],
+                eventID: event.id
+            });
+
+        if (data.length == 0) {
+            let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
+            let title = `Tier Not Found`;
+
+            await interaction.editReply({
+                embeds: [
+                    generateEmbed({
+                        name: title,
+                        content: {
+                            'type': 'ERROR',
+                            'message': reply
+                        },
+                        client: discordClient.client
+                    })
+                ]
+            });
+
+            return
+        };
+
+        let points = new Set()
+        let rankData = [];
+
+        data.forEach(x => {
+            if(!points.has(x.Score)){
+                rankData.push({ timestamp: x.Timestamp, score: x.Score })
+                points.add(x.Score)
+            }
+        })
         rankData.unshift({ timestamp: eventData.startAt, score: 0 })
         rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
@@ -273,10 +275,16 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
         let pointsPerGame = []
         let energyPossibilities = energyBoost.map((x) => 0)
         let energyPossiblitiesHour = energyBoost.map((x) => 0)
+        let timestampIndex = 0;
+        let movingWindowSpeeds = []
 
         rankData.slice(1).forEach((point, i) => {
             if (lastPoint < point.score && point.score - lastPoint >= 100) {
                 let gain = point.score - lastPoint
+                let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
+                timestamps = timestamps.slice(windowIndex);
+                timestampIndex += windowIndex;
+                movingWindowSpeeds.push(point.score - rankData[timestampIndex].score)
                 energyBoost.forEach((x, idx) => {
                     if(x == 1) {}
                     else if (gain % x == 0 && gain < 2000 * x) {
@@ -303,13 +311,16 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
 
         let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
         let estimatedEnergyHour = energyPossiblitiesHour.indexOf(Math.max(...energyPossiblitiesHour));
+        let peakSpeed = Math.max(...movingWindowSpeeds);
 
+        //Ignore this entire section
         let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
             `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
             `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
             `Average Score per Game over the hour: ` + scorePerGame + '\n' +
             `Estimated Energy usage: ${estimatedEnergy}\n` +
             `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
+            `Peak Speed over an hour: ${peakSpeed}\n` + 
             `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
             `Last 5 Games:\n`
 
