@@ -89,6 +89,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   let pointsPerGame = [];
   let energyPossibilities = energyBoost.map((x) => 0)
   let lastPoint = 0;
+  tier = ensureASCII(tier);
 
   rankData.forEach(point => {
     if(point.score > lastPoint) {
@@ -106,6 +107,19 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
       lastPoint = point.score;
     }
   })
+
+  if(pointsPerGame.length == 0) {
+    await interaction.editReply({
+      embeds: [
+        generateEmbed({
+          name: COMMAND.INFO.name,
+          content: COMMAND.CONSTANTS.NO_DATA_ERR,
+          client: discordClient.client
+        })
+      ]
+    });
+    return
+  }
 
   let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
   let binsize = Math.max(5, energyBoost[estimatedEnergy]);
