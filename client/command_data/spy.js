@@ -10,7 +10,7 @@ module.exports = {
     'name': 'spy',
     'utilization': '/spy',
     'description': 'Get information of any position on the leaderboard.',
-    'ephemeral': false,
+    'ephemeral': true,
     'subcommands': [
       {
         'name': 'player',
