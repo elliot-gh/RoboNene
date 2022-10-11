@@ -166,6 +166,9 @@ class DiscordClient {
       '(EventID INTEGER, Tier TEXT, Timestamp INTEGER, Score INTEGER, ID INTEGER,' +
       'PRIMARY KEY(EventID, Tier, Timestamp))').run();
 
+    //Add an index to cutoffs
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS IDs ON cutoffs (ID, Timestamp, Score)').run();
+
     // Initialize User Tracking
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
       '(discord_id TEXT, Tier INTEGER, EventID INTEGER,' +
