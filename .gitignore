@@ -8,6 +8,7 @@
 
 # config
 config.json
+ecosystem.config.js
 
 # bonk
 bonk.json
@@ -15,6 +16,8 @@ backup bonk.json
 track.json
 blessings.json
 silver.json
+mack.js
+mack.json
 
 # silver
 silver.js
