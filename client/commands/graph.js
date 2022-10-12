@@ -163,6 +163,52 @@ function getEventName(eventID)
   return data[currentEventIdx].name
 }
 
+async function noDataErrorMessage(interaction, discordClient) {
+  let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
+  let title = `Tier Not Found`;
+
+  await interaction.editReply({
+    embeds: [
+      generateEmbed({
+        name: title,
+        content: {
+          'type': 'ERROR',
+          'message': reply
+        },
+        client: discordClient.client
+      })
+    ]
+  });
+  return;
+}
+
+async function sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient) {
+  discordClient.addPrioritySekaiRequest('ranking', {
+    eventId: eventId,
+    targetRank: tier,
+    lowerLimit: 0
+  }, async (response) => {
+
+    let userId = response['rankings'][0]['userId']//Get the last ID in the list
+    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+      'WHERE (ID=@id AND EventID=@eventID)').all({
+        id: userId,
+        eventID: eventId
+      });
+    if (data.length > 0) {
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 })
+      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
+      rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, discordClient);
+    } else {
+      noDataErrorMessage(interaction, discordClient)
+    };
+  }, (err) => {
+    console.log(err);
+  });
+};
+
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
@@ -199,36 +245,13 @@ module.exports = {
           eventID: event.id
         });
       if (data.length == 0) {
-          let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
+          
+        noDataErrorMessage(interaction, discordClient);
+        return;
 
-          let title = `Tier Not Found`;
-
-          await interaction.editReply({
-            embeds: [
-              generateEmbed({
-                name: title,
-                content: {
-                  'type': 'ERROR',
-                  'message': reply
-                },
-                client: discordClient.client
-              })
-            ]
-          });
-
-          return;
       } else {
-        let userId = data[data.length - 1].ID
-        data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-          'WHERE (ID=@id AND EventID=@eventID)').all({
-            id: userId,
-            eventID: event.id
-          });
+        sendTierRequest(event.id, eventName, event, tier, interaction, discordClient)
       }
-      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      rankData.unshift({ timestamp: event.startAt, score: 0 })
-      rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
     } else if (user) {
       try {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
