@@ -40,18 +40,28 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
     var talent = 0;
 
     //Get Talent for each parameter
-    data.cardParameters.filter((param) => 
-    param.cardLevel === card.level)
-        .map((param) => talent += param.power);
+    for(let i = 1; i <= 3; i++) {
+        data.cardParameters.filter((param) =>
+            param.cardLevel === card.level && param.cardParameterType === `param${i}`)
+            .map((param) => {
+                talent += param.power
+            });
+    }
 
-    talent += card.specialTrainingStatus === 'done' ? data.specialTrainingPower1BonusFixed * 3 : 0;
+    talent += card.specialTrainingStatus === 'done' ? data.specialTrainingPower1BonusFixed
+                                                    + data.specialTrainingPower2BonusFixed
+                                                    + data.specialTrainingPower3BonusFixed : 0;
     if(card.episodes[0].scenarioStatus == 'already_read') {
         let param = cardEpisodes.find((param) => param.cardId === card.cardId && param.seq === 1);
-        talent += param.power1BonusFixed * 3;
+        talent += param.power1BonusFixed;
+        talent += param.power2BonusFixed;
+        talent += param.power3BonusFixed;
     }
     if (card.episodes[1].scenarioStatus == 'already_read') {
         let param = cardEpisodes.find((param) => param.cardId === card.cardId && param.seq === 2);
-        talent += param.power1BonusFixed * 3;
+        talent += param.power1BonusFixed;
+        talent += param.power2BonusFixed;
+        talent += param.power3BonusFixed;
     }
 
     talent += card.masterRank * MASTERYRANKREWARDS[data.rarity] * 3;
@@ -93,7 +103,7 @@ const getAreaItemBonus = (cards, data, areaItemLevels) => {
         });
 
         areaItemBuffs.forEach(element => {
-            card.talent += card.baseTalent * element.power1BonusRate / 100.0;
+            card.talent += Math.round(card.baseTalent * element.power1BonusRate / 100.0);
         });
     });
 };
@@ -222,7 +232,7 @@ const calculateTeam = (data, eventID) => {
         }
     });
 
-    if (type) {
+    if (group) {
         let buff = getGroupAreaItem(group, data, areaItemLevels);
         cardData.forEach(card => {
             card.talent += card.baseTalent * buff;
