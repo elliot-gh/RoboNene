@@ -21,6 +21,12 @@ module.exports = {
             'name': 'tier',
             'required': true,
             'description': 'The cutoff tier specified',
+          },
+          {
+            'type': 'integer',
+            'name': 'binsize',
+            'required': false,
+            'description': 'Custom size of bin on the histogram'
           }
         ]
       },
@@ -33,6 +39,12 @@ module.exports = {
           'name': 'user',
           'required': true,
           'description': 'A linked User that has been tracked'
+          },
+          {
+            'type': 'integer',
+            'name': 'binsize',
+            'required': false,
+            'description': 'Custom size of bin on the histogram'
           }
         ]
       }
