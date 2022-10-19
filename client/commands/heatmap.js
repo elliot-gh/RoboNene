@@ -401,7 +401,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
       rankData.unshift({ timestamp: eventData.startAt, score: 0 })
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, eventData, discordClient);
+      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`, rankData, eventData, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient)
     };
@@ -465,7 +465,7 @@ module.exports = {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, eventData, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, discordClient);
         }
         else
         {
