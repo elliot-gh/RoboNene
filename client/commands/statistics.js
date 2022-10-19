@@ -137,11 +137,17 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                 let energyUsedHr = 0;
                 let gamesPlayedHr = 0;
                 let pointsPerGame = []
+                let timestampIndex = 0;
+                let movingWindowSpeeds = []
 
                 rankData.slice(1).forEach((point, i) => {
                     if (lastPoint < point.score && point.score - lastPoint >= 100) {
                         let tempEnergyTable = [];
-                        let gain = point.score - lastPoint
+                        let gain = point.score - lastPoint;
+                        let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
+                        timestamps = timestamps.slice(windowIndex);
+                        timestampIndex += windowIndex;
+                        movingWindowSpeeds.push(point.score - rankData[timestampIndex].score);
                         energyBoost.forEach((x, i) => {
                             if (gain % x == 0) {
                                 tempEnergyTable.push([i, pointTable[i]]);
@@ -164,12 +170,14 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                 let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score)
 
                 let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+                let peakSpeed = Math.max(...movingWindowSpeeds);
 
                 let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
                     `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
                     `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
                     `Average Score per Game over the hour: ` + scorePerGame + '\n' +
                     `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
+                    `Peak Speed over an hour: ${peakSpeed}\n` + 
                     `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
                     `Estimated Talent: ${Math.round(teamData.talent)}\n` +
                     `Estimated Event Bonus: ${(teamData.eventBonus * 100).toFixed(2)}%\n` +
@@ -317,10 +325,10 @@ async function tierStatistics(tier, event, eventData, discordClient, interaction
         let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
             `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
             `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-            `Average Score per Game over the hour: ` + scorePerGame + '\n' +
+            `Average Score per Game over the hour: ${scorePerGame}\n` +
+            `Peak Speed over an hour: ${peakSpeed}\n` + 
             `Estimated Energy usage: ${estimatedEnergy}\n` +
             `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
-            `Peak Speed over an hour: ${peakSpeed}\n` + 
             `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
             `Last 5 Games:\n`
 
