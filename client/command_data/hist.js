@@ -2,7 +2,7 @@
  * @fileoverview Command Data & Constants Related to the /hist command
  * These constants are used to dynamically generate a slash command on discord.
  * This File also contains the constants and error values used exclusively in the /hist command.
- * @author Potor10
+ * @author Ai0796
  */
 
 module.exports = {
@@ -59,7 +59,7 @@ module.exports = {
   
     'NO_DATA_ERR': {
       'type': 'Error',
-      'message': 'Please cloose a different cutoff tier'
+      'message': 'No data found (have you played a game after linking?)'
     },
   
     'SEKAI_BEST_HOST': 'api.sekai.best'

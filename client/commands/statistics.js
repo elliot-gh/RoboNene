@@ -1,6 +1,6 @@
 /**
- * @fileoverview Display a graph of the previous ranking trend
- * @author Potor10
+ * @fileoverview Displays statistics of a user or tier
+ * @author Ai0796
  */
 
 const { MessageEmbed } = require('discord.js');

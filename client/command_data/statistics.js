@@ -1,6 +1,6 @@
 /**
  * @fileoverview Used to get statistics about a user
- * @author Potor10
+ * @author Ai0796
  */
 
 module.exports = {

@@ -1,7 +1,6 @@
 /**
- * @fileoverview The main output when users call for the /about command
- * Will create a scrollable leaderboard elaborating about the bot and other features
- * @author Potor10
+ * @fileoverview Allows you to bonk a user
+ * @author Ai0796
  */
 
 const { MessageActionRow, MessageButton } = require('discord.js');
