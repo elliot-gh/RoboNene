@@ -27,6 +27,18 @@ module.exports = {
             'name': 'binsize',
             'required': false,
             'description': 'Custom size of bin on the histogram'
+          },
+          {
+            'type': 'integer',
+            'name': 'min',
+            'required': false,
+            'description': 'Custom maximum value on the histogram'
+          },
+          {
+            'type': 'integer',
+            'name': 'max',
+            'required': false,
+            'description': 'Custom minimum value on the histogram'
           }
         ]
       },
@@ -45,6 +57,18 @@ module.exports = {
             'name': 'binsize',
             'required': false,
             'description': 'Custom size of bin on the histogram'
+          },
+          {
+            'type': 'integer',
+            'name': 'min',
+            'required': false,
+            'description': 'Custom maximum value on the histogram'
+          },
+          {
+            'type': 'integer',
+            'name': 'max',
+            'required': false,
+            'description': 'Custom minimum value on the histogram'
           }
         ]
       }

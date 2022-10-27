@@ -70,7 +70,7 @@ function ensureASCII(str) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, binSize, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, binSize, min, max, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -92,10 +92,13 @@ const postQuickChart = async (interaction, tier, rankData, binSize, discordClien
   let lastPoint = 0;
   tier = ensureASCII(tier);
 
+  const highBound = Math.min(max || 75000, 75000)
+  const lowBound = Math.max(min || 100, 100)
+
   rankData.forEach(point => {
     if(point.score > lastPoint) {
       let gain = point.score - lastPoint
-      if (gain < 75000 && gain >= 100)
+      if (gain < highBound && gain >= lowBound)
       {
         pointsPerGame.push(gain);
         energyBoost.forEach((x, idx) => {
@@ -129,7 +132,9 @@ const postQuickChart = async (interaction, tier, rankData, binSize, discordClien
 
   let layout = {
     title: tier,
-    xaxis: {title: "Event Points"},
+    xaxis: {
+      title: "Event Points"
+    },
     yaxis: {title: "Count"},
     bargap: 0.25,
     template: {
@@ -220,8 +225,8 @@ const postQuickChart = async (interaction, tier, rankData, binSize, discordClien
         },
         autobinx: false,
         xbins: {
-          start: Math.min(...pointsPerGame),
-          end: Math.max(...pointsPerGame),
+          start: min || Math.min(...pointsPerGame),
+          end: max || Math.max(...pointsPerGame),
           size: binsize
         },
       }
@@ -290,7 +295,7 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendTierRequest(eventId, eventName, eventData, tier, binSize, interaction, discordClient) {
+async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min, max, interaction, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventId,
     targetRank: tier,
@@ -308,7 +313,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, int
       rankData.unshift({ timestamp: eventData.startAt, score: 0 })
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, discordClient);
+      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient)
     };
@@ -346,6 +351,8 @@ module.exports = {
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
     const binSize = interaction.options.getInteger('binsize');
+    const min = interaction.options.getInteger('min');
+    const max = interaction.options.getInteger('max');
 
     if(tier)
     {
@@ -359,7 +366,7 @@ module.exports = {
         return
       }
       else {
-        sendTierRequest(event.id, eventName, eventData, tier, binSize, interaction, discordClient)
+        sendTierRequest(event.id, eventName, eventData, tier, binSize, min, max, interaction, discordClient)
       }
     } else if (user) {
       try {
@@ -373,7 +380,8 @@ module.exports = {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, binSize, discordClient);
+          let title = `${eventName} ${name} Event Points`;
+          postQuickChart(interaction, title, rankData, binSize, min, max, discordClient);
         }
         else
         {
