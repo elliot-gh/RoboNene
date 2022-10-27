@@ -270,7 +270,6 @@ const generateCutoff = async ({ interaction, event,
 
       var amtThrough = 0;
 
-      console.log(smoothingPoints.length)
       // Calculate the % through the event, we will use this as a weight for the estimation
       // If no indexes then crash and set amtThrough to 0
       if (smoothingPoints.length > 0) {

@@ -35,8 +35,6 @@ function addTrack(tier, score, mention, channel) {
             trackFile[tier][score] = [[channel, mention]];
         }
 
-        console.log(trackFile);
-
         fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
