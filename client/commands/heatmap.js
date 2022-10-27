@@ -161,6 +161,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
     yperiod: 0,
     zsmooth: false, 
     hoverongaps: false,
+    "reversescale": true,
     xgap: 0.3,
     ygap: 0.3,
   };
