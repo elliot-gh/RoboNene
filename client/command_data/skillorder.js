@@ -27,7 +27,8 @@ module.exports = {
                     ["Viva Happy", 11],
                     ["ODDS&ENDS", 117],
                     ["Dramaturgy", 91],
-                    ["Ready Steady", 54]
+                    ["Ready Steady", 54],
+                    ["Gunjo Sanka", 141]
                 ]
             }
         ]
