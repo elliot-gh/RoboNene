@@ -1,7 +1,7 @@
 /**
  * @fileoverview An implementation designed to efficiently generate an embed for a
- * leaderboard display, given ranking data
- * @author Potor10
+ * leaderboard display, given ranking data along with change over the hour
+ * @author Ai0796
  */
 
 const { RESULTS_PER_PAGE } = require('../../constants');
