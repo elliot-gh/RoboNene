@@ -8,28 +8,78 @@ const { MessageEmbed } = require('discord.js');
 const { RESULTS_PER_PAGE, NENE_COLOR, FOOTER } = require('../constants');
 const RANKING_RANGE = require('./trackRankingRange.json')
 const fs = require('fs');
-const generateRankingText = require('../client/methods/generateRankingText')
+const generateRankingText = require('../client/methods/generateRankingTextChanges')
+
+function getLastHour(sortedList, el) {
+  for (let i = 0; i < sortedList.length; i++) {
+    if (sortedList[i] > el) {
+      return i;
+    }
+  }
+  return 0
+}
+
+const HOUR = 3600000;
 
 /**
  * Sends an embed containing the top 20 players to specific Discord servers that have
  * signed up for tracking updates
- * @param {Object} data a collection of the top 20 players on the leaderboard
+ * @param {Object} rankingData a collection of the top 20 players on the leaderboard
  * @param {Object} event data about the current event that is going on
  * @param {Integer} timestamp the time when the data was collected, in epochseconds
  * @param {DiscordClient} discordClient the client we are using to interact with Discord
  */
-const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
+const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) => {
   const generateTrackingEmbed = () => {
-    let leaderboardText = generateRankingText(data.slice(0, RESULTS_PER_PAGE), 0, 0)
+      let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (EventID=@eventID AND Tier=@tier)').all({
+            eventID: event.id,
+            tier: 1
+          });
+
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      let timestamps = rankData.map(x => x.timestamp);
+      let lastTimestamp = timestamps[timestamps.length - 1]
+
+      let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+      let timestampIndex = timestamps[lastHourIndex]
+
+      let lastHourCutoffs = []
+      let userIds = []
+
+      for(let i = 0; i < rankingData.length; i++) {
+        lastHourCutoffs.push(-1)
+        userIds.push(rankingData[i].userId)
+      }
+
+      let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: timestampIndex,
+        });
+
+      lastHourData.forEach(data => {
+        // console.log(data.ID)
+        let index = userIds.indexOf(data.ID)
+
+        if (index != -1) {
+          lastHourCutoffs[index] = data.Score;
+        }
+      });
+
+      let mobile = false;
+
+      let leaderboardText = generateRankingText(rankingData, 1, null, lastHourCutoffs, mobile)
+      
+      let leaderboardEmbed = new MessageEmbed()
+        .setColor(NENE_COLOR)
+        .setTitle(`${event.name}`)
+        .setDescription(`T20 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
+        .addField(`T20`, leaderboardText, false)
+        .setThumbnail(event.banner)
+        .setTimestamp()
   
-    const leaderboardEmbed = new MessageEmbed()
-      .setColor(NENE_COLOR)
-      .setTitle(`${event.name}`)
-      .addField(`**Last Updated:** <t:${Math.floor(timestamp/1000)}:R>`, leaderboardText, false)
-      .setTimestamp()
-      .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
-  
-    return leaderboardEmbed;
+      return leaderboardEmbed;
   };
   
   const send = async (target, embed) => {
@@ -51,7 +101,7 @@ const sendTrackingEmbed = async (data, event, timestamp, discordClient) => {
     });
   }
 
-  if (data.length > 0) {
+  if (rankingData.length > 0) {
     const trackingEmbed = generateTrackingEmbed()
 
     const channels = discordClient.db.prepare('SELECT * FROM tracking').all()
