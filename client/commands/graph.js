@@ -264,7 +264,7 @@ module.exports = {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
           'WHERE (id=@id AND EventID=@eventID)').all({
             id: id,
-            eventID: eventId
+            eventID: event.id
           });
         if (data.length)
         {
