@@ -95,23 +95,27 @@ function sanityLost(gamesPlayed, finalPoint)
     return {sanity : sanity, suffix: suffix}
 }
 
-async function userStatistics(user, event, eventData, discordClient, interaction) {
+async function userStatistics(user, eventId, eventData, discordClient, interaction) {
+
+    let id = discordClient.getId(user.id)
+
+    if(id == -1) {
+        interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+        return
+    }
+
     let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
-        'WHERE (discord_id=@discord_id AND EventID=@eventID)').all({
-            discord_id: user.id,
-            eventID: event.id
+        'WHERE (id=@id AND EventID=@eventID)').all({
+            id: id,
+            eventID: eventId
         });
-    let userData = discordClient.db.prepare('Select * FROM users WHERE ' +
-        'discord_id=@discordid').all({
-            discordid: user.id
-        });
-    if (data.length && userData.length) {
+    if (data.length) {
         discordClient.addPrioritySekaiRequest('profile', {
             userId: userData[0].sekai_id
         }, async (profile) => {
             let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
             discordClient.addPrioritySekaiRequest('ranking', {
-                eventId: event.id,
+                eventId: eventId,
                 targetUserId: userData[0].sekai_id,
                 lowerLimit: 0
             }, async (response) => {
@@ -124,7 +128,7 @@ async function userStatistics(user, event, eventData, discordClient, interaction
                 let lastHour = rankData[lastHourIndex];
                 let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
 
-                let teamData = calculateTeam(profile, event.id);
+                let teamData = calculateTeam(profile, eventId);
                 let score = calculateScore(teamData.talent);
                 let multiscore = score * 5;
                 let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
@@ -219,21 +223,21 @@ async function userStatistics(user, event, eventData, discordClient, interaction
         });
     }
     else {
-        interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+        interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
     }
 }
 
-async function tierStatistics(tier, event, eventData, discordClient, interaction) {
+async function tierStatistics(tier, eventId, eventData, discordClient, interaction) {
 
     discordClient.addPrioritySekaiRequest('ranking', {
-        eventId: event.id,
+        eventId: eventId,
         targetRank: tier,
         lowerLimit: 0
     }, async (response) => {
         let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
             'WHERE (EventID=@eventID AND ID=@id)').all({
                 id: response['rankings'][0]['userId'],
-                eventID: event.id
+                eventID: eventId
             });
 
         if (data.length == 0) {
@@ -384,14 +388,15 @@ module.exports = {
             return;
         }
 
-        const eventData = getEventData(event.id);
-
         const user = interaction.options.getUser('user');
         const tier = interaction.options.getInteger('tier');
+        const eventId = interaction.options.getInteger('event') || event.id
+
+        const eventData = getEventData(eventId);
 
         if (user) {
             try {
-                userStatistics(user, event, eventData, discordClient, interaction)
+                userStatistics(user, eventId, eventData, discordClient, interaction)
             } catch (err) {
             console.log(err);
             }
@@ -399,7 +404,7 @@ module.exports = {
 
         else if (tier) {
             try {
-                tierStatistics(tier, event, eventData, discordClient, interaction)
+                tierStatistics(tier, eventId, eventData, discordClient, interaction)
             } catch (err) {
                 console.log(err);
             }

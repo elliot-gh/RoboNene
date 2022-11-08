@@ -19,6 +19,12 @@ module.exports = {
                             'name': 'tier',
                             'required': true,
                             'description': 'The cutoff tier specified',
+                        },
+                        {
+                            'type': 'integer',
+                            'name': 'event',
+                            'required': false,
+                            'description': 'The event to display for',
                         }
                     ]
                 },
@@ -31,6 +37,12 @@ module.exports = {
                             'name': 'user',
                             'required': true,
                             'description': 'A linked User that has been tracked'
+                        },
+                        {
+                            'type': 'integer',
+                            'name': 'event',
+                            'required': false,
+                            'description': 'The event to display for',
                         }
                     ]
                 }

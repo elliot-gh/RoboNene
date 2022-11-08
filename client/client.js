@@ -134,9 +134,11 @@ class DiscordClient {
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
 
-    this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
-      '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, private INTEGER DEFAULT 1, ' + 
+    this.db.prepare('CREATE TABLE users ' +
+      '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
       'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run();
+
+    this.db.prepare('CREATE INDEX IF NOT EXISTS IDs ON users (discord_id, id, quiz_correct)').run();
 
     // Initialize the tracking database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
@@ -163,7 +165,7 @@ class DiscordClient {
 
     // Initialize the tracking database instance
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
-      '(EventID INTEGER, Tier TEXT, Timestamp INTEGER, Score INTEGER, ID INTEGER,' +
+      '(EventID INTEGER, Tier INTEGER, Timestamp INTEGER, Score INTEGER, ID INTEGER,' +
       'PRIMARY KEY(EventID, Tier, Timestamp))').run();
 
     //Add an index to cutoffs
@@ -171,9 +173,26 @@ class DiscordClient {
 
     // Initialize User Tracking
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
-      '(discord_id TEXT, Tier INTEGER, EventID INTEGER,' +
+      '(id INTEGER, Tier INTEGER, EventID INTEGER,' +
       'Timestamp INTEGER, Score INTEGER,' +
-      'PRIMARY KEY(discord_id, EventID, Timestamp))').run();
+      'PRIMARY KEY(id, EventID, Timestamp))').run();
+  }
+
+  /**
+   * 
+   * @param {string} discord_id users discord ID
+   * @returns {int} users unique database ID
+   */
+  getId(discord_id) {
+    let data = this.db.prepare('SELECT * FROM users ' +
+      'WHERE (discord_id=@discord_id)').all({
+        discord_id: discord_id,
+      });
+    if (data.length > 0) {
+      return data.id
+    } else {
+      return -1
+    }
   }
 
   /**
@@ -267,7 +286,7 @@ class DiscordClient {
   async runSekaiRequests(rate=10) {
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
-        const response = await apiClient.userProfile(request.params.userId, request.error);
+        const response = await apiClient.userProfile(request.params.userId);
 
         // If our response is valid we run the callback
         if (response) {
@@ -277,7 +296,7 @@ class DiscordClient {
         const queryParams = {...request.params};
         delete queryParams.eventId;
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams, request.error)
+        const response = await apiClient.eventRanking(request.params.eventId, queryParams)
 
         // If our response is valid we run the callback
         if (response) {

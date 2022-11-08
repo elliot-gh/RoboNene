@@ -16,7 +16,7 @@ const generateEmbed = require('../methods/generateEmbed');
 const { data } = require('./statistics');
 const heatmap = require('../command_data/heatmap');
 
-const Plotly = require("plotly")(plotlyUser, plotlyKey)
+const Plotly = require("plotly")(plotlyUser, plotlyKey);
 
 const HOUR = 3600000; 
 
@@ -127,8 +127,6 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
       let gain = point.score - lastPoint
       if (gain < 75000 && gain >= 100) {
         gamesPerHour += 1
-      } else if (gain >= 75000) {
-        gamesPerHour += Math.floor(gain / average);
       }
       lastPoint = point.score;
     }
@@ -392,9 +390,16 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
   }, async (response) => {
 
     let userId = response['rankings'][0]['userId']//Get the last ID in the list
-    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-      'WHERE (ID=@id AND EventID=@eventID)').all({
-        id: userId,
+    let id = discordClient.getId(user.id)
+
+    if (id == -1) {
+      interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+      return
+    }
+
+    let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
+      'WHERE (id=@id AND EventID=@eventID)').all({
+        id: id,
         eventID: eventId
       });
     if(data.length > 0) {
@@ -434,7 +439,7 @@ module.exports = {
       return
     }
 
-    const eventName = getEventName(event.id)
+    const eventName = getEventName(event.id);
     const eventData = getEventData(event.id);
 
     const tier = interaction.options.getInteger('tier');
