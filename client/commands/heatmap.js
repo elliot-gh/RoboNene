@@ -461,11 +461,19 @@ module.exports = {
       }
     } else if (user) {
       try {
+        let id = discordClient.getId(user.id)
+
+        if (id == -1) {
+          interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+          return
+        }
+
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
-          'WHERE (discord_id=@discord_id AND EventID=@eventID)').all({
-            discord_id: user.id,
+          'WHERE (id=@id AND EventID=@eventID)').all({
+            id: id,
             eventID: event.id
           });
+
         if (data.length > 0)
         {
           let name = user.username;
@@ -475,7 +483,7 @@ module.exports = {
         }
         else
         {
-          interaction.editReply({content: 'Discord User not found (are you sure that account is linked?)'})
+          interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' })
         }
       } catch (err) {
         // Error parsing JSON: ${err}`
