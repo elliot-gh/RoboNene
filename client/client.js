@@ -134,7 +134,7 @@ class DiscordClient {
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
 
-    this.db.prepare('CREATE TABLE users ' +
+    this.db.prepare('CREATE TABLE IF NOT EXISTS users ' +
       '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
       'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run();
 
@@ -189,7 +189,7 @@ class DiscordClient {
         discord_id: discord_id,
       });
     if (data.length > 0) {
-      return data.id
+      return data[0].id
     } else {
       return -1
     }
