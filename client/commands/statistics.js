@@ -109,6 +109,10 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
             id: id,
             eventID: eventId
         });
+    let userData = discordClient.db.prepare('SELECT * FROM users ' +
+        'WHERE (discord_id=@discord_id)').all({
+          discord_id: user.id,
+        });
     if (data.length) {
         discordClient.addPrioritySekaiRequest('profile', {
             userId: userData[0].sekai_id
@@ -398,7 +402,7 @@ module.exports = {
             try {
                 userStatistics(user, eventId, eventData, discordClient, interaction)
             } catch (err) {
-            console.log(err);
+                console.log(err);
             }
         }
 
