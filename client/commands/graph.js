@@ -266,7 +266,7 @@ module.exports = {
             id: id,
             eventID: event.id
           });
-        if (data.length)
+        if (data.length>0)
         {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
