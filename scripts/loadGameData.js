@@ -7,6 +7,7 @@
 const { DIR_DATA } = require('../constants');
 const https = require('https');
 const fs = require('fs');
+const { request } = require('http');
 
 // The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
@@ -43,7 +44,8 @@ const loadGameData = (idx, callback) => {
     const options = {
       host: GAME_CONSTANTS.HOST,
       path: `${GAME_CONSTANTS.PATH}${filename}.json`,
-      headers: {'User-Agent': 'request'}
+      headers: {'User-Agent': 'request'},
+      timeout: 3000
     };
   
     https.get(options, (res) => {
@@ -64,6 +66,10 @@ const loadGameData = (idx, callback) => {
           // console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`)
         }
       });
+      res.on('timeout', async () => {
+        res.destroy();
+        loadGameData(idx, callback)
+      })
     }).on('error', (err) => {});
   }
 }
