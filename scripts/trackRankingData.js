@@ -20,6 +20,7 @@ function getLastHour(sortedList, el) {
 }
 
 const HOUR = 3600000;
+const gameFilePath = 'games.json'
 
 /**
  * Sends an embed containing the top 20 players to specific Discord servers that have
@@ -39,17 +40,17 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
 
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
-      let lastTimestamp = timestamps[timestamps.length - 1]
+      let lastTimestamp = timestamps[timestamps.length - 1];
 
       let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
-      let timestampIndex = timestamps[lastHourIndex]
+      let timestampIndex = timestamps[lastHourIndex];
 
-      let lastHourCutoffs = []
-      let userIds = []
+      let lastHourCutoffs = [];
+      let userIds = [];
 
       for(let i = 0; i < rankingData.length; i++) {
-        lastHourCutoffs.push(-1)
-        userIds.push(rankingData[i].userId)
+        lastHourCutoffs.push(-1);
+        userIds.push(rankingData[i].userId);
       }
 
       let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
@@ -60,7 +61,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
 
       lastHourData.forEach(data => {
         // console.log(data.ID)
-        let index = userIds.indexOf(data.ID)
+        let index = userIds.indexOf(data.ID);
 
         if (index != -1) {
           lastHourCutoffs[index] = data.Score;
@@ -77,7 +78,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
         .setDescription(`T20 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
         .addField(`T20`, leaderboardText, false)
         .setThumbnail(event.banner)
-        .setTimestamp()
+        .setTimestamp();
   
       return leaderboardEmbed;
   };
@@ -89,7 +90,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
       const perms = guild.me.permissionsIn(channel)
       if (perms.has('SEND_MESSAGES') && perms.has('EMBED_LINKS')) {
         await channel.send({ embeds: [embed] });
-        return
+        return;
       }
     }
 
@@ -99,28 +100,32 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
       guildId: target.guild_id,
       channelId: target.channel_id
     });
-  }
+  };
+
+  const removeDuplicates = async (arr) => {
+    return [...new Set(arr)];
+  };
 
   if (rankingData.length > 0) {
-    const trackingEmbed = generateTrackingEmbed()
+    const trackingEmbed = generateTrackingEmbed();
 
-    const channels = discordClient.db.prepare('SELECT * FROM tracking').all()
+    const channels = await removeDuplicates(discordClient.db.prepare('SELECT * FROM tracking').all());
 
     channels.forEach(async (channel) => {
       if (channel.tracking_type == 2) {
-        send(channel, trackingEmbed)
+        send(channel, trackingEmbed);
       } else {
-        const nearestHour = new Date(timestamp)
+        const nearestHour = new Date(timestamp);
         nearestHour.setHours(nearestHour.getHours() + Math.round(nearestHour.getMinutes()/60));
-        nearestHour.setMinutes(0, 0, 0)
+        nearestHour.setMinutes(0, 0, 0);
     
-        if (Math.abs(nearestHour.getTime() - timestamp) <= 60000) {
-          send(channel, trackingEmbed)
+        if (Math.abs(nearestHour.getTime() - timestamp) <= 30000) {
+          send(channel, trackingEmbed);
         }
       }
-    })
+    });
   }
-}
+};
 
 /**
  * Identifies the time needed before the next check of data
@@ -133,6 +138,40 @@ const getNextCheck = () => {
 
   nextCheck.setMinutes(nextCheck.getMinutes() + 1);
   return nextCheck.getTime() - Date.now();
+};
+
+async function getGames() {
+
+  var gameFile;
+
+  try {
+    if (!fs.existsSync(gameFilePath)) {
+      gameFile = new Object();
+    }
+    else {
+      gameFile = JSON.parse(fs.readFileSync(gameFilePath, 'utf8'));
+    }
+
+    return gameFile;
+  } catch (e) {
+    console.log('Error occured while reading game tracking file: ', e);
+  }
+}
+
+async function writeGames(object) {
+  fs.writeFile(gameFilePath, JSON.stringify(object), err => {
+    if (err) {
+      console.log('Error writing game tracking file', err);
+    } else {
+      console.log(`Wrote game tracking file Successfully`);
+    }
+  });
+}
+
+async function deleteGames() {
+  if (fs.existsSync(gameFilePath)) {
+    fs.unlinkSync(gameFilePath);
+  }
 }
 
 /**
@@ -141,31 +180,48 @@ const getNextCheck = () => {
  * @param {DiscordClient} discordClient the client we are using 
  */
 const requestRanking = async (event, discordClient) => {
-  const retrieveResult = (response) => {
+  const retrieveResult = async (response) => {
     
     // TODO: Add a check here if response is not available
     // EX: { httpStatus: 403, errorCode: 'session_error', errorMessage: '' }
-    const timestamp = Date.now()
-    response.rankings.forEach(ranking => {
+    const rankingData = response.rankings;
+    const timestamp = Date.now();
+
+    let gameCache = await getGames();
+
+    rankingData.forEach((ranking) => {
       if (ranking != null && event != -1) {
         // User is already linked
         let score = ranking['score'];
         let rank = ranking['rank'];
         let id = ranking['userId'];
+        if (id in gameCache) {
+          if (score >= gameCache[id].score + 100) {
+            gameCache[id].games++;
+            gameCache[id].score = score;
+          }
+        } else {
+          gameCache[id] = {'score': score, 'games': 0};
+        }
+
+        let games = gameCache[id].games;
 
         discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
-          '(EventID, Tier, Timestamp, Score, ID) ' +
-          'VALUES(@eventID, @tier, @timestamp, @score, @id)').run({
+          '(EventID, Tier, Timestamp, Score, ID, GameNum) ' +
+          'VALUES(@eventID, @tier, @timestamp, @score, @id, @gameNum)').run({
             score: score,
             eventID: event.id,
             tier: rank,
             timestamp: timestamp,
-            id: id
+            id: id,
+            gameNum: games
           });
       }
-    })
-    sendTrackingEmbed(response.rankings, event, timestamp, discordClient)
-  }
+    });
+
+    await writeGames(gameCache);
+    sendTrackingEmbed(response.rankings, event, timestamp, discordClient);
+  };
 
   for(const idx in RANKING_RANGE) {
     // Make Priority Requests (We Need These On Time)
@@ -205,7 +261,7 @@ const getRankingEvent = () => {
     }
   }
   return { id: -1, banner: '', name: '' }
-}
+};
 
 /**
  * Continaully grabs and updates the ranking data
@@ -217,6 +273,7 @@ const trackRankingData = async (discordClient) => {
 
   // change later back to correct === -1
   if (event.id === -1) {
+    deleteGames();
     let eta_ms = getNextCheck()
     console.log(`No Current Ranking Event Active, Pausing For ${eta_ms} ms`);
     // 1 extra second to make sure event is on

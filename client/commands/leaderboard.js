@@ -9,10 +9,11 @@ const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
 const COMMAND = require('../command_data/leaderboard')
 
-const MAX_PAGE = Math.ceil(100 / RESULTS_PER_PAGE) -1
+const MAX_PAGE = Math.ceil(120 / RESULTS_PER_PAGE) -1
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
 const generateRankingText = require('../methods/generateRankingTextChanges')
+const generateAlternateRankingText = require('../methods/generateAlternateRankingText')
 const generateEmbed = require('../methods/generateEmbed') 
 
 function getLastHour(sortedList, el) {
@@ -68,8 +69,9 @@ module.exports = {
 
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
-      targetRank: 1,
-      lowerLimit: 99
+      targetRank: 61,
+      lowerLimit: 59,
+      higherLimit: 60
     }, async (response) => {
       // Check if the response is valid
       if (!response.rankings) {
@@ -136,15 +138,23 @@ module.exports = {
       let lastTimestamp = timestamps[timestamps.length - 1]
 
       let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
-      let timestampIndex = timestamps[lastHourIndex]
+      let timestampIndex = timestamps[lastHourIndex];
 
-      let lastHourCutoffs = []
-      let userIds = []
+      let lastHourCutoffs = [];
+      let gamesPlayed = [];
+      let userIds = [];
 
-      for(let i = 0; i < 100; i++) {
-        lastHourCutoffs.push(-1)
-        userIds.push(rankingData[i].userId)
+      for(let i = 0; i < 120; i++) {
+        lastHourCutoffs.push(-1);
+        gamesPlayed.push(-1);
+        userIds.push(rankingData[i].userId);
       }
+
+      let currentData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: lastTimestamp,
+        });
 
       let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
@@ -152,16 +162,27 @@ module.exports = {
           timestamp: timestampIndex,
         });
 
-      lastHourData.forEach(data => {
+      let currentGamesPlayed = currentData.map(x => {
+        return {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
+      })
+
+      lastHourData.forEach((data, i) => {
         // console.log(data.ID)
         let index = userIds.indexOf(data.ID)
 
         if (index != -1) {
           lastHourCutoffs[index] = data.Score;
+          gamesPlayed[index] = Math.max(currentGamesPlayed[i].games - data.GameNum, 0);
+          if (rankingData[index].score >= currentGamesPlayed[i].score + 100) {
+            gamesPlayed[index]++;
+          }
         }
       });
 
       let mobile = false;
+      let alt = false;
+      let offset = false;
+      var slice, sliceOffset, sliceAlt;
 
       let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
       
@@ -190,7 +211,17 @@ module.exports = {
             .setCustomId(`mobile`)
             .setLabel('MOBILE')
             .setStyle('SECONDARY')
-            .setEmoji(COMMAND.CONSTANTS.MOBILE))
+            .setEmoji(COMMAND.CONSTANTS.MOBILE),
+          new MessageButton()
+            .setCustomId(`offset`)
+            .setLabel('OFFSET')
+            .setStyle('SECONDARY')
+            .setEmoji(COMMAND.CONSTANTS.OFFSET),
+          new MessageButton()
+            .setCustomId(`alt`)
+            .setLabel('ALT')
+            .setStyle('SECONDARY')
+            .setEmoji(COMMAND.CONSTANTS.ALT))
 
       const leaderboardMessage = await interaction.editReply({ 
         embeds: [leaderboardEmbed], 
@@ -200,7 +231,11 @@ module.exports = {
 
       // Create a filter for valid responses
       const filter = (i) => {
-        return i.customId == `prev` || i.customId == `next` || i.customId == `mobile`
+        return i.customId == `prev` || 
+        i.customId == `next` || 
+        i.customId == `mobile` || 
+        i.customId == `alt` ||
+        i.customId == `offset`
       }
 
       const collector = leaderboardMessage.createMessageComponentCollector({ 
@@ -226,23 +261,48 @@ module.exports = {
 
         if (i.customId === `prev`) {
           if (page == 0) {
-            page = MAX_PAGE
+            page = MAX_PAGE;
           } else {
             page -= 1;
           }
         } else if (i.customId === `next`) {
           if (page == MAX_PAGE) {
-            page = 0
+            page = 0;
           } else {
             page += 1;
           }
         } else if (i.customId === `mobile`) {
-          mobile = !mobile
+          mobile = !mobile;
+        } else if (i.customId === `alt`) {
+          alt = !alt;
+        } else if (i.customId === `offset`) {
+          offset = !offset;
         }
 
         start = page * RESULTS_PER_PAGE;
         end = start + RESULTS_PER_PAGE;
-        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
+        if (offset) {
+          start += 10;
+          end += 10;
+          end %= 120;
+        }
+
+        if(start > end) {
+          slice = rankingData.slice(start, 120).concat(rankingData.slice(0, end));
+          sliceOffset = lastHourCutoffs.slice(start, 120).concat(lastHourCutoffs.slice(0, end));
+          sliceAlt = gamesPlayed.slice(start, 120).concat(gamesPlayed.slice(0, end));
+        }
+        else {
+          slice = rankingData.slice(start, end);
+          sliceOffset = lastHourCutoffs.slice(start, end);
+          sliceAlt = gamesPlayed.slice(start, end);
+        }
+        if (!alt) {
+          leaderboardText = generateRankingText(slice, page, target, sliceOffset, mobile);
+        }
+        else {
+          leaderboardText = generateAlternateRankingText(slice, page, target, sliceAlt,  mobile);
+        }
         leaderboardEmbed = new MessageEmbed()
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
