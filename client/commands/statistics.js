@@ -15,7 +15,7 @@ const generateEmbed = require('../methods/generateEmbed');
 const calculateTeam = require('../methods/calculateTeam');
 
 const HOUR = 3600000;
-const SONGBIAS = 3.36 * 4.0; //Multiplier for Talent to get score
+const SONGBIAS = 8.00; //Multiplier for Talent to get score
 
 const energyBoost = [
     1,
@@ -78,7 +78,7 @@ function getEnergyPerGame(energyTable, eventPoints)
 
 function getLastHour(sortedList, el) {
     for(let i = 0; i < sortedList.length; i++) {
-        if(sortedList[i] > el) {
+        if(sortedList[i] >= el) {
             return i;
         }
     }
@@ -155,7 +155,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                         let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
                         timestamps = timestamps.slice(windowIndex);
                         timestampIndex += windowIndex;
-                        movingWindowSpeeds.push(point.score - rankData[timestampIndex].score);
+                        movingWindowSpeeds.push(point.score - rankData[Math.max(timestampIndex - 1, 0)].score);
                         energyBoost.forEach((x, i) => {
                             if (gain % x == 0) {
                                 tempEnergyTable.push([i, pointTable[i]]);
@@ -163,7 +163,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                         })
                         let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
                         energyUsed += energyUsedGame;
-                        gamesPlayed++
+                        gamesPlayed++;
                         pointsPerGame.push({points: gain, energy: energyUsedGame, timestamp: parseInt(point.timestamp/1000)});
                         if (i >= lastHourIndex) {
                             energyUsedHr += energyUsedGame;
@@ -394,7 +394,7 @@ module.exports = {
 
         const user = interaction.options.getUser('user');
         const tier = interaction.options.getInteger('tier');
-        const eventId = interaction.options.getInteger('event') || event.id
+        const eventId = interaction.options.getInteger('event') || event.id;
 
         const eventData = getEventData(eventId);
 
