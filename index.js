@@ -11,7 +11,7 @@ const trackRankingData = require('./scripts/trackRankingData');
 const trackCutoffData = require('./scripts/trackCutoffData');
 const trackUserCutoffs = require('./scripts/trackUserCutoffs');
 const trackTierData = require('./scripts/trackTierData');
-const fs = require('fs')
+const fs = require('fs');
 
 loadMusicMeta(0);
 loadGameData(0, async () => {
@@ -33,13 +33,16 @@ loadGameData(0, async () => {
   trackUserCutoffs(client);
   trackTierData(client);
 
+
   //This is a very duct tape solution
   if(fs.existsSync('messages.json')) {
     let messages = JSON.parse(fs.readFileSync(`messages.json`, 'utf8'));
     Object.keys(messages).forEach((key) => {
       let message = messages[key];
       let channel = client.client.channels.cache.get(key);
-      channel.send(message);
+      if(channel) {
+        channel.send(message);
+      }
     })
 
     fs.unlinkSync('messages.json')
