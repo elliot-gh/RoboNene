@@ -28,7 +28,8 @@ module.exports = {
                     ["ODDS&ENDS", 117],
                     ["Dramaturgy", 91],
                     ["Ready Steady", 54],
-                    ["Gunjo Sanka", 141]
+                    ["Gunjo Sanka", 141],
+                    ["IDSMILE", 116]
                 ]
             }
         ]
