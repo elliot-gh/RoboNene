@@ -63,7 +63,7 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         }
 
         let rank = " ".repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank
-        let nameStr = data[i].name.substring(0, maxNameLength)
+        let nameStr = data[i].name.substring(0, maxNameLength).replace("`", "'")
         let name = nameStr + " ".repeat(maxNameLength - nameStr.length)
         let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) +
             data[i].score.toLocaleString()
