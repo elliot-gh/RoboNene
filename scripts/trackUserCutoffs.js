@@ -19,7 +19,7 @@ const fs = require('fs');
  * @param {DiscordClient} discordClient the client we are using 
 */
 async function getCutoffs(discordClient) {
-    async function logResults(response, discord_id, sekai_id) {
+    async function logResults(response, id, sekai_id) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
@@ -29,9 +29,9 @@ async function getCutoffs(discordClient) {
                 let timestamp = Date.now();
 
                 discordClient.cutoffdb.prepare('INSERT INTO users ' +
-                    '(discord_id, Tier, EventID, Timestamp, Score) ' +
-                    'VALUES(@discordID, @tier, @EventID, @timestamp, @score)').run({
-                        discordID: discord_id,
+                    '(id, Tier, EventID, Timestamp, Score) ' +
+                    'VALUES(@id, @tier, @EventID, @timestamp, @score)').run({
+                        id: id,
                         score: score,
                         EventID: event,
                         tier: rank,
@@ -53,7 +53,7 @@ async function getCutoffs(discordClient) {
                     eventId: event,
                     targetUserId: id.sekai_id,
                     lowerLimit: 0
-                }, function(k) { logResults(k, id.discord_id, id.sekai_id); }, (err) => {
+                }, function(k) { logResults(k, id.id, id.sekai_id); }, (err) => {
                     discordClient.logger.log({
                         level: 'error',
                         message: err.toString()
