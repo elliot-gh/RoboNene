@@ -21,7 +21,7 @@ const GAME_CONSTANTS = {
  * Recursively downloads the data one by one
  * @param {Integer} idx the current index on that data we have downloaded
  */
-const loadMusicMeta = (idx) => {
+const loadMusicMeta = async (idx) => {
     if (idx >= GAME_CONSTANTS.JSON.length) {
         return
     } else {
