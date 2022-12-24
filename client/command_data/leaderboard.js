@@ -57,6 +57,8 @@ module.exports = {
   
     'LEFT': '⬅️',
     'RIGHT': '➡️',
-    'MOBILE': '📲'
+    'MOBILE': '📲',
+    'OFFSET': '🔃',
+    'ALT': '🔀'
   }
 }
