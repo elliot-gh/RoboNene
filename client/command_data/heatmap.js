@@ -27,6 +27,12 @@ module.exports = {
             'name': 'offset',
             'required': false,
             'description': 'Offset from UTC'
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
           }
         ]
       },
@@ -45,6 +51,12 @@ module.exports = {
             'name': 'offset',
             'required': false,
             'description': 'Offset from UTC'
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
           }
         ]
       }

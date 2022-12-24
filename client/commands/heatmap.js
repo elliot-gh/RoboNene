@@ -72,7 +72,6 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
   }
 
   graphData = []
-  const event = discordClient.getCurrentEvent()
   
   tier = ensureASCII(tier);
 
@@ -120,7 +119,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
         heatmapData.unshift(dayData);
         dayData = [];
       }
-      dayData.push(gamesPerHour)
+      dayData.push(gamesPerHour);
       gamesPerHour = 0;
     }
     if (point.score > lastPoint) {
@@ -335,32 +334,14 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
 function getEventName(eventID) 
 {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-  let currentEventIdx = -1;
-  let currentDate = new Date();
 
-  for (let i = 0; i < data.length; i++) {
-    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-      currentEventIdx = i;
-    }
-  }
-  
-  return data[currentEventIdx].name
+  return data[eventID - 2].name
 }
 
 function getEventData(eventID) {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-  let currentEventIdx = -1;
-  let currentDate = new Date();
 
-  for (let i = 0; i < data.length; i++) {
-      if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-          Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-          currentEventIdx = i;
-      }
-  }
-
-  return data[currentEventIdx];
+  return data[eventID - 2];
 }
 
 async function noDataErrorMessage(interaction, discordClient) {
@@ -390,16 +371,10 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
   }, async (response) => {
 
     let userId = response['rankings'][0]['userId']//Get the last ID in the list
-    let id = discordClient.getId(user.id)
-
-    if (id == -1) {
-      interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
-      return
-    }
-
-    let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
-      'WHERE (id=@id AND EventID=@eventID)').all({
-        id: id,
+    
+    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+      'WHERE (ID=@id AND EventID=@eventID)').all({
+        id: userId,
         eventID: eventId
       });
     if(data.length > 0) {
@@ -439,8 +414,10 @@ module.exports = {
       return
     }
 
-    const eventName = getEventName(event.id);
-    const eventData = getEventData(event.id);
+    const eventId = interaction.options.getInteger('event') || event.id;
+
+    const eventName = getEventName(eventId);
+    const eventData = getEventData(eventId);
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
@@ -450,14 +427,14 @@ module.exports = {
       var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (Tier=@tier AND EventID=@eventID)').all({
           tier: tier,
-          eventID: event.id
+          eventID: eventId
         });
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
         return
       }
       else {
-        sendTierRequest(event.id, eventName, eventData, tier, interaction, discordClient)
+        sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient)
       }
     } else if (user) {
       try {
@@ -471,7 +448,7 @@ module.exports = {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
           'WHERE (id=@id AND EventID=@eventID)').all({
             id: id,
-            eventID: event.id
+            eventID: eventId
           });
 
         if (data.length > 0)
