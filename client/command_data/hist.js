@@ -39,6 +39,12 @@ module.exports = {
             'name': 'max',
             'required': false,
             'description': 'Custom minimum value on the histogram'
+          },
+          {
+            'type': 'boolean',
+            'name': 'hourly',
+            'required': false,
+            'description': 'Graph hourly instead of per game'
           }
         ]
       },
@@ -69,6 +75,12 @@ module.exports = {
             'name': 'max',
             'required': false,
             'description': 'Custom minimum value on the histogram'
+          },
+          {
+            'type': 'boolean',
+            'name': 'hourly',
+            'required': false,
+            'description': 'Graph hourly instead of per game'
           }
         ]
       }
