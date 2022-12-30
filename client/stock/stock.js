@@ -51,6 +51,26 @@ class Stock {
 
         return returnData;
     }
+
+    async getCryptoData(symbol) {
+
+        let response = await fetch(`https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${symbol}&to_currency=USD&apikey=${this.APIKEY}`);
+        let data = await response.json();
+
+        let returnData = {};
+
+        let exemptKeys = ['1. From_Currency Code', '2. From_Currency Name', '3. To_Currency Code', '4. To_Currency Name']
+
+        for (let key in data['Realtime Currency Exchange Rate']) {
+            let newKey = await this.formatKey(key.substring(3));
+            if (exemptKeys.includes(key)) {
+                continue;
+            }
+            returnData[newKey] = data['Realtime Currency Exchange Rate'][key];
+        }
+
+        return returnData;
+    }
 }
 
 module.exports = Stock;

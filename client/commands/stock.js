@@ -24,7 +24,7 @@ const prskChars = {
     'LEN': '',
     'LUKA': 'SPY',
     'MEIK': '',
-    'KAIT': '',
+    'KAIT': 'UL',
     'ICHK': '',
     'SAKI': '',
     'HONA': '',
@@ -38,9 +38,9 @@ const prskChars = {
     'TOE': 'GOOS',
     'TOYA': 'NKE',
     'TSKA': 'BTC',
-    'EMU': '',
+    'EMU': 'DIS',
     'NENE': '',
-    'RUI': '',
+    'RUI': 'ETH',
     'KND': 'TSUKF',
     'MFY': '',
     'ENA': '',
@@ -67,7 +67,15 @@ async function sendStockData(ticker, interaction, discordClient) {
         swappedTicker = ticker;
     }
 
-    let reply = await stocks.getStockData(swappedTicker);
+    var reply;
+
+    if (!(["BTC", "ETH"].includes(swappedTicker))) {
+        reply = await stocks.getStockData(swappedTicker);
+    }
+
+    else {
+        reply = await stocks.getCryptoData(swappedTicker);
+    }
     if (Object.keys(reply).length === 0) {
         await interaction.editReply({
             embeds: [
