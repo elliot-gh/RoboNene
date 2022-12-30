@@ -97,11 +97,11 @@ function sanityLost(gamesPlayed, finalPoint)
 
 async function userStatistics(user, eventId, eventData, discordClient, interaction) {
 
-    let id = discordClient.getId(user.id)
+    let id = discordClient.getId(user.id);
 
     if(id == -1) {
         interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
-        return
+        return;
     }
 
     let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
@@ -123,7 +123,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                 targetUserId: userData[0].sekai_id,
                 lowerLimit: 0
             }, async (response) => {
-                rankData.unshift({ timestamp: eventData.startAt, score: 0})
+                rankData.unshift({ timestamp: eventData.startAt, score: 0});
                 rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
                 let lastTimestamp = rankData[rankData.length - 1].timestamp;
                 let timestamps = rankData.map(x => x.timestamp);
@@ -144,12 +144,12 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                 let gamesPlayed = 0;
                 let energyUsedHr = 0;
                 let gamesPlayedHr = 0;
-                let pointsPerGame = []
+                let pointsPerGame = [];
                 let timestampIndex = 0;
-                let movingWindowSpeeds = []
+                let movingWindowSpeeds = [];
 
                 rankData.slice(1).forEach((point, i) => {
-                    if (lastPoint < point.score && point.score - lastPoint >= 100) {
+                    if (point.score - lastPoint >= 100) {
                         let tempEnergyTable = [];
                         let gain = point.score - lastPoint;
                         let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
@@ -203,6 +203,14 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
 
                 if (user.id == '475083312772415489' || user.id == '327997209666912256') {
                     reply += '\nPeople Killed: 1';
+                }
+
+                else if (user.id == '530650499465216000') {
+                    reply += '\nHearts Broken: 3';
+                }
+
+                else if (user.id == '178294808429723648') {
+                    reply += '\nBroken Hearts: 3';
                 }
 
                 await interaction.editReply({
@@ -264,16 +272,16 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
             return
         };
 
-        let points = new Set()
+        let points = new Set();
         let rankData = [];
 
         data.forEach(x => {
             if(!points.has(x.Score)){
-                rankData.push({ timestamp: x.Timestamp, score: x.Score })
-                points.add(x.Score)
+                rankData.push({ timestamp: x.Timestamp, score: x.Score });
+                points.add(x.Score);
             }
-        })
-        rankData.unshift({ timestamp: eventData.startAt, score: 0 })
+        });
+        rankData.unshift({ timestamp: eventData.startAt, score: 0 });
         rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
             
@@ -288,15 +296,15 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
 
         let gamesPlayed = 0;
         let gamesPlayedHr = 0;
-        let pointsPerGame = []
-        let energyPossibilities = energyBoost.map((x) => 0)
-        let energyPossiblitiesHour = energyBoost.map((x) => 0)
+        let pointsPerGame = [];
+        let energyPossibilities = energyBoost.map((x) => 0);
+        let energyPossiblitiesHour = energyBoost.map((x) => 0);
         let timestampIndex = 0;
-        let movingWindowSpeeds = []
+        let movingWindowSpeeds = [];
 
         rankData.slice(1).forEach((point, i) => {
-            if (lastPoint < point.score && point.score - lastPoint >= 100) {
-                let gain = point.score - lastPoint
+            if (point.score - lastPoint >= 100) {
+                let gain = point.score - lastPoint;
                 let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
                 timestamps = timestamps.slice(windowIndex);
                 timestampIndex += windowIndex;
@@ -315,8 +323,8 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
                 if (i >= lastHourIndex) {
                     gamesPlayedHr++;
                 }
+                lastPoint = point.score;
             }
-            lastPoint = point.score;
         });
 
         let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000)
