@@ -26,10 +26,10 @@ const generateEmbed = ({name, content, image, client}) => {
     .setFooter(FOOTER, client.user.displayAvatarURL());
 
   if (image) {
-    embed.setImage(image)
+    embed.setImage(image);
   }
 
-  return embed
-}
+  return embed;
+};
 
-module.exports = generateEmbed
+module.exports = generateEmbed;
