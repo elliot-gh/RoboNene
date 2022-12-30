@@ -404,10 +404,9 @@ module.exports = {
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
     const eventId = interaction.options.getInteger('event') || event.id;
-    let offset = interaction.options.getInteger('offset') || 18;
+    let offset = interaction.options.getInteger('offset');
 
-    offset += 24;
-    offset %= 24;
+    if (offset == null && offset != 0) offset = 18;
 
     const eventData = getEventData(eventId);
     const eventName = eventData.name;
