@@ -339,7 +339,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
 function getEventData(eventID) {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
 
-  return data[eventID];
+  return data[eventID - 2];
 }
 
 async function noDataErrorMessage(interaction, discordClient) {
