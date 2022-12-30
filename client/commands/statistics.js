@@ -207,9 +207,9 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     { name: 'Energy Used in the Last Hour', value: energyUsedHr.toLocaleString(), inline: true },
                     { name: 'Total Energy Used', value: energyUsed.toLocaleString(), inline: true },
                     { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
-                    { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
                     { name: 'Estimated Talent', value: `${Math.round(teamData.talent).toLocaleString()}`, inline: true },
-                    { name: 'Estimated Event Bonus', value: `${(teamData.eventBonus * 100).toFixed(2) }%`, inline: true }
+                    { name: 'Estimated Event Bonus', value: `${(teamData.eventBonus * 100).toFixed(2) }%`, inline: true },
+                    { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` }
                 );
 
                 for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
