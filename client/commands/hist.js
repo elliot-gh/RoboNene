@@ -77,7 +77,7 @@ async function getStdDev(data) {
 }
 
 async function generateNormalDist(xData) {
-  let start = 0;
+  let start = Math.min(...xData);
   let end = Math.max(...xData);
   let step = (end - start) / 1000;
   let mean = average(xData);
