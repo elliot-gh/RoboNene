@@ -134,7 +134,7 @@ class DiscordClient {
 
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
-    this.db.pragma('journal_mode = WAL');
+    this.db.pragma('journal_mode = DELETE');
 
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' +
       '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
@@ -164,7 +164,7 @@ class DiscordClient {
 
     // Read an encrypted database
     this.cutoffdb.pragma(`key='${secretKey}'`);
-    this.cutoffdb.pragma('journal_mode = WAL');
+    this.cutoffdb.pragma('journal_mode = DELETE');
 
     // Initialize the tracking database instance
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
@@ -190,11 +190,12 @@ class DiscordClient {
 
     // Read an encrypted database
     this.prayerdb.pragma(`key='${secretKey}'`);
-    this.prayerdb.pragma('journal_mode = WAL');
+    this.prayerdb.pragma('journal_mode = DELETE');
 
     // Initialize the prayer database table
     this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
     '(id STRING PRIMARY KEY, luck INTEGER, prays INTEGER, lastTimestamp INTEGER, totalLuck INTEGER)').run();
+  
   }
 
   /**
