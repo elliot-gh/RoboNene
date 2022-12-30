@@ -34,15 +34,18 @@ const generateRankingText = (data, page, target, changes, mobile) => {
     let maxScoreLength = scoreLabel.length;
     let maxChangeLength = changeLabel.length;
 
-    data.forEach((user) => {
+    data.forEach((user, i) => {
         if (user.rank.toString().length > maxRankLength) {
-            maxRankLength = user.rank.toString().length
+            maxRankLength = user.rank.toString().length;
         }
         if (user.name.length > maxNameLength) {
-            maxNameLength = user.name.length
+            maxNameLength = user.name.length;
         }
         if (user.score.toLocaleString().length > maxScoreLength) {
-            maxScoreLength = user.score.toLocaleString().length
+            maxScoreLength = user.score.toLocaleString().length;
+        }
+        if (((data[i].score - changes[i])).toLocaleString().length > maxChangeLength) {
+            maxChangeLength = ((data[i].score - changes[i])).toLocaleString().length;
         }
     })
 
