@@ -57,4 +57,4 @@ module.exports = {
 
         'SEKAI_BEST_HOST': 'api.sekai.best'
     }
-}
+};
