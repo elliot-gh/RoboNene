@@ -141,12 +141,14 @@ module.exports = {
       let timestampIndex = timestamps[lastHourIndex];
 
       let lastHourCutoffs = [];
-      let gamesPlayed = [];
+      let GPH = [];
+      let gamesPlayed = []
       let userIds = [];
 
       for(let i = 0; i < 120; i++) {
         lastHourCutoffs.push(-1);
         gamesPlayed.push(-1);
+        GPH.push(-1);
         userIds.push(rankingData[i].userId);
       }
 
@@ -168,21 +170,25 @@ module.exports = {
 
       lastHourData.forEach((data, i) => {
         // console.log(data.ID)
-        let index = userIds.indexOf(data.ID)
+        let index = userIds.indexOf(data.ID);
 
         if (index != -1) {
           lastHourCutoffs[index] = data.Score;
-          gamesPlayed[index] = Math.max(currentGamesPlayed[i].games - data.GameNum, 0);
-          if (rankingData[index].score >= currentGamesPlayed[i].score + 100) {
+          GPH[index] = Math.max(currentGamesPlayed[index].games - data.GameNum, 0);
+          gamesPlayed[index] = currentGamesPlayed[index].games;
+          if (rankingData[index].score >= currentGamesPlayed[index].score + 100) {
+            GPH[index]++;
             gamesPlayed[index]++;
           }
         }
       });
 
+      
+
       let mobile = false;
       let alt = false;
       let offset = false;
-      var slice, sliceOffset, sliceAlt;
+      var slice, sliceOffset, sliceGPH, sliceGamesPlayed;
 
       let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
       
@@ -290,18 +296,20 @@ module.exports = {
         if(start > end) {
           slice = rankingData.slice(start, 120).concat(rankingData.slice(0, end));
           sliceOffset = lastHourCutoffs.slice(start, 120).concat(lastHourCutoffs.slice(0, end));
-          sliceAlt = gamesPlayed.slice(start, 120).concat(gamesPlayed.slice(0, end));
+          sliceGamesPlayed = gamesPlayed.slice(start, 120).concat(gamesPlayed.slice(0, end));
+          sliceGPH = GPH.slice(start, 120).concat(GPH.slice(0, end));
         }
         else {
           slice = rankingData.slice(start, end);
           sliceOffset = lastHourCutoffs.slice(start, end);
-          sliceAlt = gamesPlayed.slice(start, end);
+          sliceGamesPlayed = gamesPlayed.slice(start, end);
+          sliceGPH = GPH.slice(start, end);
         }
         if (!alt) {
           leaderboardText = generateRankingText(slice, page, target, sliceOffset, mobile);
         }
         else {
-          leaderboardText = generateAlternateRankingText(slice, page, target, sliceAlt,  mobile);
+          leaderboardText = generateAlternateRankingText(slice, page, target, sliceGamesPlayed, sliceGPH, mobile);
         }
         leaderboardEmbed = new MessageEmbed()
           .setColor(NENE_COLOR)

@@ -201,7 +201,7 @@ const requestRanking = async (event, discordClient) => {
             gameCache[id].score = score;
           }
         } else {
-          gameCache[id] = {'score': score, 'games': 0};
+          gameCache[id] = {'score': score, 'games': 1};
         }
 
         let games = gameCache[id].games;
