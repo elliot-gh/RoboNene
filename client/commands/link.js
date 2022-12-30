@@ -7,10 +7,10 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
 
-const COMMAND = require('../command_data/link')
+const COMMAND = require('../command_data/link');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 /**
  * Generates the embed that is used when users request a link
@@ -27,7 +27,7 @@ const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
     message: `Link Code: \`${code}\`\n` + 
       `Account ID: \`${accountId}\`\n` + 
       `Expires: <t:${Math.floor(expires/1000)}>`
-  }
+  };
 
   const linkEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
@@ -40,15 +40,15 @@ const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
     .setFooter(FOOTER, client.user.displayAvatarURL());
 
   if (content) {
-    linkEmbed.addField(content.type, content.message)
+    linkEmbed.addField(content.type, content.message);
   }
 
-  return linkEmbed
-}
+  return linkEmbed;
+};
 
 function isAdmin(msg) {
   try{
-    return msg.member.permissionsIn(msg.channel).has('Administrator')
+    return msg.member.permissionsIn(msg.channel).has('Administrator');
   }
   catch {
     return false;
@@ -62,9 +62,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const db = discordClient.db
+    const db = discordClient.db;
     const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
     var userId = interaction.options.getString('discordid');
 
@@ -76,7 +76,7 @@ module.exports = {
           discordId: userId,
           sekaiId: accountId
         });
-      await interaction.editReply("Added")
+      await interaction.editReply('Added');
       return;
     }
 
@@ -90,7 +90,7 @@ module.exports = {
             client: discordClient.client
           })
         ]
-      })
+      });
       return;
     }
 
@@ -98,7 +98,7 @@ module.exports = {
       'discord_id=@discordId OR sekai_id=@sekaiId').all({ 
       discordId: interaction.user.id, 
       sekaiId: accountId
-    })
+    });
 
     if (users.length) {
       // User is already linked
@@ -138,7 +138,7 @@ module.exports = {
         });
       }
 
-      return
+      return;
     }
     
     if (!discordClient.checkRateLimit(interaction.user.id)) {
@@ -152,24 +152,24 @@ module.exports = {
           },
           client: discordClient.client
         })]
-      })
-      return
+      });
+      return;
     }
 
     // No Errors
     discordClient.addSekaiRequest('profile', {
       userId: accountId
-    }, async (response) => {
+    }, async () => {
       // Generate a new code for the user
-      const code = Math.random().toString(36).slice(-5) 
-      const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME
+      const code = Math.random().toString(36).slice(-5); 
+      const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME;
 
       const linkButton = new MessageActionRow()
         .addComponents(new MessageButton()
-          .setCustomId(`link`)
+          .setCustomId('link')
           .setLabel('LINK')
           .setStyle('SUCCESS')
-          .setEmoji(COMMAND.CONSTANTS.LINK_EMOJI))
+          .setEmoji(COMMAND.CONSTANTS.LINK_EMOJI));
 
       const linkMessage = await interaction.editReply({
         embeds: [
@@ -188,8 +188,8 @@ module.exports = {
       let limited = false;
 
       const filter = (i) => {
-        return i.customId == `link`
-      }
+        return i.customId == 'link';
+      };
   
       const collector = linkMessage.createMessageComponentCollector({ 
         filter, 
@@ -227,8 +227,8 @@ module.exports = {
               })
             ],
             components: []
-          })
-          return
+          });
+          return;
         }
 
         // We got a response, proceeding to authenticate
@@ -240,9 +240,9 @@ module.exports = {
               'VALUES(@discordId, @sekaiId)').run({
               discordId: interaction.user.id,
               sekaiId: accountId
-            })
+            });
 
-            linked = true
+            linked = true;
 
             await interaction.editReply({
               embeds: [
@@ -276,7 +276,7 @@ module.exports = {
             level: 'error',
             timestamp: Date.now(),
             message: err.toString()
-          })
+          });
 
           // If the account does not exist (even though we should have checked)
           await interaction.editReply({
@@ -291,10 +291,10 @@ module.exports = {
             ],
             components: []
           });
-        })
-      })
+        });
+      });
 
-      collector.on('end', async (collected) => {
+      collector.on('end', async () => {
         // No Response
         if (!linked && !limited) {
           await interaction.editReply({ 
@@ -322,14 +322,14 @@ module.exports = {
               client: discordClient.client
             })
           ]
-        })
+        });
       } else {
         // Log the error
         discordClient.logger.log({
           level: 'error',
           timestamp: Date.now(),
           message: err.toString()
-        })
+        });
 
         await interaction.editReply({
           embeds: [generateEmbed({
@@ -337,8 +337,8 @@ module.exports = {
             content: { type: 'error', message: err.toString() },
             client: discordClient.client
           })]
-        })
+        });
       }
-    })
+    });
   }
 };

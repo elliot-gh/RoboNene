@@ -17,6 +17,7 @@ const path = require('path');
 
 // Constants used to locate the directories of data
 const CLIENT_CONSTANTS = {
+  // eslint-disable-next-line no-undef
   'CMD_DIR': path.join(__dirname, '/commands'),
   'EVENT_DIR': path.join(__dirname, '/events'),
   'LOG_DIR': path.join(__dirname, '../logs'),
@@ -133,7 +134,7 @@ class DiscordClient {
 
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
-    this.db.pragma('journal_mode = WAL')
+    this.db.pragma('journal_mode = WAL');
 
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' +
       '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
@@ -185,7 +186,7 @@ class DiscordClient {
    * the databases for usage.
    */
   loadPrayerDb(dir = CLIENT_CONSTANTS.PRAYER_DB_DIR) {
-    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`, { verbose: console.log });
+    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`);
 
     // Read an encrypted database
     this.prayerdb.pragma(`key='${secretKey}'`);

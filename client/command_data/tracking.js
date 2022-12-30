@@ -47,7 +47,7 @@ module.exports = {
 
     'NO_PERMISSIONS_ERR': {
       type: 'Error',
-      message: 'The bot does not have \`\`Send Messages\`\` and \`\`Embed Links\`\` permissions in the selected channel.'
+      message: 'The bot does not have ``Send Messages`` and ``Embed Links`` permissions in the selected channel.'
     },
 
     'NO_TRACKING_ERR': {
@@ -55,4 +55,4 @@ module.exports = {
       message: 'There are no tracking alerts for these parameters.'
     }
   }
-}
+};

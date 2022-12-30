@@ -4,17 +4,14 @@
  * @author Potor10
  */
 
-const { PermissionsBitField } = require('discord.js');
-const { BOT_NAME } = require('../../constants');
+const COMMAND = require('../command_data/restart');
 
-const COMMAND = require('../command_data/restart')
-
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const APP = require('process')
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const APP = require('process');
 const fs = require('fs');
 
 function isAdmin(msg) {
-    return msg.member.permissionsIn(msg.channel).has('0x0000000000000010')
+    return msg.member.permissionsIn(msg.channel).has('0x0000000000000010');
 }
 
 function addMessage(message, channel) {
@@ -22,13 +19,13 @@ function addMessage(message, channel) {
     try {
         trackFile = new Object();
 
-        trackFile[channel] = message
+        trackFile[channel] = message;
 
-        fs.writeFile(`messages.json`, JSON.stringify(trackFile), err => {
+        fs.writeFile('messages.json', JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
             } else {
-                console.log(`Wrote Tracking Successfully`);
+                console.log('Wrote Tracking Successfully');
             }
         });
     } catch (e) {
@@ -43,7 +40,7 @@ module.exports = {
     async execute(interaction, discordClient) {
         await interaction.deferReply({
             ephemeral: COMMAND.INFO.ephemeral
-        })
+        });
         if(isAdmin(interaction)) {
             try {
 
@@ -56,18 +53,18 @@ module.exports = {
 
                     // Then I excute the command and kill the app if starting was successful
                     var exec = require('child_process').exec;
-                    interaction.editReply("Restarting Application")
-                    addMessage("Application Restarted Successfully", interaction.channelId)
+                    interaction.editReply('Restarting Application');
+                    addMessage('Application Restarted Successfully', interaction.channelId);
                     exec(cmd, function () {
                         process.kill();
                     });
                 }
             } catch (e) {
                 console.log(e);
-                interaction.editReply("Application Restarted: Failure")
+                interaction.editReply('Application Restarted: Failure');
             } // Due to possible null values add a try catch
         } else {
-            interaction.editReply("You do not have the permissions for that")
+            interaction.editReply('You do not have the permissions for that');
         }
     }
 };

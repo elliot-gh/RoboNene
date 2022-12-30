@@ -3,11 +3,6 @@
  * @author Ai0796
  */
 
-const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
-const https = require('https');
-const fs = require('fs');
-
 const COMMAND = require('../command_data/stock');
 
 const { stockApiKey } = require('../../config.json');
@@ -54,7 +49,7 @@ const prskChars = {
  * @returns 
  */
 async function ensureAtoZ(str) {
-    return str.replace(/[^a-zA-Z]/gi, '')
+    return str.replace(/[^a-zA-Z]/gi, '');
 }
 
 async function sendStockData(ticker, interaction, discordClient) {
@@ -69,7 +64,7 @@ async function sendStockData(ticker, interaction, discordClient) {
 
     var reply;
 
-    if (!(["BTC", "ETH"].includes(swappedTicker))) {
+    if (!(['BTC', 'ETH'].includes(swappedTicker))) {
         reply = await stocks.getStockData(swappedTicker);
     }
 

@@ -10,22 +10,22 @@ const fs = require('fs');
 
 // The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
-  "HOST": "raw.githubusercontent.com",
-  "PATH": "/Sekai-World/sekai-master-db-en-diff/main/",
-  "JSON": [
-    "gameCharacters",
-    "gameCharacterUnits",
-    "characterProfiles",
-    "areas",
-    "areaItems",
-    "areaItemLevels",
-    "events",
-    "eventCards",
-    "cards",
-    "musics",
-    "eventDeckBonuses"
+  'HOST': 'raw.githubusercontent.com',
+  'PATH': '/Sekai-World/sekai-master-db-en-diff/main/',
+  'JSON': [
+    'gameCharacters',
+    'gameCharacterUnits',
+    'characterProfiles',
+    'areas',
+    'areaItems',
+    'areaItemLevels',
+    'events',
+    'eventCards',
+    'cards',
+    'musics',
+    'eventDeckBonuses'
   ]
-}
+};
 
 /**
  * Downloads all the requested data one by one
@@ -47,7 +47,7 @@ const getData = () => {
         if (res.statusCode === 200) {
           try {
             fs.writeFileSync(`${DIR_DATA}/${filename}.json`, JSON.stringify(JSON.parse(json)));
-            console.log(`${filename}.json Retrieved`)
+            console.log(`${filename}.json Retrieved`);
           } catch (err) {
             // Error parsing JSON: ${err}`
           }
@@ -55,9 +55,9 @@ const getData = () => {
           // Error retrieving via HTTPS. Status: ${res.statusCode}
         }
       });
-    }).on('error', (err) => {});
-  })
-}
+    }).on('error', () => {});
+  });
+};
 
 /**
  * Enables the tracking of the game database, and requests game data once every two hours
@@ -67,8 +67,8 @@ const trackGameData = async (discordClient) => {
   // Obtain the game data
   getData();
 
-  console.log('Game Data Requested, Pausing For 2 Hours')
-  setTimeout(() => {trackGameData(discordClient)}, 7200000);
-}
+  console.log('Game Data Requested, Pausing For 2 Hours');
+  setTimeout(() => {trackGameData(discordClient);}, 7200000);
+};
 
 module.exports = trackGameData;

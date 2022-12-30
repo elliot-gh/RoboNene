@@ -3,9 +3,9 @@
  * @author Ai0796
  */
 
-const { DateTime, Duration }  = require('luxon')
+const { DateTime, Duration }  = require('luxon');
 
-const HOUR = Duration.fromObject({"hours": 1})
+const HOUR = Duration.fromObject({'hours': 1});
 
 /**
  * Generates an embed from the provided params
@@ -15,16 +15,16 @@ const generateTimeZones = () => {
     var now = DateTime.now();
     const timezones = [];
 
-    now = now.minus(Duration.fromObject({"hours": 11}));
+    now = now.minus(Duration.fromObject({'hours': 11}));
 
-    console.log(now.toLocaleString())
+    console.log(now.toLocaleString());
 
     for(let i = -11; i < 12; i++) {
-        timezones.push([`${now.toLocaleString(DateTime.TIME_24_SIMPLE)} (UTC${(i <= 0 ? "" : "+")}${i})`, i]);
+        timezones.push([`${now.toLocaleString(DateTime.TIME_24_SIMPLE)} (UTC${(i <= 0 ? '' : '+')}${i})`, i]);
         now = now.plus(HOUR);
     }
 
-    return timezones
-}
+    return timezones;
+};
 
-module.exports = generateTimeZones
+module.exports = generateTimeZones;

@@ -4,11 +4,11 @@
  * @author Potor10
  */
 
-const COMMAND = require('../command_data/rank')
+const COMMAND = require('../command_data/rank');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const getRank = require('../methods/getRank')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const getRank = require('../methods/getRank');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 module.exports = {
   ...COMMAND.INFO,
@@ -17,15 +17,15 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
     const target = (interaction.options._hoistedOptions.length) ? 
       interaction.options._hoistedOptions[0].value :
-      interaction.user.id
+      interaction.user.id;
     
     const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
       discordId: target
-    })
+    });
 
     if (!user.length) {
       await interaction.editReply({
@@ -37,11 +37,11 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     getRank(COMMAND.INFO.name, interaction, discordClient, {
       targetUserId: user[0].sekai_id
-    })
+    });
   }
 };

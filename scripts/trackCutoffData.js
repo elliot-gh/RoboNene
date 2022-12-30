@@ -3,7 +3,7 @@
  * @author Ai0796
  */
 
-const { CUTOFF_INTERVAL, CUTOFF_DATA} = require('../constants');
+const { CUTOFF_INTERVAL } = require('../constants');
 const fs = require('fs');
 
 //Cutoffs we store

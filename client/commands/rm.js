@@ -3,14 +3,10 @@
  * @author Ai0796
  */
 
-const { MessageActionRow, MessageButton } = require('discord.js');
-const { BOT_NAME } = require('../../constants');
+const COMMAND = require('../command_data/rm');
 
-const COMMAND = require('../command_data/rm')
-
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed')
-const fs = require('fs');
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed');
 
 const timeout = 600000;
 const channels = {};

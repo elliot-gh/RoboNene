@@ -7,10 +7,10 @@
 const { MessageActionRow, MessageButton } = require('discord.js');
 const { BOT_NAME } = require('../../constants');
 
-const COMMAND = require('../command_data/about')
+const COMMAND = require('../command_data/about');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 module.exports = {
   ...COMMAND.INFO,
@@ -19,9 +19,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const EMBED_TITLE = `About ${BOT_NAME}`
+    const EMBED_TITLE = `About ${BOT_NAME}`;
 
     const aboutPages = [
       // Embed generation of a list of programmers who supported the bot
@@ -30,7 +30,7 @@ module.exports = {
         content: {
           type: '**Programming**',
           message: COMMAND.CONSTANTS.PROGRAMMERS.map((name, index) => {
-            return `${index+1}. ${name}`
+            return `${index+1}. ${name}`;
           }).join('\n')
         },
         client: discordClient.client
@@ -41,7 +41,7 @@ module.exports = {
         content: {
           type: '**Design**',
           message: COMMAND.CONSTANTS.DESIGNERS.map((name, index) => {
-            return `${index+1}. ${name}`
+            return `${index+1}. ${name}`;
           }).join('\n')
         }, 
         client: discordClient.client
@@ -52,7 +52,7 @@ module.exports = {
         content: {
           type: '**Testers**',
           message: COMMAND.CONSTANTS.TESTERS.map((name, index) => {
-            return `${index+1}. ${name}`
+            return `${index+1}. ${name}`;
           }).join('\n')
         }, 
         client: discordClient.client
@@ -129,22 +129,22 @@ module.exports = {
         }, 
         client: discordClient.client
       })
-    ]
+    ];
 
     const aboutButtons = new MessageActionRow()
       .addComponents(
         new MessageButton()
-          .setCustomId(`prev`)
+          .setCustomId('prev')
           .setLabel('PREV')
           .setStyle('SECONDARY')
           .setEmoji(COMMAND.CONSTANTS.LEFT),
         new MessageButton()
-          .setCustomId(`next`)
+          .setCustomId('next')
           .setLabel('NEXT')
           .setStyle('SECONDARY')
-          .setEmoji(COMMAND.CONSTANTS.RIGHT))
+          .setEmoji(COMMAND.CONSTANTS.RIGHT));
 
-    let page = 0
+    let page = 0;
 
     const aboutMessage = await interaction.editReply({ 
       embeds: [aboutPages[page]],
@@ -153,8 +153,8 @@ module.exports = {
     });
 
     const filter = (i) => {
-      return i.customId == `prev` || i.customId == `next`
-    }
+      return i.customId == 'prev' || i.customId == 'next';
+    };
 
     const collector = aboutMessage.createMessageComponentCollector({ 
       filter, 
@@ -162,15 +162,15 @@ module.exports = {
     });
     
     collector.on('collect', async (i) => {
-      if (i.customId === `prev`) {
+      if (i.customId === 'prev') {
         if (page == 0) {
-          page = aboutPages.length - 1
+          page = aboutPages.length - 1;
         } else {
           page -= 1;
         }
-      } else if (i.customId === `next`) {
+      } else if (i.customId === 'next') {
         if (page == aboutPages.length - 1) {
-          page = 0
+          page = 0;
         } else {
           page += 1;
         }
@@ -180,9 +180,9 @@ module.exports = {
         embeds: [aboutPages[page]], 
         components: [aboutButtons]
       });
-    })
+    });
 
-    collector.on('end', async (collected) => {
+    collector.on('end', async () => {
       await interaction.editReply({ 
         embeds: [aboutPages[page]], 
         components: []

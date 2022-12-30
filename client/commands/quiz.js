@@ -10,10 +10,10 @@
 const { MessageActionRow, MessageSelectMenu } = require('discord.js');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/quiz')
+const COMMAND = require('../command_data/quiz');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 /**
  * Shuffles array in place.
@@ -29,7 +29,7 @@ const shuffle = (a) => {
       a[j] = x;
   }
   return a;
-}
+};
 
 /**
  * A class designed to obtain questions from existing event data
@@ -38,7 +38,7 @@ class eventQuestion {
   constructor() {
     this.type = 'events';
     this.events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-    this.prompts = require('../../quiz/event')
+    this.prompts = require('../../quiz/event');
   }
 
   /**
@@ -46,7 +46,7 @@ class eventQuestion {
    * @return the question's type of prompt
    */
   getType() {
-    return this.type
+    return this.type;
   }
 
   /**
@@ -54,19 +54,19 @@ class eventQuestion {
    * @return {Object} a collection of the aforementioned values
    */
   getQuestion() {
-    const eventShuffle = shuffle(this.events)
+    const eventShuffle = shuffle(this.events);
 
-    const event = eventShuffle.pop()
-    const wrong = [eventShuffle.pop().name, eventShuffle.pop().name, eventShuffle.pop().name]
-    const questionIdx = Math.floor(Math.random() * this.prompts.length)
+    const event = eventShuffle.pop();
+    const wrong = [eventShuffle.pop().name, eventShuffle.pop().name, eventShuffle.pop().name];
+    const questionIdx = Math.floor(Math.random() * this.prompts.length);
 
     const question = {
       right: event.name,
       wrong: wrong,
       prompt: this.prompts[questionIdx].prompt(event)
-    }
+    };
 
-    return question
+    return question;
   }
 }
 
@@ -78,16 +78,16 @@ class characterQuestion {
     this.type = 'characters';
     this.characterProfiles = JSON.parse(fs.readFileSync('./sekai_master/characterProfiles.json'));
     this.gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
-    this.characterInfo = []
+    this.characterInfo = [];
 
     for(let idx in this.characterProfiles) {
       this.characterInfo.push({
         ...this.gameCharacters[idx],
         ...this.characterProfiles[idx]
-      })
+      });
     }
 
-    this.prompts = require('../../quiz/characters')
+    this.prompts = require('../../quiz/characters');
   }
   
   /**
@@ -95,7 +95,7 @@ class characterQuestion {
    * @return the question's type of prompt
    */
   getType() {
-    return this.type
+    return this.type;
   }
 
   /**
@@ -103,31 +103,31 @@ class characterQuestion {
    * @return {Object} a collection of the aforementioned values
    */
   getQuestion() {
-    const charaShuffle = shuffle(this.characterInfo)
+    const charaShuffle = shuffle(this.characterInfo);
 
     const getName = (character) => {
-      let charName = character.givenName
+      let charName = character.givenName;
       if (character.firstName) {
-        charName += ` ${character.firstName}`
+        charName += ` ${character.firstName}`;
       }
-      return charName
-    }
+      return charName;
+    };
 
-    const wrong = []
-    const questionIdx = Math.floor(Math.random() * this.prompts.length)
-    const attr = this.prompts[questionIdx].attr
+    const wrong = [];
+    const questionIdx = Math.floor(Math.random() * this.prompts.length);
+    const attr = this.prompts[questionIdx].attr;
 
     // Recursively sample random characters until a character w/o the same trait is found
     const chooseCharacter = () => {
-      const character = charaShuffle.pop()
+      const character = charaShuffle.pop();
 
       if (!character[attr]) { 
-        return chooseCharacter() 
+        return chooseCharacter(); 
       } else {
         while (wrong.length < 3) {
-          const incorrectChar = charaShuffle.pop()
+          const incorrectChar = charaShuffle.pop();
           if (incorrectChar[attr] && incorrectChar[attr] !== character[attr]) {
-            wrong.push(getName(incorrectChar))
+            wrong.push(getName(incorrectChar));
           }
         }
 
@@ -135,11 +135,11 @@ class characterQuestion {
           right: getName(character),
           wrong: wrong,
           prompt: this.prompts[questionIdx].prompt(character)
-        }
+        };
       }
-    }
+    };
 
-    return chooseCharacter()
+    return chooseCharacter();
   }
 }
 
@@ -151,17 +151,17 @@ class cardQuestion {
     this.type = 'cards';
     this.cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
     this.gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
-    this.cardInfo = []
+    this.cardInfo = [];
 
     for(let idx in this.cards) {
       this.cardInfo.push({
         ...this.cards[idx],
         firstName: this.gameCharacters[this.cards[idx].characterId-1].firstName,
         givenName: this.gameCharacters[this.cards[idx].characterId-1].givenName,
-      })
+      });
     }
 
-    this.prompts = require('../../quiz/cards')
+    this.prompts = require('../../quiz/cards');
   }
 
   /**
@@ -169,7 +169,7 @@ class cardQuestion {
    * @return the question's type of prompt
    */
   getType() {
-    return this.type
+    return this.type;
   }
 
   /**
@@ -177,31 +177,31 @@ class cardQuestion {
    * @return {Object} a collection of the aforementioned values
    */
   getQuestion() {
-    const cardShuffle = shuffle(this.cardInfo)
+    const cardShuffle = shuffle(this.cardInfo);
 
-    const wrong = []
-    const questionIdx = Math.floor(Math.random() * this.prompts.length)
-    const attr = this.prompts[questionIdx].attr
+    const wrong = [];
+    const questionIdx = Math.floor(Math.random() * this.prompts.length);
+    const attr = this.prompts[questionIdx].attr;
 
     // Recursively sample random characters until a character w/o the same trait is found
     const chooseCard = () => {
-      const card = cardShuffle.pop()
+      const card = cardShuffle.pop();
 
       while (wrong.length < 3) {
-        const incorrectCard = cardShuffle.pop()
+        const incorrectCard = cardShuffle.pop();
         if (incorrectCard[attr] !== card[attr]) {
-          let attrExists = false
-          let attrValue =  this.prompts[questionIdx].name(incorrectCard)
+          let attrExists = false;
+          let attrValue =  this.prompts[questionIdx].name(incorrectCard);
 
           for (const wrongIdx in wrong) {
             if (wrong[wrongIdx] === attrValue) {
-              attrExists = true
-              break
+              attrExists = true;
+              break;
             }
           }
 
           if (!attrExists) {
-            wrong.push(attrValue)
+            wrong.push(attrValue);
           }
         }
       }
@@ -210,10 +210,10 @@ class cardQuestion {
         right: this.prompts[questionIdx].name(card),
         wrong: wrong,
         prompt: this.prompts[questionIdx].prompt(card)
-      }
-    }
+      };
+    };
 
-    return chooseCard()
+    return chooseCard();
   }
 }
 
@@ -225,13 +225,13 @@ class areaQuestion {
     this.type = 'cards';
     this.areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
     this.areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
-    this.areaItemInfo = []
+    this.areaItemInfo = [];
 
     for(let areaItemIdx in this.areaItems) {
-      let areaName = 'N/A'
+      let areaName = 'N/A';
       for(let areaIdx in this.areas) {
         if (this.areas[areaIdx].id === this.areaItems[areaItemIdx].areaId) {
-          areaName = this.areas[areaIdx].name
+          areaName = this.areas[areaIdx].name;
           break;
         }
       }
@@ -239,10 +239,10 @@ class areaQuestion {
       this.areaItemInfo.push({
         ...this.areaItems[areaItemIdx],
         areaName: areaName
-      })
+      });
     }
 
-    this.prompts = require('../../quiz/areaItems')
+    this.prompts = require('../../quiz/areaItems');
   }
 
   /**
@@ -250,7 +250,7 @@ class areaQuestion {
    * @return the question's type of prompt
    */
   getType() {
-    return this.type
+    return this.type;
   }
 
   /**
@@ -260,32 +260,32 @@ class areaQuestion {
   getQuestion() {
     // Remove duplicates of Music Speakers from the pool
     const areaShuffle = shuffle(this.areaItemInfo).filter((area) => {
-      return area.name !== 'Music Speakers'
-    })
+      return area.name !== 'Music Speakers';
+    });
 
-    const wrong = []
-    const questionIdx = Math.floor(Math.random() * this.prompts.length)
-    const attr = this.prompts[questionIdx].attr
+    const wrong = [];
+    const questionIdx = Math.floor(Math.random() * this.prompts.length);
+    const attr = this.prompts[questionIdx].attr;
 
     // Recursively sample random characters until a character w/o the same trait is found
     const chooseAreaItem = () => {
-      const areaItem = areaShuffle.pop()
+      const areaItem = areaShuffle.pop();
 
       while (wrong.length < 3) {
-        const incorrectAreaItem = areaShuffle.pop()
+        const incorrectAreaItem = areaShuffle.pop();
         if (incorrectAreaItem[attr] !== areaItem[attr]) {
-          let attrExists = false
-          let attrValue =  this.prompts[questionIdx].name(incorrectAreaItem)
+          let attrExists = false;
+          let attrValue =  this.prompts[questionIdx].name(incorrectAreaItem);
 
           for (const wrongIdx in wrong) {
             if (wrong[wrongIdx] === attrValue) {
-              attrExists = true
-              break
+              attrExists = true;
+              break;
             }
           }
 
           if (!attrExists) {
-            wrong.push(attrValue)
+            wrong.push(attrValue);
           }
         }
       }
@@ -294,10 +294,10 @@ class areaQuestion {
         right: this.prompts[questionIdx].name(areaItem),
         wrong: wrong,
         prompt: this.prompts[questionIdx].prompt(areaItem)
-      }
-    }
+      };
+    };
 
-    return chooseAreaItem()
+    return chooseAreaItem();
   }
 }
 
@@ -311,15 +311,15 @@ const getAccount = (userId, discordClient) => {
   // Obtain our user stats
   const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
     discordId: userId
-  })
+  });
 
-  let account = null
+  let account = null;
   if (user.length) {
-    account = user[0]
+    account = user[0];
   }
 
-  return account
-}
+  return account;
+};
 
 module.exports = {
   data: generateSlashCommand(COMMAND.INFO),
@@ -327,7 +327,7 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
     // Init our question generators
     const questions = [
@@ -335,46 +335,46 @@ module.exports = {
       new characterQuestion(), 
       new cardQuestion(), 
       new areaQuestion()
-    ]
+    ];
 
     // Obtain a random question
-    const questionCreator = (questions[Math.floor(Math.random() * questions.length)])
-    const question = questionCreator.getQuestion()
-    let prompt = question.prompt + '\n'
+    const questionCreator = (questions[Math.floor(Math.random() * questions.length)]);
+    const question = questionCreator.getQuestion();
+    let prompt = question.prompt + '\n';
 
     // Set our correct answer to be a random index (out of 4)
-    const correctIdx = Math.floor(Math.random() * 3)
-    const answerOptions = []
+    const correctIdx = Math.floor(Math.random() * 3);
+    const answerOptions = [];
 
     for(let i = 0; i < 4; i++) {
-      let answer = question.right
+      let answer = question.right;
       if (i !== correctIdx) {
-        answer = question.wrong.pop()
+        answer = question.wrong.pop();
       } 
       answerOptions.push({
         label: answer,
         value: answer,
         emoji: COMMAND.CONSTANTS[i+1]
-      })
+      });
 
-      prompt += `${COMMAND.CONSTANTS[i+1]} \`\`${answer}\`\`\n`
+      prompt += `${COMMAND.CONSTANTS[i+1]} \`\`${answer}\`\`\n`;
     }
   
-    console.log(answerOptions)
+    console.log(answerOptions);
 
     // Initialize our question selection menu
     const questionSelect = new MessageActionRow()
       .addComponents(new MessageSelectMenu()
-          .setCustomId(`quiz`)
+          .setCustomId('quiz')
           .setPlaceholder('Select Your Answer!')
-          .addOptions(answerOptions))
+          .addOptions(answerOptions));
 
-    const interactionSec = Math.round(COMMAND.CONSTANTS.INTERACTION_TIME / 1000)
+    const interactionSec = Math.round(COMMAND.CONSTANTS.INTERACTION_TIME / 1000);
     
     const content = {
       type: questionCreator.getType(),
       message: prompt + `\n*You have ${interactionSec} seconds to answer this question*`
-    }
+    };
 
     const quizMessage = await interaction.editReply({ 
       embeds: [
@@ -388,12 +388,12 @@ module.exports = {
       fetchReply: true
     });
 
-    const filter = i => { return i.customId === `quiz` }
+    const filter = i => { return i.customId === 'quiz'; };
 
     const collector = quizMessage.createMessageComponentCollector({ 
       filter, 
       time: COMMAND.CONSTANTS.INTERACTION_TIME 
-    })
+    });
 
     let answered = false;
 
@@ -409,22 +409,22 @@ module.exports = {
             })
           ],
           ephemeral: true
-        })
-        return
+        });
+        return;
       } else {
         // Right user has answered the prompt
-        answered = true
+        answered = true;
       }
 
       let content = {
         type: '',
         message: `${question.prompt}\nYour Answer: \`\`${i.values[0]}\`\`\nCorrect Answer: \`\`${question.right}\`\`\n\n`
-      }
+      };
   
-      let account = getAccount(interaction.user.id, discordClient)
+      let account = getAccount(interaction.user.id, discordClient);
 
       // Initialize correct if we have an account
-      let correct = (account) ? account.quiz_correct : 0
+      let correct = (account) ? account.quiz_correct : 0;
       
       if (i.values[0] === question.right) {
         if (account) {
@@ -434,13 +434,13 @@ module.exports = {
             quizCorrect: account.quiz_correct + 1,
             quizQuestion: account.quiz_question + 1,
             discordId: interaction.user.id
-          })
+          });
         }
 
         // Append message content
-        content.type = COMMAND.CONSTANTS.QUESTION_RIGHT_TYPE
-        content.message += COMMAND.CONSTANTS.QUESTION_RIGHT_MSG
-        correct++
+        content.type = COMMAND.CONSTANTS.QUESTION_RIGHT_TYPE;
+        content.message += COMMAND.CONSTANTS.QUESTION_RIGHT_MSG;
+        correct++;
       } else {
         if (account) {
           // Update our user db with the new values
@@ -448,21 +448,21 @@ module.exports = {
             'WHERE discord_id=@discordId').run({
             quizQuestion: account.quiz_question + 1,
             discordId: interaction.user.id
-          })
+          });
         }
 
         // Append message content
-        content.type = COMMAND.CONSTANTS.QUESTION_WRONG_TYPE
-        content.message += COMMAND.CONSTANTS.QUESTION_WRONG_MSG
+        content.type = COMMAND.CONSTANTS.QUESTION_WRONG_TYPE;
+        content.message += COMMAND.CONSTANTS.QUESTION_WRONG_MSG;
       }
 
       if (account) {
         // Output our user statistics
-        content.message += `\n\nQuestions Correct: \`\`${correct}\`\``
-        content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-        content.message += `\nAccuracy: \`\`${+((correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
+        content.message += `\n\nQuestions Correct: \`\`${correct}\`\``;
+        content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``;
+        content.message += `\nAccuracy: \`\`${+((correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``;
       } else {
-        content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
+        content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`;
       }
 
       interaction.editReply({
@@ -474,35 +474,35 @@ module.exports = {
           })
         ],
         components: []
-      })
+      });
 
-    })
+    });
 
     collector.on('end', async (collected) => {
       if (!answered) {
-        console.log(`Collected ${collected.size} items`)
+        console.log(`Collected ${collected.size} items`);
 
         // If the user has not answered the question yet
         const content = {
           type: COMMAND.CONSTANTS.QUESTION_TIMEOUT_TYPE,
           message: `${question.prompt}\nCorrect Answer: \`\`${question.right}\`\`\n\n` +
             COMMAND.CONSTANTS.QUESTION_TIMEOUT_MSG
-        }
+        };
 
-        let account = getAccount(interaction.user.id, discordClient)
+        let account = getAccount(interaction.user.id, discordClient);
 
         if (account) {
           discordClient.db.prepare('UPDATE users SET quiz_question=@quizQuestion ' + 
             'WHERE discord_id=@discordId').run({
             quizQuestion: account.quiz_question + 1,
             discordId: interaction.user.id
-          })
+          });
 
-          content.message += `\n\nQuestions Correct: \`\`${account.quiz_correct}\`\``
-          content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``
-          content.message += `\nAccuracy: \`\`${+((account.quiz_correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``
+          content.message += `\n\nQuestions Correct: \`\`${account.quiz_correct}\`\``;
+          content.message += `\nQuestions Answered: \`\`${account.quiz_question + 1}\`\``;
+          content.message += `\nAccuracy: \`\`${+((account.quiz_correct / (account.quiz_question + 1)) * 100).toFixed(2)}%\`\``;
         } else {
-          content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`
+          content.message += `\n\n ${COMMAND.CONSTANTS.LINK_MSG}`;
         }
 
         await interaction.editReply({
@@ -514,8 +514,8 @@ module.exports = {
             })
           ],
           components: []
-        })
+        });
       }
     });
   }
-}
+};

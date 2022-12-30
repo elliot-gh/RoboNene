@@ -4,26 +4,24 @@
  */
 
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
 
 const fs = require('fs');
 const path = require('path');
 
-const generateEmbed = require('../methods/generateEmbed') 
+const generateEmbed = require('../methods/generateEmbed'); 
 
 // Constants that are used within the command 
-const COMMAND_NAME = 'help'
+const COMMAND_NAME = 'help';
 
 const HELP_CONSTANTS = {
   'BAD COMMAND': {
     type: 'Error',
     message: 'There was a problem in finding your specified command'
   }
-}
+};
 
 // Parse commands jsons in current directory
-const commands = {}
+const commands = {};
 const commandFiles = fs.readdirSync(path.join(__dirname, '../command_data')).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles.slice(25)) {
@@ -34,19 +32,19 @@ for (const file of commandFiles.slice(25)) {
 
 const slashCommand = new SlashCommandBuilder()
   .setName(COMMAND_NAME)
-  .setDescription('Get help on commands')
+  .setDescription('Get help on commands');
 
 slashCommand.addStringOption(op => {
-  op.setName('command')
-  op.setDescription('The name of the command you would like information on')
-  op.setRequired(true)
+  op.setName('command');
+  op.setDescription('The name of the command you would like information on');
+  op.setRequired(true);
   
   for(const command in commands) {
-    op.addChoice(command, command)
+    op.addChoice(command, command);
   }
 
-  return op
-})
+  return op;
+});
 
 /**
  * Generate an options string based on the command that we're trying to query
@@ -55,27 +53,27 @@ slashCommand.addStringOption(op => {
  * @return {String} option string dynamically generated from existing data
  */
 const generateOptions = (commandInfo, commandName) => {
-  let optStr = `\n\`\`/${commandName}`
+  let optStr = `\n\`\`/${commandName}`;
 
   if (commandInfo.params) {
     commandInfo.params.forEach(op => {
-      optStr += ` [${op.name}]`
-    })
+      optStr += ` [${op.name}]`;
+    });
   }
 
-  optStr += `\`\`\n${commandInfo.description}\n`
+  optStr += `\`\`\n${commandInfo.description}\n`;
 
   if (commandInfo.params) {
     commandInfo.params.forEach(op => {
-      optStr += `\n\`\`[${op.name}]\`\`\n`
-      optStr += `**Type:** \`\`${op.type.charAt(0).toUpperCase() + op.type.slice(1)}\`\`\n`
-      optStr += `**Required:** \`\`${(op.required) ? 'Yes' : 'No'}\`\`\n`
-      optStr += `**Description:** ${op.description}\n`
-    })
+      optStr += `\n\`\`[${op.name}]\`\`\n`;
+      optStr += `**Type:** \`\`${op.type.charAt(0).toUpperCase() + op.type.slice(1)}\`\`\n`;
+      optStr += `**Required:** \`\`${(op.required) ? 'Yes' : 'No'}\`\`\n`;
+      optStr += `**Description:** ${op.description}\n`;
+    });
   }
 
-  return optStr
-}
+  return optStr;
+};
 
 module.exports = {
   data: slashCommand,
@@ -83,7 +81,7 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: true
-    })
+    });
 
     if (!(commands.hasOwnProperty(interaction.options._hoistedOptions[0].value))) {
       await interaction.editReply({
@@ -94,23 +92,23 @@ module.exports = {
             client: discordClient.client
           })
         ]
-      })
-      return
+      });
+      return;
     }
 
-    const commandInfo = commands[interaction.options._hoistedOptions[0].value]
+    const commandInfo = commands[interaction.options._hoistedOptions[0].value];
     let content = {
       type: commandInfo.name,
       message: ''
-    }
+    };
 
     if (commandInfo.subcommands) {
-      content.message += `${commandInfo.description}\n`
+      content.message += `${commandInfo.description}\n`;
       commandInfo.subcommands.forEach(sc => {
-        content.message += generateOptions(sc, `${commandInfo.name} ${sc.name}`)
-      })
+        content.message += generateOptions(sc, `${commandInfo.name} ${sc.name}`);
+      });
     } else {
-      content.message += generateOptions(commandInfo, commandInfo.name)
+      content.message += generateOptions(commandInfo, commandInfo.name);
     }
 
     await interaction.editReply({

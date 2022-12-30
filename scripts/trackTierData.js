@@ -3,7 +3,7 @@
  * @author Ai0796
  */
 
-const { CUTOFF_INTERVAL, CUTOFF_DATA } = require('../constants');
+const { CUTOFF_INTERVAL } = require('../constants');
 const fs = require('fs');
 
 /**
@@ -13,7 +13,7 @@ const fs = require('fs');
 
 async function clearFile() {
     try {
-        if (fs.existsSync(`track.json`)) {
+        if (fs.existsSync('track.json')) {
             await fs.unlinkSync('track.json');
         }
     } catch (e) {
@@ -24,11 +24,11 @@ async function clearFile() {
 function readTiers() {
     var trackFile;
     try {
-        if (!fs.existsSync(`track.json`)) {
+        if (!fs.existsSync('track.json')) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
         }
 
         console.log(trackFile);
@@ -44,11 +44,11 @@ function readScores(tier) {
     tier = tier.toString();
     var trackFile;
     try {
-        if (!fs.existsSync(`track.json`)) {
+        if (!fs.existsSync('track.json')) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
         }
 
         if (tier in trackFile) {
@@ -67,11 +67,11 @@ function getUsers(tier, score) {
     var users = [];
     var trackFile;
     try {
-        if (!fs.existsSync(`track.json`)) {
+        if (!fs.existsSync('track.json')) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
         }
 
         if (tier in trackFile) {
@@ -82,11 +82,11 @@ function getUsers(tier, score) {
             }
         }
 
-        fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
+        fs.writeFile('track.json', JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
             } else {
-                console.log(`Wrote Tracking Successfully`);
+                console.log('Wrote Tracking Successfully');
             }
         });
     } catch (e) {

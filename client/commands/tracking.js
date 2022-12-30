@@ -4,10 +4,10 @@
  * @author Potor10
  */
 
-const COMMAND = require('../command_data/tracking')
+const COMMAND = require('../command_data/tracking');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 module.exports = {
   ...COMMAND.INFO,
@@ -16,11 +16,11 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const db = discordClient.db
+    const db = discordClient.db;
 
-    const channelData = interaction.options._hoistedOptions[0]
+    const channelData = interaction.options._hoistedOptions[0];
 
     if (channelData.channel.type !== 'GUILD_TEXT') {
       await interaction.editReply({
@@ -33,11 +33,11 @@ module.exports = {
         ]
       });
 
-      return
+      return;
     }
 
     if (interaction.options._hoistedOptions[2].value) {
-      const perms = channelData.channel.guild.me.permissionsIn(channelData.channel)
+      const perms = channelData.channel.guild.me.permissionsIn(channelData.channel);
       if (!perms.has('SEND_MESSAGES') || !perms.has('EMBED_LINKS')) {
         await interaction.editReply({
           embeds: [
@@ -48,7 +48,7 @@ module.exports = {
             })
           ]
         });
-        return
+        return;
       }
 
       db.prepare('REPLACE INTO tracking (channel_id, guild_id, tracking_type) ' + 
@@ -61,10 +61,10 @@ module.exports = {
       const content = {
         type: 'Success',
         message: `Alert Type: \`\`${interaction.options._hoistedOptions[1].value} min\`\`\n` +
-          `Status: \`\`Enabled\`\`\n` +
+          'Status: ``Enabled``\n' +
           `Channel: \`\`${channelData.channel.name}\`\`\n` +
           `Guild: \`\`${channelData.channel.guild.name}\`\``
-      }
+      };
 
       await interaction.editReply({
         embeds: [
@@ -87,10 +87,10 @@ module.exports = {
         const content = {
           type: 'Success',
           message: `Alert Type: \`\`${interaction.options._hoistedOptions[1].value} min\`\`\n` +
-            `Status: \`\`Disabled\`\`\n` +
+            'Status: ``Disabled``\n' +
             `Channel: \`\`${channelData.channel.name}\`\`\n` +
             `Guild: \`\`${channelData.channel.guild.name}\`\``
-        }
+        };
 
         await interaction.editReply({
           embeds: [

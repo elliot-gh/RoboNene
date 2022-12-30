@@ -5,7 +5,7 @@
  */
 
 const { RESULTS_PER_PAGE } = require('../../constants');
-var MAXLENGTH = 42
+var MAXLENGTH = 42;
 
 /**
  * Generates an ranking embed from the provided params
@@ -17,11 +17,11 @@ var MAXLENGTH = 42
  * @return {MessageEmbed} a generated embed of the current leaderboard
  */
 const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobile) => {
-    let rankLabel = "T";
-    let nameLabel = "Name";
-    let scoreLabel = "Score"; 
-    let gamesLabel = "Games";
-    let changeLabel = "GPH"
+    let rankLabel = 'T';
+    let nameLabel = 'Name';
+    let scoreLabel = 'Score'; 
+    let gamesLabel = 'Games';
+    let changeLabel = 'GPH';
 
     //Ignore this
     if(mobile) {
@@ -46,17 +46,17 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
         if (user.score.toLocaleString().length > maxScoreLength) {
             maxScoreLength = user.score.toLocaleString().length;
         }
-    })
+    });
 
     let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH);
     maxNameLength -= difference;
 
     let leaderboardText = '';
-    let rank = " ".repeat(maxRankLength - rankLabel.length) + rankLabel;
-    let name = nameLabel + " ".repeat(maxNameLength - nameLabel.length);
-    let score = scoreLabel + " ".repeat(maxScoreLength - scoreLabel.length);
-    let games = " ".repeat(maxGamesLength - gamesLabel.length) + gamesLabel;
-    let change = " ".repeat(maxChangeLength - changeLabel.length) + changeLabel;
+    let rank = ' '.repeat(maxRankLength - rankLabel.length) + rankLabel;
+    let name = nameLabel + ' '.repeat(maxNameLength - nameLabel.length);
+    let score = scoreLabel + ' '.repeat(maxScoreLength - scoreLabel.length);
+    let games = ' '.repeat(maxGamesLength - gamesLabel.length) + gamesLabel;
+    let change = ' '.repeat(maxChangeLength - changeLabel.length) + changeLabel;
     leaderboardText += `\`${rank} ${name} ${score} ${games} ${change}\``;
     leaderboardText += '\n';
     for (let i = 0; i < RESULTS_PER_PAGE; i++) {
@@ -65,26 +65,26 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
             break;
         }
 
-        let rank = " ".repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank;
-        let nameStr = data[i].name.substring(0, maxNameLength).replace("`", "'");
-        let name = nameStr + " ".repeat(maxNameLength - nameStr.length);
-        let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) +
+        let rank = ' '.repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank;
+        let nameStr = data[i].name.substring(0, maxNameLength).replace('`', '\'');
+        let name = nameStr + ' '.repeat(maxNameLength - nameStr.length);
+        let score = ' '.repeat(maxScoreLength - data[i].score.toLocaleString().length) +
             data[i].score.toLocaleString();
         var gamesStr;
         if (gamesPlayed[i] == -1) {
-            gamesStr = "N/A"
+            gamesStr = 'N/A';
         } else {
             gamesStr = (gamesPlayed[i]).toLocaleString();
         }
         var changeStr;
         if (GPH[i] == -1) {
-            changeStr = "N/A"
+            changeStr = 'N/A';
         }
         else {
             changeStr = (GPH[i]).toLocaleString();
         }
-        let games = " ".repeat(maxGamesLength - gamesStr.length) + gamesStr;
-        let change = " ".repeat(maxChangeLength - changeStr.length) + 
+        let games = ' '.repeat(maxGamesLength - gamesStr.length) + gamesStr;
+        let change = ' '.repeat(maxChangeLength - changeStr.length) + 
             changeStr;
 
         leaderboardText += `\`${rank} ${name} ${score} ${games} ${change}\``;
@@ -94,7 +94,7 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
         leaderboardText += '\n';
     }
 
-    return leaderboardText
-}
+    return leaderboardText;
+};
 
-module.exports = generateAlternateRankingText
+module.exports = generateAlternateRankingText;

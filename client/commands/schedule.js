@@ -8,7 +8,7 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/schedule')
+const COMMAND = require('../command_data/schedule');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const { DateTime } = require('luxon');
@@ -20,7 +20,7 @@ const { DateTime } = require('luxon');
  */
 const getNextReset = (currentDate) => {
 
-  var nextReset = DateTime.now().setZone("America/Los_Angeles");
+  var nextReset = DateTime.now().setZone('America/Los_Angeles');
   nextReset = nextReset.set({
     hour: 4,
     minutes: 0,
@@ -86,7 +86,7 @@ const createScheduleEmbed = (data, client) => {
     );
 
     scheduleEmbed.setThumbnail('https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' + 
-      `${data[currentEventIdx].assetbundleName}/logo_rip/logo.webp`)
+      `${data[currentEventIdx].assetbundleName}/logo_rip/logo.webp`);
   }
 
   // Determine if there is the next event in the future (closest)
@@ -113,7 +113,7 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
     const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(events, discordClient.client);

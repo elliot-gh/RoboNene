@@ -7,7 +7,7 @@ const fs = require('fs');
 
 const MASTERYRANKREWARDS = [0, 50, 100, 150, 200];
 const V2MASTERYREWARDS = [0.1, 0.2, 1, 1.5, 2];
-const CARDRARITIES = ["rarity_1", "rarity_2", "rarity_3", "rarity_birthday", "rarity_4"]
+const CARDRARITIES = ['rarity_1', 'rarity_2', 'rarity_3', 'rarity_birthday', 'rarity_4'];
 
 /**
  * @typedef {Object} Team
@@ -44,7 +44,7 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
         data.cardParameters.filter((param) =>
             param.cardLevel === card.level && param.cardParameterType === `param${i}`)
             .map((param) => {
-                talent += param.power
+                talent += param.power;
             });
     }
 
@@ -178,7 +178,7 @@ const getEventBonus = (cards, eventBonusCards, eventCards, eventID) => {
             if (param.eventId == eventID) {
                 return param.cardId === card.cardId;
             }
-        })
+        });
         if (gachaBonus) {
             eventBonus += gachaBonus.bonusRate;
         }

@@ -18,22 +18,22 @@ module.exports = {
                 'required': false,
                 'description': 'Song Name',
                 'choices': [
-                    ["Intense Voice of Hatsune Miku", 131],
-                    ["Melt", 47],
-                    ["World is Mine", 48],
-                    ["Chikyuu Saigo no Kkuhaku wo", 154],
-                    ["Hitorinbo Envy", 74],
-                    ["Jack Pot Sad Girl", 62],
-                    ["Viva Happy", 11],
-                    ["ODDS&ENDS", 117],
-                    ["Dramaturgy", 91],
-                    ["Ready Steady", 54],
-                    ["Gunjo Sanka", 141],
-                    ["IDSMILE", 116]
+                    ['Intense Voice of Hatsune Miku', 131],
+                    ['Melt', 47],
+                    ['World is Mine', 48],
+                    ['Chikyuu Saigo no Kkuhaku wo', 154],
+                    ['Hitorinbo Envy', 74],
+                    ['Jack Pot Sad Girl', 62],
+                    ['Viva Happy', 11],
+                    ['ODDS&ENDS', 117],
+                    ['Dramaturgy', 91],
+                    ['Ready Steady', 54],
+                    ['Gunjo Sanka', 141],
+                    ['IDSMILE', 116]
                 ]
             }
         ]
     },
 
     'CONSTANTS': {}
-}
+};

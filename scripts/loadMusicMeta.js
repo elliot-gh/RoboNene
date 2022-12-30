@@ -10,12 +10,12 @@ const fs = require('fs');
 
 // The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
-    "HOST": "minio.dnaroma.eu",
-    "PATH": "/sekai-best-assets/",
-    "JSON": [
-        "music_metas"
+    'HOST': 'minio.dnaroma.eu',
+    'PATH': '/sekai-best-assets/',
+    'JSON': [
+        'music_metas'
     ]
-}
+};
 
 /**
  * Recursively downloads the data one by one
@@ -23,9 +23,9 @@ const GAME_CONSTANTS = {
  */
 const loadMusicMeta = async (idx) => {
     if (idx >= GAME_CONSTANTS.JSON.length) {
-        return
+        return;
     } else {
-        const filename = GAME_CONSTANTS.JSON[idx]
+        const filename = GAME_CONSTANTS.JSON[idx];
 
         const options = {
             host: GAME_CONSTANTS.HOST,
@@ -42,17 +42,17 @@ const loadMusicMeta = async (idx) => {
                 if (res.statusCode === 200) {
                     try {
                         fs.writeFileSync(`${DIR_DATA}/${filename}.json`, JSON.stringify(JSON.parse(json)));
-                        console.log(`${filename}.json Retrieved`)
-                        loadMusicMeta(idx + 1)
+                        console.log(`${filename}.json Retrieved`);
+                        loadMusicMeta(idx + 1);
                     } catch (err) {
-                        console.log(`Error parsing JSON: ${err}`)
+                        console.log(`Error parsing JSON: ${err}`);
                     }
                 } else {
-                    console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`)
+                    console.log(`Error retrieving via HTTPS. Status: ${res.statusCode}`);
                 }
             });
-        }).on('error', (err) => { });
+        }).on('error', () => { });
     }
-}
+};
 
 module.exports = loadMusicMeta;

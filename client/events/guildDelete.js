@@ -17,7 +17,7 @@ module.exports = {
       message: `Removed From ${guild.name} (id: ${guild.id})`
     });
 
-    const client = discordClient.client
+    const client = discordClient.client;
     client.user.setActivity(BOT_ACTIVITY() + 
       `${client.guilds.cache.size} ${(client.guilds.cache.size > 1) ? 'servers' : 'server'}`);
   }

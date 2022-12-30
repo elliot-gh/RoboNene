@@ -6,14 +6,11 @@
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
-const fs = require('fs');
 
-const COMMAND = require('../command_data/graph')
+const COMMAND = require('../command_data/graph');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
-
-const HOUR = 3600000;
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 /**
  * Create a graph embed to be sent to the discord interaction
@@ -32,8 +29,8 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  return graphEmbed
-}
+  return graphEmbed;
+};
 
 /**
  * Ensures a string is ASCII to be sent through HTML
@@ -41,7 +38,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
  * @returns 
  */
 function ensureASCII(str) {
-  return str.replace(/[^a-z0-9&]/gi, ' ')
+  return str.replace(/[^a-z0-9&]/gi, ' ');
 }
 
 /**
@@ -63,10 +60,10 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
         })
       ]
     });
-    return
+    return;
   }
 
-  graphData = []
+  let graphData = [];
   const event = discordClient.getCurrentEvent();
   tier = ensureASCII(tier);
 
@@ -74,43 +71,43 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
     graphData.push({
       x: point.timestamp - event.startAt,
       y: point.score
-    })
+    });
   });
 
-  postData = JSON.stringify({
-    "backgroundColor": "#FFFFFF",
-    "format": "png",
+  let postData = JSON.stringify({
+    'backgroundColor': '#FFFFFF',
+    'format': 'png',
     'chart': {
       'type': 'line', 
       'data': {
         'datasets': [{
           'label': `${tier}`, 
-          "fill": false,
+          'fill': false,
           'data': graphData
         }]
       },
-      "options": {
-        "scales": {
-          "xAxes": [{
-            "type": "time",
-            "distribution": 'linear',
-            "time": {
-              "displayFormats": {
-                "hour": "[Day] D HH"
+      'options': {
+        'scales': {
+          'xAxes': [{
+            'type': 'time',
+            'distribution': 'linear',
+            'time': {
+              'displayFormats': {
+                'hour': '[Day] D HH'
               },
-              "unit": 'hour',
-              "stepSize": 3
+              'unit': 'hour',
+              'stepSize': 3
             }
           }]
         }
       }
     }
-  })
+  });
 
   const options = {
     host: 'quickchart.io',
     port: 443,
-    path: `/chart/create`,
+    path: '/chart/create',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -119,7 +116,7 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
   };
 
   const req = https.request(options, (res) => {
-    console.log(`statusCode: ${res.statusCode}`)
+    console.log(`statusCode: ${res.statusCode}`);
 
     let json = '';
     res.on('data', (chunk) => {
@@ -128,44 +125,28 @@ const postQuickChart = async (interaction, tier, rankData, discordClient) => {
     res.on('end', async () => {
       if (res.statusCode === 200) {
         try {
-          console.log(JSON.stringify(JSON.parse(json)))
+          console.log(JSON.stringify(JSON.parse(json)));
           await interaction.editReply({ 
             embeds: [generateGraphEmbed(JSON.parse(json).url, tier, discordClient)]
-          })
+          });
         } catch (err) {
           // Error parsing JSON: ${err}`
-          console.log(`ERROR 1 ${err}`)
+          console.log(`ERROR 1 ${err}`);
         }
       } else {
         // Error retrieving via HTTPS. Status: ${res.statusCode}
-        console.log(`Error retrieving via HTTPS ${res.statusCode}`)
+        console.log(`Error retrieving via HTTPS ${res.statusCode}`);
       }
     });
-  }).on('error', (err) => {});
+  }).on('error', () => {});
 
-  req.write(postData)
-  req.end()
-}
-
-function getEventName(eventID) 
-{
-  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-  let currentEventIdx = -1;
-  let currentDate = new Date();
-
-  for (let i = 0; i < data.length; i++) {
-    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-      currentEventIdx = i;
-    }
-  }
-  
-  return data[currentEventIdx].name
-}
+  req.write(postData);
+  req.end();
+};
 
 async function noDataErrorMessage(interaction, discordClient) {
-  let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
-  let title = `Tier Not Found`;
+  let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+  let title = 'Tier Not Found';
 
   await interaction.editReply({
     embeds: [
@@ -189,7 +170,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
     lowerLimit: 0
   }, async (response) => {
 
-    let userId = response['rankings'][0]['userId']//Get the last ID in the list
+    let userId = response['rankings'][0]['userId'];//Get the last ID in the list
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
@@ -197,17 +178,17 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
       });
     if (data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      rankData.unshift({ timestamp: eventData.startAt, score: 0 })
-      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, discordClient);
     } else {
-      noDataErrorMessage(interaction, discordClient)
-    };
+      noDataErrorMessage(interaction, discordClient);
+    }
   }, (err) => {
     console.log(err);
   });
-};
+}
 
 module.exports = {
   ...COMMAND.INFO,
@@ -216,9 +197,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
     
-    const event = discordClient.getCurrentEvent()
+    const event = discordClient.getCurrentEvent();
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
@@ -229,10 +210,10 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
-    const eventName = getEventName(event.id)
+    const eventName = event.name;
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
@@ -250,15 +231,15 @@ module.exports = {
         return;
 
       } else {
-        sendTierRequest(event.id, eventName, event, tier, interaction, discordClient)
+        sendTierRequest(event.id, eventName, event, tier, interaction, discordClient);
       }
     } else if (user) {
       try {
-        let id = discordClient.getId(user.id)
+        let id = discordClient.getId(user.id);
 
         if (id == -1) {
           interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
-          return
+          return;
         }
 
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
@@ -270,7 +251,7 @@ module.exports = {
         {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-          rankData.unshift({ timestamp: event.startAt, score: 0 })
+          rankData.unshift({ timestamp: event.startAt, score: 0 });
           postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, discordClient);
         }
         else {

@@ -69,4 +69,4 @@ module.exports = {
 
     'ABOUT_LICENSE': 'MIT'
   }
-}
+};

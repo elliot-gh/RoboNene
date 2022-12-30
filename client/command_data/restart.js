@@ -19,4 +19,4 @@ module.exports = {
             'message': 'This user has not linked their project sekai account with the bot.'
         }
     }
-}
+};

@@ -53,8 +53,8 @@ module.exports = {
   },
 
   'CONSTANTS': {
-    "RATE_HOST": "raw.githubusercontent.com",
-    "RATE_PATH": "/potor10/SekaiCutoffRate/master/rank/rate.json",
+    'RATE_HOST': 'raw.githubusercontent.com',
+    'RATE_PATH': '/potor10/SekaiCutoffRate/master/rank/rate.json',
 
     'RATE_LIMIT_ERR': {
       'type': 'Error', 
@@ -91,4 +91,4 @@ module.exports = {
     'NAIVE_DESC': 'Current Score + (Average Points Per Hour \\* Hours Left)',
     'NAIVE_LAST_HR_DESC': 'Current Score + (Average Points Per Hour [Last Hour] \\* Hours Left)'
   }
-}
+};

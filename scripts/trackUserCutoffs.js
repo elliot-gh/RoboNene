@@ -3,7 +3,7 @@
  * @author Ai0796
  */
 
-const { CUTOFF_INTERVAL, CUTOFF_DATA } = require('../constants');
+const { CUTOFF_INTERVAL } = require('../constants');
 const fs = require('fs');
 /**
  * Writes JSON response from Project Sekai servers to local JSON
@@ -19,7 +19,7 @@ const fs = require('fs');
  * @param {DiscordClient} discordClient the client we are using 
 */
 async function getCutoffs(discordClient) {
-    async function logResults(response, id, sekai_id) {
+    async function logResults(response, id) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
@@ -53,7 +53,7 @@ async function getCutoffs(discordClient) {
                     eventId: event,
                     targetUserId: id.sekai_id,
                     lowerLimit: 0
-                }, function(k) { logResults(k, id.id, id.sekai_id); }, (err) => {
+                }, function(k) { logResults(k, id.id); }, (err) => {
                     discordClient.logger.log({
                         level: 'error',
                         message: err.toString()

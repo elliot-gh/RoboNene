@@ -47,4 +47,4 @@ module.exports = {
       'message': 'You have provided an invalid ID.'
     }
   }
-}
+};

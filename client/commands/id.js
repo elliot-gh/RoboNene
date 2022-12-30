@@ -3,11 +3,6 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
-const https = require('https');
-const fs = require('fs');
-
 const COMMAND = require('../command_data/id');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
@@ -19,12 +14,12 @@ module.exports = {
 
     async execute(interaction, discordClient) {
         let ephemeral = interaction.options.getBoolean('show');
-        console.log(ephemeral)
+        console.log(ephemeral);
         if(ephemeral == null) {
-            ephemeral = true
+            ephemeral = true;
         }
         else {
-            ephemeral = !ephemeral
+            ephemeral = !ephemeral;
         }
         await interaction.deferReply({
             ephemeral: ephemeral
@@ -33,13 +28,13 @@ module.exports = {
         try {
             let id = interaction.member.user.id; 
             let name = interaction.member.user.username;
-            let sendName = `${name}'s Sekai ID`
+            let sendName = `${name}'s Sekai ID`;
             let userData = discordClient.db.prepare('Select * FROM users WHERE ' +
                 'discord_id=@discordid').all({
                     discordid: id
                 });
             if (userData.length > 0) {
-                let sekaiID = userData[0].sekai_id
+                let sekaiID = userData[0].sekai_id;
                 await interaction.editReply({
                     embeds: [
                         generateEmbed({

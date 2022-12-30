@@ -5,16 +5,16 @@
  */
 
 const { MessageEmbed } = require('discord.js');
-const { DIR_DATA, NENE_COLOR, FOOTER, CUTOFF_DATA } = require('../../constants');
+const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 const fs = require('fs');
 const regression = require('regression');
 
-const COMMAND = require('../command_data/cutoff')
+const COMMAND = require('../command_data/cutoff');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed')
-const binarySearch = require('../methods/binarySearch')
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed');
+const binarySearch = require('../methods/binarySearch');
 
 /**
  * Operates on a http request and returns the current rate being hosted on GH actions.
@@ -37,19 +37,19 @@ const requestRate = () => {
       res.on('end', async () => {
         if (res.statusCode === 200) {
           try {
-            resolve(JSON.parse(json))
+            resolve(JSON.parse(json));
           } catch (err) {
-            reject(err)
+            reject(err);
           }
         } else {
-          reject(res.statusCode)
+          reject(res.statusCode);
         }
       });
     }).on('error', (err) => {
-      reject(err)
+      reject(err);
     });
-  })
-}
+  });
+};
 
 
 /**
@@ -97,7 +97,7 @@ const generateCutoff = async ({ interaction, event,
         })
       ]
     });
-    return
+    return;
   }
 
   const msTaken = timestamp - event.startAt;
@@ -109,12 +109,12 @@ const generateCutoff = async ({ interaction, event,
   let lastHourPt = (rankData) ? rankData[0] : {
     timestamp: (new Date(timestamp)).toISOString(),
     score: score
-  }
+  };
 
   // Every point is spaced by 1 minute intervals (assuming that there isn't any downtime)
   // Otherwise there maybe a difference of 1-2 minutes, but that's still generally ok for calculating
   if (rankData.length > 60) {
-    lastHourPt = rankData[rankData.length - 60]
+    lastHourPt = rankData[rankData.length - 60];
   }
 
   // Estimate texts used in the embed
@@ -133,23 +133,23 @@ const generateCutoff = async ({ interaction, event,
 
   // Find the index where 12 and 24 hours have passed into the event (or the latest timestamp)
   for (let i = 0; i < rankData.length; i++) {
-    const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
+    const currentEventTime = (new Date(rankData[i].timestamp)).getTime();
     if (halfDayIdx === -1 && currentEventTime >= event.startAt + 43200000) {
-      halfDayIdx = i
+      halfDayIdx = i;
     }
     if (currentEventTime >= event.startAt + 86400000) {
-      oneDayIdx = i
-      break
+      oneDayIdx = i;
+      break;
     }
   }
 
   // Find the index where less than 24 hours left in the event (or the latest timestamp)
   if (timestamp >= event.aggregateAt - 86400000) {
     for (let i = 0; i < rankData.length; i++) {
-      const currentEventTime = (new Date(rankData[i].timestamp)).getTime()
-      lastDayIdx = i
+      const currentEventTime = (new Date(rankData[i].timestamp)).getTime();
+      lastDayIdx = i;
       if (currentEventTime >= event.aggregateAt - 86400000) {
-        break
+        break;
       }
     }
   }
@@ -167,7 +167,7 @@ const generateCutoff = async ({ interaction, event,
     eventCards.forEach(card => {
       if (card.eventId == event.id) {
         const cardInfo = binarySearch(card.cardId, 'id', cards);
-        characterIds.push(cardInfo.characterId)
+        characterIds.push(cardInfo.characterId);
       }
     });
 
@@ -188,30 +188,30 @@ const generateCutoff = async ({ interaction, event,
     // Identify a constant c used in y = (c * m)x + b that can be used via this event
     for (const eventId in rate) {
       if (rate[eventId].eventType !== currentEventType) {
-        continue
+        continue;
       }
 
-      const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0 }).length;
+      const similarity = characterIds.filter(el => { return rate[eventId].characterIds.indexOf(el) >= 0; }).length;
       if (rate[eventId][tier]) {
         // Make sure our idx is within bounds
-        const eventRateIdx = Math.min(rateIdx, rate[eventId][tier].length - 1)
+        const eventRateIdx = Math.min(rateIdx, rate[eventId][tier].length - 1);
 
         // Calculate recency factor
-        const eventWeight = parseInt(eventId, 10) / event.id
+        const eventWeight = parseInt(eventId, 10) / event.id;
 
         // Total Rate = Rate * # of similar characters * recency of event
-        totalRate += rate[eventId][tier][eventRateIdx] * similarity * eventWeight
-        totalSimilar += similarity * eventWeight
+        totalRate += rate[eventId][tier][eventRateIdx] * similarity * eventWeight;
+        totalSimilar += similarity * eventWeight;
 
-        allTotalRate += rate[eventId][tier][eventRateIdx]
-        rateCount += 1
+        allTotalRate += rate[eventId][tier][eventRateIdx];
+        rateCount += 1;
       }
     }
 
     // Determine the final rate depending on if there was a previous event with similar chara, 
     // otherwise use the average of all events of same type
     // If there is no data to go off of, we use 1
-    const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : ((rateCount) ? (allTotalRate / rateCount) : 1)
+    const finalRate = (totalSimilar) ? (totalRate / totalSimilar) : ((rateCount) ? (allTotalRate / rateCount) : 1);
     console.log(`The Final Rate is ${finalRate}`);
 
     const points = [];
@@ -263,7 +263,7 @@ const generateCutoff = async ({ interaction, event,
 
       // Create a linear regression model with the current data points
       const modelSmoothed = regression.linear(smoothingPoints, { precision: 100 });
-      const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1]
+      const predictedSmoothed = (modelSmoothed.equation[0] * finalRate * duration) + modelSmoothed.equation[1];
 
       // Calculate Error 
       errorSmoothed = stdError(points, model, finalRate) * (duration / points[points.length - 1][0]);
@@ -306,17 +306,17 @@ const generateCutoff = async ({ interaction, event,
     .setTitle(`${event.name} T${tier} Cutoff`)
     .setDescription(`**Requested:** <t:${Math.floor(timestamp / 1000)}:R>`)
     .setThumbnail(event.banner)
-    .addField(`Cutoff Statistics`, `Points: \`\`${score.toLocaleString()}\`\`\n` +
+    .addField('Cutoff Statistics', `Points: \`\`${score.toLocaleString()}\`\`\n` +
       `Avg. Speed (Per Hour): \`\`${scorePH.toLocaleString()}/h\`\`\n` +
       `Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp / 1000)}:R>] (Per Hour): \`\`${lastHourPtSpeed.toLocaleString()}/h\`\`\n`)
-    .addField(`Event Information`, `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` +
+    .addField('Event Information', `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` +
       `Ranking Ends: <t:${Math.floor(event.aggregateAt / 1000)}:R>\n` +
       `Percentage Through Event: \`\`${+(eventPercentage).toFixed(2)}%\`\`\n`)
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
   if (tier < 100) {
-    cutoffEmbed.addField('Warning', `*${COMMAND.CONSTANTS.PRED_WARNING}*`)
+    cutoffEmbed.addField('Warning', `*${COMMAND.CONSTANTS.PRED_WARNING}*`);
   }
 
   cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}` +
@@ -324,26 +324,26 @@ const generateCutoff = async ({ interaction, event,
     ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*${linEquationStr}\n\n` : '') +
     `Estimated Points (Smoothing): \`\`${smoothingEstimate}` +
     ` ± ${smoothingError}\`\`\n` +
-    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''))
+    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''));
 
 
   // Add a Naive Estimate if the user requests detailed information
   if (detailed) {
     const naiveEstimate = (oneDayIdx === -1) ? 'N/A' :
-      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (scorePH / 3600000)).toLocaleString()
+      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (scorePH / 3600000)).toLocaleString();
     const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' :
-      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (lastHourPtSpeed / 3600000)).toLocaleString()
+      Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (lastHourPtSpeed / 3600000)).toLocaleString();
 
-    cutoffEmbed.addField(`Naive Estimation (Predictions)`, `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
+    cutoffEmbed.addField('Naive Estimation (Predictions)', `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
       `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
       `Naive Estimate (Last Hour): \`\`${naiveLastHrEstimate}\`\`\n` +
-      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`)
+      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`);
   }
 
   await interaction.editReply({
     embeds: [cutoffEmbed]
   });
-}
+};
 
 module.exports = {
   ...COMMAND.INFO,
@@ -365,7 +365,7 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     const tier = interaction.options._hoistedOptions[0].value;
@@ -395,7 +395,7 @@ module.exports = {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName,
+              name: COMMAND.commandName,
               content: COMMAND.CONSTANTS.NO_RESPONSE_ERR,
               client: discordClient.client
             })
@@ -406,7 +406,7 @@ module.exports = {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName,
+              name: COMMAND.commandName,
               content: COMMAND.CONSTANTS.BAD_INPUT_ERROR,
               client: discordClient.client
             })

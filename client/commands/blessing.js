@@ -3,13 +3,10 @@
  * @author Ai0796
  */
 
-const { MessageActionRow, MessageButton } = require('discord.js');
-const { BOT_NAME } = require('../../constants');
 
-const COMMAND = require('../command_data/blessing')
+const COMMAND = require('../command_data/blessing');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed')
+const generateSlashCommand = require('../methods/generateSlashCommand');
 const fs = require('fs');
 
 const blessingLyrics = [
@@ -115,39 +112,40 @@ const blessingLyrics = [
     'Hip hip HOORAY',
     'kimi ni sachi are',
     '🎉🎊✨🎂 Hip hip HOORAY!!! 🎂✨🎊🎉',
-]
+];
 
 function getBonks() {
-    var bonk = 0
+    var bonk = 0;
+    var bonkFile;
     try {
-        if (!fs.existsSync(`blessings.json`)) {
+        if (!fs.existsSync('blessings.json')) {
             bonkFile = new Object();
         }
         else {
-            bonkFile = JSON.parse(fs.readFileSync(`blessings.json`, 'utf8'));
+            bonkFile = JSON.parse(fs.readFileSync('blessings.json', 'utf8'));
         }
 
-        if ("blessings" in bonkFile) {
-            bonkFile["blessings"] = bonkFile["blessings"] + 1
+        if ('blessings' in bonkFile) {
+            bonkFile['blessings'] = bonkFile['blessings'] + 1;
         }
         else {
-            bonkFile["blessings"] = 0
+            bonkFile['blessings'] = 0;
         }
 
-        bonk = bonkFile["blessings"]
+        bonk = bonkFile['blessings'];
 
-        fs.writeFile(`blessings.json`, JSON.stringify(bonkFile), err => {
+        fs.writeFile('blessings.json', JSON.stringify(bonkFile), err => {
             if (err) {
                 console.log('Error writing Bonk', err);
             } else {
-                console.log(`Wrote Bonk Successfully`);
+                console.log('Wrote Bonk Successfully');
             }
         });
     } catch (e) {
         console.log('Error occured while writing cutoffs: ', e);
     }
 
-    return bonk
+    return bonk;
 }
 
 module.exports = {
@@ -158,7 +156,7 @@ module.exports = {
         // await interaction.reply("test")
         try {
 
-            bonks = getBonks()
+            let bonks = getBonks();
 
             await interaction.reply(blessingLyrics[bonks % blessingLyrics.length]);
         } catch (e) {

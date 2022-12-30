@@ -6,21 +6,21 @@
  */
 
 const { DMChannel } = require('discord.js');
-const generateEmbed = require('../methods/generateEmbed') 
+const generateEmbed = require('../methods/generateEmbed'); 
 
 // General constants used to reply to standard interactions
 const INTERACTION_CONST = {
-  "NO_ACCESS_ADMIN": {
+  'NO_ACCESS_ADMIN': {
     type: 'Error',
-    message: "You can not access this command.\nPlease make sure you have " + 
-      "\`\`Administrator\`\` or \`\`Manage Server\`\` permissions."
+    message: 'You can not access this command.\nPlease make sure you have ' + 
+      '``Administrator`` or ``Manage Server`` permissions.'
   },
 
-  "NO_ACCESS_LINK": {
+  'NO_ACCESS_LINK': {
     type: 'Error',
-    message: "You can not access this command until you link your Discord to a Project Sekai account.\nUse /link to begin."
+    message: 'You can not access this command until you link your Discord to a Project Sekai account.\nUse /link to begin.'
   }
-}
+};
 
 module.exports = {
   name: 'interactionCreate',
@@ -44,11 +44,11 @@ module.exports = {
       .indexOf(interaction.commandName);
     
     if (interactionIdx != -1) {
-      const command = discordClient.commands[interactionIdx]
+      const command = discordClient.commands[interactionIdx];
 
       if (command.adminOnly) {
         // Check for server manager / administrate perms
-        let permissions = interaction.member.permissions
+        let permissions = interaction.member.permissions;
         if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_GUILD')) {
           await interaction.reply({
             embeds: [
@@ -60,7 +60,7 @@ module.exports = {
             ],
             ephemeral: true 
           });
-          return
+          return;
         }
       }
       

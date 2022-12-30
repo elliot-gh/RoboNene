@@ -16,7 +16,7 @@ const generateSkillText = require('../methods/generateSkillText');
 
 //Required since Proseka Skill order is not 1 2 3 4 5
 const ProsekaSkillOrder = [2, 1, 4, 5, 3];
-const Difficulties = ["easy", "normal", "hard", "expert", "master"];
+const Difficulties = ['easy', 'normal', 'hard', 'expert', 'master'];
 
 /**
  * A class designed to store music data from JSON Files

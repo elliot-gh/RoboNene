@@ -6,8 +6,8 @@
 
 const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
-const generateRankingText = require('../methods/generateRankingText')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateRankingText = require('../methods/generateRankingText');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 // Messages displayed when there is an error
 const RANK_CONSTANTS = {
@@ -18,7 +18,7 @@ const RANK_CONSTANTS = {
 
   'NO_EVENT_ERR': {
     type: 'Error',
-    message: "There is currently no event going on",
+    message: 'There is currently no event going on',
   },
 
   'NO_RESPONSE_ERR': {
@@ -46,7 +46,7 @@ const RANK_CONSTANTS = {
  * @param {Object} requestParams the parameters provided to the API for our ranking leaderboard query 
  */
 const getRank = async (commandName, interaction, discordClient, requestParams) => {
-  const event = discordClient.getCurrentEvent()
+  const event = discordClient.getCurrentEvent();
 
   if (event.id === -1) {
     await interaction.editReply({
@@ -58,7 +58,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
         })
       ]
     });
-    return
+    return;
   }
 
   if (!discordClient.checkRateLimit(interaction.user.id)) {
@@ -66,15 +66,15 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
       embeds: [generateEmbed({
         name: commandName,
         content: { 
-          type: RATE_LIMIT_ERR.type, 
-          message: RATE_LIMIT_ERR.message + 
+          type: RANK_CONSTANTS.RATE_LIMIT_ERR.type, 
+          message: RANK_CONSTANTS.RATE_LIMIT_ERR.message + 
             `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
         },
         client: discordClient.client
       })]
-    })
+    });
 
-    return
+    return;
   }
 
   discordClient.addSekaiRequest('ranking', {
@@ -93,7 +93,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
           })
         ]
       });
-      return
+      return;
     } else if (response.rankings.length === 0) {
       await interaction.editReply({
         embeds: [
@@ -104,28 +104,28 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
           })
         ]
       });
-      return
+      return;
     }
 
-    let higherLimit = RANK_CONSTANTS.HIGHER_LIMIT
-    let lowerLimit = RANK_CONSTANTS.LOWER_LIMIT
+    let higherLimit = RANK_CONSTANTS.HIGHER_LIMIT;
+    let lowerLimit = RANK_CONSTANTS.LOWER_LIMIT;
 
     if (response.rankings[0].rank < RANK_CONSTANTS.HIGHER_LIMIT + 1) {
-      const diff = RANK_CONSTANTS.HIGHER_LIMIT + 1 - response.rankings[0].rank
-      higherLimit -= diff
-      lowerLimit += diff
+      const diff = RANK_CONSTANTS.HIGHER_LIMIT + 1 - response.rankings[0].rank;
+      higherLimit -= diff;
+      lowerLimit += diff;
     }
 
-    requestParams.higherLimit = higherLimit
-    requestParams.lowerLimit = lowerLimit
+    requestParams.higherLimit = higherLimit;
+    requestParams.lowerLimit = lowerLimit;
 
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
       ...requestParams
     }, async (response) => {
-      const timestamp = Date.now()    
+      const timestamp = Date.now();    
   
-      let leaderboardText = generateRankingText(response.rankings, 0, requestParams.higherLimit+1)
+      let leaderboardText = generateRankingText(response.rankings, 0, requestParams.higherLimit+1);
       const leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
@@ -143,7 +143,7 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
         level: 'error',
         timestamp: Date.now(),
         message: err.toString()
-      })
+      });
 
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -151,15 +151,15 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
           content: { type: 'error', message: err.toString() },
           client: discordClient.client
         })]
-      })
-    })
+      });
+    });
   }, async (err) => {
     // Log the error
     discordClient.logger.log({
       level: 'error',
       timestamp: Date.now(),
       message: err.toString()
-    })
+    });
 
     await interaction.editReply({
       embeds: [generateEmbed({
@@ -167,8 +167,8 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
         content: { type: 'error', message: err.toString() },
         client: discordClient.client
       })]
-    })
-  })
-}
+    });
+  });
+};
 
-module.exports = getRank
+module.exports = getRank;

@@ -2,10 +2,6 @@
  * @fileoverview Display a graph of the previous ranking trend
  * @author Potor10
  */
-
-const { MessageEmbed } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
-const https = require('https');
 const fs = require('fs');
 
 const COMMAND = require('../command_data/track');
@@ -17,11 +13,11 @@ function addTrack(tier, score, mention, channel) {
     tier = tier.toString();
     var trackFile;
     try {
-        if (!fs.existsSync(`track.json`)) {
+        if (!fs.existsSync('track.json')) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync(`track.json`, 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
         }
 
         if (tier in trackFile && score in trackFile[tier]) {
@@ -35,11 +31,11 @@ function addTrack(tier, score, mention, channel) {
             trackFile[tier][score] = [[channel, mention]];
         }
 
-        fs.writeFile(`track.json`, JSON.stringify(trackFile), err => {
+        fs.writeFile('track.json', JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
             } else {
-                console.log(`Wrote Tracking Successfully`);
+                console.log('Wrote Tracking Successfully');
             }
         });
     } catch (e) {
@@ -104,7 +100,7 @@ module.exports = {
         const tier = interaction.options.getInteger('tier');
         const cutoff = interaction.options.getInteger('cutoff');
 
-        console.log(cutoff)
+        console.log(cutoff);
 
         if(tier > 100000) {
             await interaction.editReply({

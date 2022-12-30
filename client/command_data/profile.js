@@ -52,4 +52,4 @@ module.exports = {
     'pure': '<:attPure:930717823414714438>',
     'BLANK_EMOJI': '<:blank:930716814986588170>'
   }
-}
+};

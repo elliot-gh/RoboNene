@@ -1,8 +1,3 @@
-/**
- * @fileoverview Stock API code. Made by Ai0796, why have i done this
- */
-
-const https = require('https');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 class Stock {
@@ -59,7 +54,7 @@ class Stock {
 
         let returnData = {};
 
-        let exemptKeys = ['1. From_Currency Code', '2. From_Currency Name', '3. To_Currency Code', '4. To_Currency Name']
+        let exemptKeys = ['1. From_Currency Code', '2. From_Currency Name', '3. To_Currency Code', '4. To_Currency Name'];
 
         for (let key in data['Realtime Currency Exchange Rate']) {
             let newKey = await this.formatKey(key.substring(3));

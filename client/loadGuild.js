@@ -26,7 +26,7 @@ for (const file of commandFiles) {
 const rest = new REST({ version: '9' }).setToken(token);
 (async () => {
 	try {
-    commandNames = commands.map(c => c.data.name);
+    let commandNames = commands.map(c => c.data.name);
 		console.log(`Started refreshing application (/) commands: ${commandNames}`);
 
 		await rest.put(
