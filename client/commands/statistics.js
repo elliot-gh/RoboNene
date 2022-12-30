@@ -8,8 +8,9 @@ const fs = require('fs');
 const COMMAND = require('../command_data/statistics');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
-const generateEmbed = require('../methods/generateEmbed');
 const calculateTeam = require('../methods/calculateTeam');
+const { MessageEmbed } = require('discord.js');
+const { NENE_COLOR, FOOTER } = require('../../constants');
 
 const HOUR = 3600000;
 const SONGBIAS = 8.00; //Multiplier for Talent to get score
@@ -28,10 +29,31 @@ const energyBoost = [
     35
 ];
 
+/**
+ * Generates an embed from the provided params
+ * @param {String} name the name of the command
+ * @param {Object} content the content of the message
+ * @param {String} image an image URL (if applicable)
+ * @param {DiscordClient} client the client we are using to handle Discord requests
+ * @return {MessageEmbed} a generated embed
+ */
+const generateEmbed = ({ name, client }) => {
+    const embed = new MessageEmbed()
+        .setColor(NENE_COLOR)
+        .setTitle(name.charAt(0).toUpperCase() + name.slice(1))
+        .setThumbnail(client.user.displayAvatarURL())
+        .setTimestamp()
+        .setFooter(FOOTER, client.user.displayAvatarURL());
+
+    return embed;
+};
+
+module.exports = generateEmbed;
+
 function getEventData(eventID) {
     const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
 
-    return data[eventID];
+    return data[eventID - 2];
 }
 
 function generateEnergyTable(eventPoints)
@@ -168,49 +190,50 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                 let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
                 let peakSpeed = Math.max(...movingWindowSpeeds);
 
-                let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
-                    `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-                    `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-                    'Average Score per Game over the hour: ' + scorePerGame + '\n' +
-                    `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
-                    `Peak Speed over an hour: ${peakSpeed}\n` + 
-                    `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
-                    `Estimated Talent: ${Math.round(teamData.talent)}\n` +
-                    `Estimated Event Bonus: ${(teamData.eventBonus * 100).toFixed(2)}%\n` +
-                    'Last 5 Games:\n';
-
-                var game;
-                for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
-                    game = pointsPerGame[pointsPerGame.length - i];
-                    reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> (Energy Used: ${game.energy})\n`;
-                }
-
-                reply += `Updated: <t:${timestamp}:R>`;
-
                 let title = `${user.username} Statistics`;
 
+                let embed = generateEmbed({
+                    name: title,
+                    client: discordClient.client
+                });
+
+                //Ignore this entire section
+                embed.addFields(
+                    { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString() },
+                    { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
+                    { name: 'Games Played in the Last Hour', value: `${gamesPlayedHr.toLocaleString()}`, inline: true },
+                    { name: 'Total Games Played', value: `${gamesPlayed.toLocaleString()}`, inline: true },
+                    { name: 'Average Score per Game over the hour', value: scorePerGame.toLocaleString() },
+                    { name: 'Energy Used in the Last Hour', value: energyUsedHr.toLocaleString(), inline: true },
+                    { name: 'Total Energy Used', value: energyUsed.toLocaleString(), inline: true },
+                    { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
+                    { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
+                    { name: 'Estimated Talent', value: `${Math.round(teamData.talent).toLocaleString()}`, inline: true },
+                    { name: 'Estimated Event Bonus', value: `${(teamData.eventBonus * 100).toFixed(2) }%`, inline: true }
+                );
+
+                for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
+                    let game = pointsPerGame[pointsPerGame.length - i];
+                    embed.addFields({ name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true });
+                }
+
+                embed.addFields({ name: 'Updated:', value: `<t:${timestamp}:R>` });
+
                 if (user.id == '475083312772415489' || user.id == '327997209666912256') {
-                    reply += '\nPeople Killed: 1';
+                    embed.addFields({ name: 'People Kiled:', value: '1' });
                 }
 
                 else if (user.id == '530650499465216000') {
-                    reply += '\nHearts Broken: 3';
+                    embed.addFields({ name: 'Hearts Broken:', value: '6' });
                 }
 
                 else if (user.id == '178294808429723648') {
-                    reply += '\nBroken Hearts: 3';
+                    embed.addFields({ name: 'Broken Hearts', value: '6' });
                 }
 
                 await interaction.editReply({
                     embeds: [
-                        generateEmbed({
-                            name: title,
-                            content: {
-                                'type': 'Statistics',
-                                'message': reply
-                            },
-                            client: discordClient.client
-                        })
+                        embed
                     ]
                 });
             },
@@ -324,36 +347,36 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
         let estimatedEnergyHour = energyPossiblitiesHour.indexOf(Math.max(...energyPossiblitiesHour));
         let peakSpeed = Math.max(...movingWindowSpeeds);
 
-        //Ignore this entire section
-        let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
-            `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-            `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-            `Average Score per Game over the hour: ${scorePerGame}\n` +
-            `Peak Speed over an hour: ${peakSpeed}\n` + 
-            `Estimated Energy usage: ${estimatedEnergy}\n` +
-            `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
-            `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
-            'Last 5 Games:\n';
+        let title = `T${tier} ${response['rankings'][0].name} Statistics`;
 
-        for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
+        let embed = generateEmbed({
+            name: title,
+            client: discordClient.client
+        });
+
+        //Ignore this entire section
+        embed.addFields(
+            { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString()},
+            { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
+            { name: 'Games Played in the Last Hour', value: `${gamesPlayedHr.toLocaleString()}`, inline: true },
+            { name: 'Games Played', value: `${gamesPlayed.toLocaleString()}`, inline: true },
+            { name: 'Average Score per Game over the hour', value: scorePerGame.toLocaleString() },
+            { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
+            { name: 'Estimated Energy usage', value: `${estimatedEnergy}x`},
+            { name: 'Estimated Energy usage over the hour', value: `${estimatedEnergyHour}x` },
+            { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
+        );
+
+        for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
             let game = pointsPerGame[pointsPerGame.length - i];
-            reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> \n`;
+            embed.addFields({name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true});
         }
 
-        reply += `Updated: <t:${timestamp}:R>`;
-
-        let title = `T${tier} ${response['rankings'][0].name} Statistics`;
+        embed.addFields({name: 'Updated:', value: `<t:${timestamp}:R>`});
 
         await interaction.editReply({
             embeds: [
-                generateEmbed({
-                    name: title,
-                    content: {
-                        'type': 'Statistics',
-                        'message': reply
-                    },
-                    client: discordClient.client
-                })
+                embed
             ]
         });
     }, (err) => {
