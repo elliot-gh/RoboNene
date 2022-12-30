@@ -8,9 +8,15 @@ const { MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 /**
+ * @typedef {Object} Content
+ * @property {String} type the type of message
+ * @property {String} message the message
+ */
+
+/**
  * Generates an embed from the provided params
  * @param {String} name the name of the command
- * @param {Object} content the content of the message
+ * @param {Content} content the content of the message
  * @param {String} image an image URL (if applicable)
  * @param {DiscordClient} client the client we are using to handle Discord requests
  * @return {MessageEmbed} a generated embed
