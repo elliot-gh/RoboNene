@@ -5,10 +5,10 @@
  */
 
 const { MessageEmbed } = require('discord.js');
-const { RESULTS_PER_PAGE, NENE_COLOR, FOOTER } = require('../constants');
-const RANKING_RANGE = require('./trackRankingRange.json')
+const { NENE_COLOR } = require('../constants');
+const RANKING_RANGE = require('./trackRankingRange.json');
 const fs = require('fs');
-const generateRankingText = require('../client/methods/generateRankingTextChanges')
+const generateRankingText = require('../client/methods/generateRankingTextChanges');
 
 function getLastHour(sortedList, el) {
   for (let i = 0; i < sortedList.length; i++) {
@@ -16,11 +16,11 @@ function getLastHour(sortedList, el) {
       return i;
     }
   }
-  return 0
+  return 0;
 }
 
 const HOUR = 3600000;
-const gameFilePath = 'games.json'
+const gameFilePath = 'games.json';
 
 /**
  * Sends an embed containing the top 20 players to specific Discord servers that have
@@ -70,13 +70,13 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
 
       let mobile = false;
 
-      let leaderboardText = generateRankingText(rankingData, 1, null, lastHourCutoffs, mobile)
+      let leaderboardText = generateRankingText(rankingData, 1, null, lastHourCutoffs, mobile);
       
       let leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
         .setDescription(`T20 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
-        .addField(`T20`, leaderboardText, false)
+        .addField('T20', leaderboardText, false)
         .setThumbnail(event.banner)
         .setTimestamp();
   
@@ -86,8 +86,8 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
   const send = async (target, embed) => {
     const channel = discordClient.client.channels.cache.get(target.channel_id);
     if (channel) {
-      const guild = discordClient.client.guilds.cache.get(channel.guild.id)
-      const perms = guild.me.permissionsIn(channel)
+      const guild = discordClient.client.guilds.cache.get(channel.guild.id);
+      const perms = guild.me.permissionsIn(channel);
       if (perms.has('SEND_MESSAGES') && perms.has('EMBED_LINKS')) {
         await channel.send({ embeds: [embed] });
         return;
@@ -95,7 +95,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
     }
 
     // Request deletion of the channel from the database
-    console.log(`Requesting deletion of ${target.channel_id}`)
+    console.log(`Requesting deletion of ${target.channel_id}`);
     discordClient.db.prepare('DELETE FROM tracking WHERE guild_id=@guildId AND channel_id=@channelId').run({
       guildId: target.guild_id,
       channelId: target.channel_id
@@ -134,7 +134,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
 const getNextCheck = () => {
   const nextCheck = new Date();
   nextCheck.setMinutes(nextCheck.getMinutes() + Math.round(nextCheck.getSeconds()/60));
-  nextCheck.setSeconds(0, 0)
+  nextCheck.setSeconds(0, 0);
 
   nextCheck.setMinutes(nextCheck.getMinutes() + 1);
   return nextCheck.getTime() - Date.now();
@@ -163,7 +163,7 @@ async function writeGames(object) {
     if (err) {
       console.log('Error writing game tracking file', err);
     } else {
-      console.log(`Wrote game tracking file Successfully`);
+      console.log('Wrote game tracking file Successfully');
     }
   });
 }
@@ -232,24 +232,24 @@ const requestRanking = async (event, discordClient) => {
       discordClient.logger.log({
         level: 'error',
         message: err.toString()
-      })
-    })
+      });
+    });
   }
-}
+};
 
 /**
  * Obtains the current event within the ranking period
  * @return {Object} the ranking event information
  */
 const getRankingEvent = () => {
-  let events = {}
+  let events = {};
   try {
     events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
   } catch (err) {
-    return { id: -1, banner: '', name: '' }
+    return { id: -1, banner: '', name: '' };
   }
 
-  const currentTime = Date.now()
+  const currentTime = Date.now();
   for (let i = 0; i < events.length; i++) {
     if (events[i].startAt <= currentTime && events[i].aggregateAt >= currentTime) {
       return {
@@ -257,10 +257,10 @@ const getRankingEvent = () => {
         banner: 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' +
           `${events[i].assetbundleName}/logo_rip/logo.webp`,
         name: events[i].name
-      }
+      };
     }
   }
-  return { id: -1, banner: '', name: '' }
+  return { id: -1, banner: '', name: '' };
 };
 
 /**
@@ -269,21 +269,21 @@ const getRankingEvent = () => {
  */
 const trackRankingData = async (discordClient) => {
   // Identify current event from schedule
-  const event = getRankingEvent()
+  const event = getRankingEvent();
 
   // change later back to correct === -1
   if (event.id === -1) {
     deleteGames();
-    let eta_ms = getNextCheck()
+    let eta_ms = getNextCheck();
     console.log(`No Current Ranking Event Active, Pausing For ${eta_ms} ms`);
     // 1 extra second to make sure event is on
-    setTimeout(() => {trackRankingData(discordClient)}, eta_ms + 1000);
+    setTimeout(() => {trackRankingData(discordClient);}, eta_ms + 1000);
   } else {
-    requestRanking(event, discordClient)
-    let eta_ms = getNextCheck()
+    requestRanking(event, discordClient);
+    let eta_ms = getNextCheck();
     console.log(`Event Scores Retrieved, Pausing For ${eta_ms} ms`);
     // 1 extra second to make sure event is on
-    setTimeout(() => {trackRankingData(discordClient)}, eta_ms + 1000);
+    setTimeout(() => {trackRankingData(discordClient);}, eta_ms + 1000);
   }
 };
 

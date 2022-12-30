@@ -5,17 +5,15 @@
 
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
-const { plotlyKey, plotlyUser } = require("../../config.json")
-const https = require('https');
+const { plotlyKey, plotlyUser } = require('../../config.json');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/hist')
+const COMMAND = require('../command_data/hist');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
+const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
-const { data } = require('./statistics');
 
-const Plotly = require("plotly")(plotlyUser, plotlyKey)
+const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
 const HOUR = 3600000;
 
@@ -34,38 +32,6 @@ const energyBoost = [
 ];
 
 const average = array => array.reduce((a, b) => a + b) / array.length;
-
-async function removeOutliers(someArray) {
-
-  // Copy the values, rather than operating on references to existing values
-  var values = someArray.concat();
-
-  // Then sort
-  values.sort(function (a, b) {
-    return a - b;
-  });
-
-  /* Then find a generous IQR. This is generous because if (values.length / 4) 
-   * is not an int, then really you should average the two elements on either 
-   * side to find q1.
-   */
-  var q1 = values[Math.floor((values.length / 4))];
-  // Likewise for q3. 
-  var q3 = values[Math.ceil((values.length * (3 / 4)))];
-  var iqr = q3 - q1;
-
-  // Then find min and max values
-  var maxValue = q3 + iqr * 1.5;
-  var minValue = q1 - iqr * 1.5;
-
-  // Then filter anything beyond or beneath these values.
-  var filteredValues = values.filter(function (x) {
-    return (x <= maxValue) && (x >= minValue);
-  });
-
-  // Then return
-  return filteredValues;
-}
 
 async function getStdDev(data) {
   let mean = average(data);
@@ -87,11 +53,11 @@ async function generateNormalDist(xData) {
   let y = [];
 
   for (let i = start; i < end; i += step) {
-    let val = Math.E ** (-1 * ((i - mean) ** 2) / (2 * stdDev ** 2)) / (stdDev * Math.sqrt(2 * Math.PI))
+    let val = Math.E ** (-1 * ((i - mean) ** 2) / (2 * stdDev ** 2)) / (stdDev * Math.sqrt(2 * Math.PI));
     x.push(i);
     y.push(val);
   }
-  return { "x": x, "y": y }
+  return { 'x': x, 'y': y };
 }
 
 /**
@@ -111,8 +77,8 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  return graphEmbed
-}
+  return graphEmbed;
+};
 
 /**
  * Ensures a string is ASCII to be sent through HTML
@@ -120,7 +86,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
  * @returns 
  */
 function ensureASCII(str) {
-  return str.replace(/[^a-z0-9&]/gi, ' ')
+  return str.replace(/[^a-z0-9&]/gi, ' ');
 }
 
 function getLastHour(sortedList, el) {
@@ -129,7 +95,7 @@ function getLastHour(sortedList, el) {
       return i;
     }
   }
-  return 0
+  return 0;
 }
 
 /**
@@ -151,14 +117,11 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
         })
       ]
     });
-    return
+    return;
   }
 
-  let graphData = [];
-  const event = discordClient.getCurrentEvent();
-
   let pointsPerGame = [];
-  let energyPossibilities = energyBoost.map((x) => 0);
+  let energyPossibilities = energyBoost.map(() => 0);
   let lastPoint = 0;
   tier = ensureASCII(tier);
 
@@ -166,17 +129,17 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   var lowBound;
 
   if (!hourly) {
-    highBound = Math.min(max || 75000, 75000)
-    lowBound = Math.max(min || 100, 100)
+    highBound = Math.min(max || 75000, 75000);
+    lowBound = Math.max(min || 100, 100);
   }
   else {
-    highBound = Math.min(max || 3000000, 3000000)
-    lowBound = Math.max(min || 100, 100)
+    highBound = Math.min(max || 3000000, 3000000);
+    lowBound = Math.max(min || 100, 100);
   }
 
   if (hourly) {
     let timestamps = rankData.map(x => x.timestamp);
-    let movingWindowSpeeds = []
+    let movingWindowSpeeds = [];
     let timestampIndex = 0;
 
     rankData.slice(1).forEach((point) => {
@@ -197,19 +160,18 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   else {
     rankData.forEach(point => {
       if (point.score > lastPoint) {
-        let gain = point.score - lastPoint
+        let gain = point.score - lastPoint;
         if (gain < highBound && gain >= lowBound) {
           pointsPerGame.push(gain);
           energyBoost.forEach((x, idx) => {
-            if (x == 1) { }
-            else if (gain % x == 0 && gain < 2000 * x) {
+            if (x != 1 && gain % x == 0 && gain < 2000 * x) {
               energyPossibilities[idx] += 1;
             }
-          })
+          });
         }
         lastPoint = point.score;
       }
-    })
+    });
   }
 
   if (pointsPerGame.length == 0) {
@@ -222,7 +184,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
         })
       ]
     });
-    return
+    return;
   }
 
   let normalDistData = await generateNormalDist(pointsPerGame);
@@ -238,11 +200,11 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   let layout = {
     title: tier,
     xaxis: {
-      title: "Event Points"
+      title: 'Event Points'
     },
-    yaxis: { title: "Count" },
+    yaxis: { title: 'Count' },
     yaxis2: {
-      title: "Normal Distribution",
+      title: 'Normal Distribution',
       overlaying: 'y',
       side: 'right',
       range: [0, Math.max(...normalDistData.y)]
@@ -325,7 +287,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
           `Average Score: ${average}`
       }
     }
-  }
+  };
 
   let normal = {
       name: 'Normal Distribution',
@@ -333,7 +295,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
       y: normalDistData.y,
       yaxis: 'y2',
       type: 'scatter'
-  }
+  };
 
   var data = {
     data: [
@@ -341,11 +303,11 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
         name: `${tier}`,
         x: pointsPerGame,
         mode: 'markers',
-        type: "histogram",
+        type: 'histogram',
         marker: {
-          color: "rgb(141,211,199)",
+          color: 'rgb(141,211,199)',
           line: {
-            color: "rgb(141,211,199)"
+            color: 'rgb(141,211,199)'
           }
         },
         autobinx: false,
@@ -366,47 +328,23 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   var pngOptions = { format: 'png', width: 1000, height: 500 };
   Plotly.getImage(data, pngOptions, async (err, imageStream) => {
     if (err) console.log(err);
-    let file = new MessageAttachment(imageStream, 'hist.png')
+    let file = new MessageAttachment(imageStream, 'hist.png');
     await interaction.editReply({
-      embeds: [generateGraphEmbed("attachment://hist.png", tier, discordClient)], files: [file]
-    })
+      embeds: [generateGraphEmbed('attachment://hist.png', tier, discordClient)], files: [file]
+    });
   });
 
-}
-
-function getEventName(eventID) {
-  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-  let currentEventIdx = -1;
-  let currentDate = new Date();
-
-  for (let i = 0; i < data.length; i++) {
-    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-      currentEventIdx = i;
-    }
-  }
-
-  return data[currentEventIdx].name
-}
+};
 
 function getEventData(eventID) {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-  let currentEventIdx = -1;
-  let currentDate = new Date();
 
-  for (let i = 0; i < data.length; i++) {
-    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-      currentEventIdx = i;
-    }
-  }
-
-  return data[currentEventIdx];
+  return data[eventID];
 }
 
 async function noDataErrorMessage(interaction, discordClient) {
-  let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
-  let title = `Tier Not Found`;
+  let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+  let title = 'Tier Not Found';
 
   await interaction.editReply({
     embeds: [
@@ -430,7 +368,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min
     lowerLimit: 0
   }, async (response) => {
 
-    let userId = response['rankings'][0]['userId']//Get the last ID in the list
+    let userId = response['rankings'][0]['userId'];//Get the last ID in the list
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
@@ -438,17 +376,17 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min
       });
     if (data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      rankData.unshift({ timestamp: eventData.startAt, score: 0 })
-      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
     } else {
-      noDataErrorMessage(interaction, discordClient)
-    };
+      noDataErrorMessage(interaction, discordClient);
+    }
   }, (err) => {
     console.log(err);
   });
-};
+}
 
 module.exports = {
   ...COMMAND.INFO,
@@ -470,11 +408,11 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
-    const eventName = getEventName(event.id);
     const eventData = getEventData(event.id);
+    const eventName = eventData.name;
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
@@ -491,18 +429,18 @@ module.exports = {
         });
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
-        return
+        return;
       }
       else {
-        sendTierRequest(event.id, eventName, eventData, tier, binSize, min, max, hourly, interaction, discordClient)
+        sendTierRequest(event.id, eventName, eventData, tier, binSize, min, max, hourly, interaction, discordClient);
       }
     } else if (user) {
       try {
-        let id = discordClient.getId(user.id)
+        let id = discordClient.getId(user.id);
 
         if (id == -1) {
           interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
-          return
+          return;
         }
 
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +

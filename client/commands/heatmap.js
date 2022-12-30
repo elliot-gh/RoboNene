@@ -5,18 +5,15 @@
 
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
-const { plotlyKey, plotlyUser } = require("../../config.json")
-const https = require('https');
+const { plotlyKey, plotlyUser } = require('./../config.json');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/heatmap')
+const COMMAND = require('../command_data/heatmap');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
+const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
-const { data } = require('./statistics');
-const heatmap = require('../command_data/heatmap');
 
-const Plotly = require("plotly")(plotlyUser, plotlyKey);
+const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
 const HOUR = 3600000; 
 
@@ -37,8 +34,8 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
-  return graphEmbed
-}
+  return graphEmbed;
+};
 
 /**
  * Ensures a string is ASCII to be sent through HTML
@@ -46,7 +43,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
  * @returns 
  */
 function ensureASCII(str) {
-  return str.replace(/[^a-z0-9&]/gi, ' ')
+  return str.replace(/[^a-z0-9&]/gi, ' ');
 }
 
 /**
@@ -68,25 +65,23 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
         })
       ]
     });
-    return
+    return;
   }
-
-  graphData = []
   
   tier = ensureASCII(tier);
 
-  let lastPoint = 0
-  let pointsPerGame = []
+  let lastPoint = 0;
+  let pointsPerGame = [];
 
   rankData.forEach(point => {
     if (point.score > lastPoint) {
-      let gain = point.score - lastPoint
+      let gain = point.score - lastPoint;
       if (gain < 75000 && gain >= 100) {
         pointsPerGame.push(gain);
       }
       lastPoint = point.score;
     }
-  })
+  });
 
   if (pointsPerGame.length == 0) {
     await interaction.editReply({
@@ -98,15 +93,14 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
         })
       ]
     });
-    return
+    return;
   }
 
-  const average = pointsPerGame.reduce((a, b) => a + b, 0) / pointsPerGame.length;
   let dayData = [];
   let heatmapData = [];
   let gamesPerHour = 0;
   let maxTimestamp = eventData.startAt + HOUR;
-  lastPoint = 0
+  lastPoint = 0;
 
   for(let i = 0; i < 18; i++){
     dayData.push(null);
@@ -114,7 +108,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
 
   rankData.forEach(point => {
     if (point.timestamp > maxTimestamp) {
-      maxTimestamp += HOUR
+      maxTimestamp += HOUR;
       if(dayData.length >= 24) {
         heatmapData.unshift(dayData);
         dayData = [];
@@ -123,18 +117,18 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
       gamesPerHour = 0;
     }
     if (point.score > lastPoint) {
-      let gain = point.score - lastPoint
+      let gain = point.score - lastPoint;
       if (gain < 75000 && gain >= 100) {
-        gamesPerHour += 1
+        gamesPerHour += 1;
       }
       lastPoint = point.score;
     }
-  })
+  });
 
   heatmapData.unshift(dayData);
 
-  let xValues = []
-  let yValues = []
+  let xValues = [];
+  let yValues = [];
 
   for(let i = 0; i < 24; i++) {
     xValues.push(i + 0.5);
@@ -144,7 +138,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
     yValues.unshift(`Day ${i + 1}`);
   }
 
-  trace1 = {
+  let trace1 = {
     mode: 'markers',
     type: 'heatmap',
     x: xValues,
@@ -158,20 +152,20 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
     yperiod: 0,
     zsmooth: false, 
     hoverongaps: false,
-    "reversescale": true,
+    'reversescale': true,
     xgap: 0.3,
     ygap: 0.3,
   };
   
-  layout = {
+  let layout = {
     title: { text: tier },
     xaxis: {
-      title: "Hour",
+      title: 'Hour',
       side: 'top',
       dtick: 1
     },
     yaxis: {
-      title: "Day",
+      title: 'Day',
       type: 'category'
     },
     legend: { title: { text: '<br>' } },
@@ -318,24 +312,24 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
   let data = {
     data: [trace1],
     layout: layout
-  }
+  };
 
   var pngOptions = {format: 'png', width: 1000, height: 500};
   Plotly.getImage(data, pngOptions, async (err, imageStream) => {
     if (err) console.log (err);
-    let file = new MessageAttachment(imageStream, 'hist.png')
+    let file = new MessageAttachment(imageStream, 'hist.png');
     await interaction.editReply({ 
-      embeds: [generateGraphEmbed("attachment://hist.png", tier, discordClient)], files: [file]
-    })
+      embeds: [generateGraphEmbed('attachment://hist.png', tier, discordClient)], files: [file]
+    });
   });
 
-}
+};
 
 function getEventName(eventID) 
 {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
 
-  return data[eventID - 2].name
+  return data[eventID - 2].name;
 }
 
 function getEventData(eventID) {
@@ -345,8 +339,8 @@ function getEventData(eventID) {
 }
 
 async function noDataErrorMessage(interaction, discordClient) {
-  let reply = `Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000`;
-  let title = `Tier Not Found`;
+  let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+  let title = 'Tier Not Found';
 
   await interaction.editReply({
     embeds: [
@@ -370,7 +364,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
     lowerLimit: 0
   }, async (response) => {
 
-    let userId = response['rankings'][0]['userId']//Get the last ID in the list
+    let userId = response['rankings'][0]['userId']; //Get the last ID in the list
     
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
@@ -379,17 +373,17 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
       });
     if(data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      rankData.unshift({ timestamp: eventData.startAt, score: 0 })
-      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+      rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`, rankData, eventData, discordClient);
     } else {
-      noDataErrorMessage(interaction, discordClient)
-    };
+      noDataErrorMessage(interaction, discordClient);
+    }
   }, (err) => {
     console.log(err);
   });
-};
+}
 
 module.exports = {
   ...COMMAND.INFO,
@@ -398,9 +392,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
     
-    const event = discordClient.getCurrentEvent()
+    const event = discordClient.getCurrentEvent();
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
@@ -411,7 +405,7 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     const eventId = interaction.options.getInteger('event') || event.id;
@@ -431,18 +425,18 @@ module.exports = {
         });
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
-        return
+        return;
       }
       else {
-        sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient)
+        sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient);
       }
     } else if (user) {
       try {
-        let id = discordClient.getId(user.id)
+        let id = discordClient.getId(user.id);
 
         if (id == -1) {
           interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
-          return
+          return;
         }
 
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
@@ -460,7 +454,7 @@ module.exports = {
         }
         else
         {
-          interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' })
+          interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
         }
       } catch (err) {
         // Error parsing JSON: ${err}`

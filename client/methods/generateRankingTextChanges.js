@@ -5,7 +5,7 @@
  */
 
 const { RESULTS_PER_PAGE } = require('../../constants');
-var MAXLENGTH = 42
+var MAXLENGTH = 42;
 
 /**
  * Generates an ranking embed from the provided params
@@ -17,10 +17,10 @@ var MAXLENGTH = 42
  * @return {MessageEmbed} a generated embed of the current leaderboard
  */
 const generateRankingText = (data, page, target, changes, mobile) => {
-    let rankLabel = "T";
-    let nameLabel = "Name";
-    let scoreLabel = "Score"; 
-    let changeLabel = "Change Hr"
+    let rankLabel = 'T';
+    let nameLabel = 'Name';
+    let scoreLabel = 'Score'; 
+    let changeLabel = 'Change Hr';
 
     //Ignore this
     if(mobile) {
@@ -47,37 +47,37 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         if (((data[i].score - changes[i])).toLocaleString().length > maxChangeLength) {
             maxChangeLength = ((data[i].score - changes[i])).toLocaleString().length;
         }
-    })
+    });
 
-    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH)
-    maxNameLength -= difference
+    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH);
+    maxNameLength -= difference;
 
     let leaderboardText = '';
-    let rank = " ".repeat(maxRankLength - rankLabel.length) + rankLabel
-    let name = nameLabel + " ".repeat(maxNameLength - nameLabel.length)
-    let score = scoreLabel + " ".repeat(maxScoreLength - scoreLabel.length)
-    let change = " ".repeat(maxChangeLength - changeLabel.length) + changeLabel
+    let rank = ' '.repeat(maxRankLength - rankLabel.length) + rankLabel;
+    let name = nameLabel + ' '.repeat(maxNameLength - nameLabel.length);
+    let score = scoreLabel + ' '.repeat(maxScoreLength - scoreLabel.length);
+    let change = ' '.repeat(maxChangeLength - changeLabel.length) + changeLabel;
     leaderboardText += `\`${rank} ${name} ${score} ${change}\``;
     leaderboardText += '\n';
-    for (i = 0; i < RESULTS_PER_PAGE; i++) {
+    for (let i = 0; i < RESULTS_PER_PAGE; i++) {
         if (i > data.length) {
             leaderboardText += '\u200b';
             break;
         }
 
-        let rank = " ".repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank
-        let nameStr = data[i].name.substring(0, maxNameLength).replace("`", "'")
-        let name = nameStr + " ".repeat(maxNameLength - nameStr.length)
-        let score = " ".repeat(maxScoreLength - data[i].score.toLocaleString().length) +
-            data[i].score.toLocaleString()
+        let rank = ' '.repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank;
+        let nameStr = data[i].name.substring(0, maxNameLength).replace('`', '\'');
+        let name = nameStr + ' '.repeat(maxNameLength - nameStr.length);
+        let score = ' '.repeat(maxScoreLength - data[i].score.toLocaleString().length) +
+            data[i].score.toLocaleString();
 
-        let changeStr = ""
+        let changeStr = '';
         if(changes[i] === -1) {
-            changeStr = "NaN";
+            changeStr = 'NaN';
         } else {
             changeStr = (data[i].score - changes[i]).toLocaleString();
         }
-        let change = " ".repeat(maxChangeLength - changeStr.length) + 
+        let change = ' '.repeat(maxChangeLength - changeStr.length) + 
             changeStr;
 
         leaderboardText += `\`${rank} ${name} ${score} ${change}\``;
@@ -87,7 +87,7 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         leaderboardText += '\n';
     }
 
-    return leaderboardText
-}
+    return leaderboardText;
+};
 
-module.exports = generateRankingText
+module.exports = generateRankingText;

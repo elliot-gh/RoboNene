@@ -7,14 +7,14 @@
 const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-const COMMAND = require('../command_data/leaderboard')
+const COMMAND = require('../command_data/leaderboard');
 
-const MAX_PAGE = Math.ceil(120 / RESULTS_PER_PAGE) -1
+const MAX_PAGE = Math.ceil(120 / RESULTS_PER_PAGE) -1;
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateRankingText = require('../methods/generateRankingTextChanges')
-const generateAlternateRankingText = require('../methods/generateAlternateRankingText')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateRankingText = require('../methods/generateRankingTextChanges');
+const generateAlternateRankingText = require('../methods/generateAlternateRankingText');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 function getLastHour(sortedList, el) {
   for (let i = 0; i < sortedList.length; i++) {
@@ -22,7 +22,7 @@ function getLastHour(sortedList, el) {
       return i;
     }
   }
-  return 0
+  return 0;
 }
 
 const HOUR = 3600000;
@@ -34,9 +34,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const event = discordClient.getCurrentEvent()
+    const event = discordClient.getCurrentEvent();
     // There is no event at the moment
     if (event.id === -1) {
       await interaction.editReply({
@@ -48,7 +48,7 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     // Ensure that the user has not surpassed the rate limit
@@ -63,8 +63,8 @@ module.exports = {
           },
           client: discordClient.client
         })]
-      })
-      return
+      });
+      return;
     }
 
     discordClient.addSekaiRequest('ranking', {
@@ -78,28 +78,28 @@ module.exports = {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName, 
+              name: COMMAND.commandName, 
               content: COMMAND.CONSTANTS.NO_RESPONSE_ERR, 
               client: discordClient.client
             })
           ]
         });
-        return
+        return;
       } else if (response.rankings.length === 0) {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName, 
+              name: COMMAND.commandName, 
               content: COMMAND.CONSTANTS.BAD_INPUT_ERROR, 
               client: discordClient.client
             })
           ]
         });
-        return
+        return;
       }
 
-      const rankingData = response.rankings
-      const timestamp = Date.now()
+      const rankingData = response.rankings;
+      const timestamp = Date.now();
 
       let target = 0;
       let page = 0;
@@ -135,14 +135,14 @@ module.exports = {
 
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
-      let lastTimestamp = timestamps[timestamps.length - 1]
+      let lastTimestamp = timestamps[timestamps.length - 1];
 
       let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
       let timestampIndex = timestamps[lastHourIndex];
 
       let lastHourCutoffs = [];
       let GPH = [];
-      let gamesPlayed = []
+      let gamesPlayed = [];
       let userIds = [];
 
       for(let i = 0; i < 120; i++) {
@@ -166,9 +166,9 @@ module.exports = {
 
       let currentGamesPlayed = currentData.map(x => {
         return {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
-      })
+      });
 
-      lastHourData.forEach((data, i) => {
+      lastHourData.forEach((data) => {
         // console.log(data.ID)
         let index = userIds.indexOf(data.ID);
 
@@ -183,14 +183,12 @@ module.exports = {
         }
       });
 
-      
-
       let mobile = false;
       let alt = false;
       let offset = false;
       var slice, sliceOffset, sliceGPH, sliceGamesPlayed;
 
-      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile)
+      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile);
       
       let leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
@@ -204,30 +202,30 @@ module.exports = {
       const leaderboardButtons = new MessageActionRow()
         .addComponents(
           new MessageButton()
-            .setCustomId(`prev`)
+            .setCustomId('prev')
             .setLabel('PREV')
             .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.LEFT),
           new MessageButton()
-            .setCustomId(`next`)
+            .setCustomId('next')
             .setLabel('NEXT')
             .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.RIGHT),
           new MessageButton()
-            .setCustomId(`mobile`)
+            .setCustomId('mobile')
             .setLabel('MOBILE')
             .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.MOBILE),
           new MessageButton()
-            .setCustomId(`offset`)
+            .setCustomId('offset')
             .setLabel('OFFSET')
             .setStyle('SECONDARY')
             .setEmoji(COMMAND.CONSTANTS.OFFSET),
           new MessageButton()
-            .setCustomId(`alt`)
+            .setCustomId('alt')
             .setLabel('ALT')
             .setStyle('SECONDARY')
-            .setEmoji(COMMAND.CONSTANTS.ALT))
+            .setEmoji(COMMAND.CONSTANTS.ALT));
 
       const leaderboardMessage = await interaction.editReply({ 
         embeds: [leaderboardEmbed], 
@@ -237,12 +235,12 @@ module.exports = {
 
       // Create a filter for valid responses
       const filter = (i) => {
-        return i.customId == `prev` || 
-        i.customId == `next` || 
-        i.customId == `mobile` || 
-        i.customId == `alt` ||
-        i.customId == `offset`
-      }
+        return i.customId == 'prev' || 
+        i.customId == 'next' || 
+        i.customId == 'mobile' || 
+        i.customId == 'alt' ||
+        i.customId == 'offset';
+      };
 
       const collector = leaderboardMessage.createMessageComponentCollector({ 
         filter, 
@@ -261,27 +259,27 @@ module.exports = {
               })
             ],
             ephemeral: true
-          })
-          return
+          });
+          return;
         }
 
-        if (i.customId === `prev`) {
+        if (i.customId === 'prev') {
           if (page == 0) {
             page = MAX_PAGE;
           } else {
             page -= 1;
           }
-        } else if (i.customId === `next`) {
+        } else if (i.customId === 'next') {
           if (page == MAX_PAGE) {
             page = 0;
           } else {
             page += 1;
           }
-        } else if (i.customId === `mobile`) {
+        } else if (i.customId === 'mobile') {
           mobile = !mobile;
-        } else if (i.customId === `alt`) {
+        } else if (i.customId === 'alt') {
           alt = !alt;
-        } else if (i.customId === `offset`) {
+        } else if (i.customId === 'offset') {
           offset = !offset;
         }
 
@@ -324,9 +322,9 @@ module.exports = {
           embeds: [leaderboardEmbed], 
           components: [leaderboardButtons]
         });
-      })
+      });
 
-      collector.on('end', async (collected) => {
+      collector.on('end', async () => {
         await interaction.editReply({ 
           embeds: [leaderboardEmbed], 
           components: []
@@ -338,7 +336,7 @@ module.exports = {
         level: 'error',
         timestamp: Date.now(),
         message: err.toString()
-      })
+      });
 
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -346,7 +344,7 @@ module.exports = {
           content: { type: 'error', message: err.toString() },
           client: discordClient.client
         })]
-      })
-    })
+      });
+    });
   }
 };

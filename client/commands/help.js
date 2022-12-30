@@ -26,7 +26,7 @@ const HELP_CONSTANTS = {
 const commands = {}
 const commandFiles = fs.readdirSync(path.join(__dirname, '../command_data')).filter(file => file.endsWith('.js'));
 
-for (const file of commandFiles) {
+for (const file of commandFiles.slice(25)) {
   const COMMAND = require(`${path.join(__dirname, '../command_data')}/${file}`);
   console.log(`Loaded command data ${COMMAND.INFO.name} from ${file}`);
   commands[COMMAND.INFO.name] = COMMAND.INFO;
