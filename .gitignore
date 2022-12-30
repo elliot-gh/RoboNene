@@ -10,17 +10,16 @@
 config.json
 ecosystem.config.js
 
-# bonk
+# storage json files
 bonk.json
 backup bonk.json
+backup ids.json
 track.json
 blessings.json
 silver.json
-mack.js
 mack.json
+pray.json
 
-# silver
-silver.js
 
 # logs, databses, and game data
 /logs
