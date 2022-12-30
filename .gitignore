@@ -28,6 +28,7 @@ silver.js
 /prefs
 /sekai_master
 /cutoff_data
+/prayer_data
 
 # local env files
 .env.local
