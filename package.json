@@ -18,6 +18,7 @@
     "discord-api-types": "0.26.0",
     "discord.js": "^13.11.0",
     "luxon": "^3.0.3",
+    "node-fetch": "^3.3.0",
     "plotly": "^1.0.6",
     "plotly.js-dist-min": "^2.14.0",
     "regression": "2.0.1",
