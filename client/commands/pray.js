@@ -86,9 +86,19 @@ async function getPray(userId, character) {
 
             val = Math.round(val);
 
-            if (val == 15) {
-                val = 50;
-                returnQuote = "You pray to Kohane, but she was on a double date An, Haruka and Minori. You gain 50 luck."
+            if (val >= 14) {
+                if (randn_bm() > 0.95) {
+                    val = 75;
+                    returnQuote = "You pray to Mochi and Ai0. You gain 75 luck."
+                } else if (randn_bm() > 0.90) {
+                    val = 80;
+                    returnQuote = "You pray to Pocket and Ai0. You gain 80 luck.";
+                }
+                else {
+                    val = 50;
+                    returnQuote = "You pray to Kohane, but she was on a double date An, Haruka and Minori. You gain 50 luck."
+                }
+                
             } else if (val == 0) {
                 if (randn_bm() > 0.8){
                     val = -50;
@@ -103,7 +113,7 @@ async function getPray(userId, character) {
                 val = -1;
 
                 returnQuote = badPrays[Math.floor(Math.random() * badPrays.length)];
-            } else if (val >= 11) {
+            } else if (val >= 10) {
                 val = 20;
                 returnQuote = goodPrays[Math.floor(Math.random() * goodPrays.length)];
             } else {
