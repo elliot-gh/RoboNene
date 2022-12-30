@@ -12,12 +12,12 @@ const fs = require('fs');
 const COMMAND = require('../command_data/hist')
 
 const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed'); 
+const generateEmbed = require('../methods/generateEmbed');
 const { data } = require('./statistics');
 
 const Plotly = require("plotly")(plotlyUser, plotlyKey)
 
-const HOUR = 3600000; 
+const HOUR = 3600000;
 
 const energyBoost = [
   1,
@@ -33,6 +33,67 @@ const energyBoost = [
   35
 ];
 
+const average = array => array.reduce((a, b) => a + b) / array.length;
+
+async function removeOutliers(someArray) {
+
+  // Copy the values, rather than operating on references to existing values
+  var values = someArray.concat();
+
+  // Then sort
+  values.sort(function (a, b) {
+    return a - b;
+  });
+
+  /* Then find a generous IQR. This is generous because if (values.length / 4) 
+   * is not an int, then really you should average the two elements on either 
+   * side to find q1.
+   */
+  var q1 = values[Math.floor((values.length / 4))];
+  // Likewise for q3. 
+  var q3 = values[Math.ceil((values.length * (3 / 4)))];
+  var iqr = q3 - q1;
+
+  // Then find min and max values
+  var maxValue = q3 + iqr * 1.5;
+  var minValue = q1 - iqr * 1.5;
+
+  // Then filter anything beyond or beneath these values.
+  var filteredValues = values.filter(function (x) {
+    return (x <= maxValue) && (x >= minValue);
+  });
+
+  // Then return
+  return filteredValues;
+}
+
+async function getStdDev(data) {
+  let mean = average(data);
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {
+    sum += Math.pow(data[i] - mean, 2);
+  }
+  return Math.sqrt(sum / data.length);
+}
+
+async function generateNormalDist(xData) {
+  let start = 0;
+  let end = Math.max(...xData);
+  let step = (end - start) / 1000;
+  let mean = average(xData);
+  let stdDev = await getStdDev(xData);
+
+  let x = [];
+  let y = [];
+
+  for (let i = start; i < end; i += step) {
+    let val = Math.E ** (-1 * ((i - mean) ** 2) / (2 * stdDev ** 2)) / (stdDev * Math.sqrt(2 * Math.PI))
+    x.push(i);
+    y.push(val);
+  }
+  return { "x": x, "y": y }
+}
+
 /**
  * Create a graph embed to be sent to the discord interaction
  * @param {string} graphUrl url of the graph we are trying to embed
@@ -44,7 +105,7 @@ const generateGraphEmbed = (graphUrl, tier, discordClient) => {
   const graphEmbed = new MessageEmbed()
     .setColor(NENE_COLOR)
     .setTitle(`${tier}`)
-    .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
+    .setDescription(`**Requested:** <t:${Math.floor(Date.now() / 1000)}:R>`)
     .setThumbnail(discordClient.client.user.displayAvatarURL())
     .setImage(graphUrl)
     .setTimestamp()
@@ -84,8 +145,8 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     await interaction.editReply({
       embeds: [
         generateEmbed({
-          name: COMMAND.INFO.name, 
-          content: COMMAND.CONSTANTS.NO_DATA_ERR, 
+          name: COMMAND.INFO.name,
+          content: COMMAND.CONSTANTS.NO_DATA_ERR,
           client: discordClient.client
         })
       ]
@@ -93,11 +154,11 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     return
   }
 
-  graphData = []
-  const event = discordClient.getCurrentEvent()
-  
+  let graphData = [];
+  const event = discordClient.getCurrentEvent();
+
   let pointsPerGame = [];
-  let energyPossibilities = energyBoost.map((x) => 0)
+  let energyPossibilities = energyBoost.map((x) => 0);
   let lastPoint = 0;
   tier = ensureASCII(tier);
 
@@ -151,7 +212,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     })
   }
 
-  if(pointsPerGame.length == 0) {
+  if (pointsPerGame.length == 0) {
     await interaction.editReply({
       embeds: [
         generateEmbed({
@@ -164,11 +225,12 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     return
   }
 
+  let normalDistData = await generateNormalDist(pointsPerGame);
   let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
   let binsize = binSize || Math.max(5, energyBoost[estimatedEnergy]);
 
   if (hourly) {
-    binsize = 10000; 
+    binsize = 10000;
   }
 
   const average = (pointsPerGame.reduce((a, b) => a + b) / pointsPerGame.length).toFixed(2);
@@ -178,79 +240,99 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     xaxis: {
       title: "Event Points"
     },
-    yaxis: {title: "Count"},
+    yaxis: { title: "Count" },
+    yaxis2: {
+      title: "Normal Distribution",
+      overlaying: 'y',
+      side: 'right',
+      range: [0, Math.max(...normalDistData.y)]
+    },
     bargap: 0.25,
     template: {
       data: {
         histogram: [
           {
-            type: 'histogram', 
-            marker: {colorbar: {
+            type: 'histogram',
+            marker: {
+              colorbar: {
                 ticks: ''
-              }}
+              }
+            }
           }
         ]
-      }, 
+      },
       layout: {
         geo: {
-          bgcolor: 'rgb(17,17,17)', 
-          showland: true, 
-          lakecolor: 'rgb(17,17,17)', 
-          landcolor: 'rgb(17,17,17)', 
-          showlakes: true, 
+          bgcolor: 'rgb(17,17,17)',
+          showland: true,
+          lakecolor: 'rgb(17,17,17)',
+          landcolor: 'rgb(17,17,17)',
+          showlakes: true,
           subunitcolor: '#506784'
-        }, 
-        font: {color: '#f2f5fa'}, 
+        },
+        font: { color: '#f2f5fa' },
         polar: {
-          bgcolor: 'rgb(17,17,17)', 
+          bgcolor: 'rgb(17,17,17)',
           radialaxis: {
-            ticks: '', 
-            gridcolor: '#506784', 
+            ticks: '',
+            gridcolor: '#506784',
             linecolor: '#506784'
-          }, 
+          },
           angularaxis: {
-            ticks: '', 
-            gridcolor: '#506784', 
+            ticks: '',
+            gridcolor: '#506784',
             linecolor: '#506784'
           }
-        }, 
-        
-        colorway: ['#636efa', '#EF553B', '#00cc96', '#ab63fa', '#19d3f3', '#e763fa', '#fecb52', '#ffa15a', '#ff6692', '#b6e880'], 
-        hovermode: 'closest', 
+        },
+
+        colorway: ['#636efa', '#EF553B', '#00cc96', '#ab63fa', '#19d3f3', '#e763fa', '#fecb52', '#ffa15a', '#ff6692', '#b6e880'],
+        hovermode: 'closest',
         colorscale: {
-          diverging: [['0', '#8e0152'], ['0.1', '#c51b7d'], ['0.2', '#de77ae'], ['0.3', '#f1b6da'], ['0.4', '#fde0ef'], ['0.5', '#f7f7f7'], ['0.6', '#e6f5d0'], ['0.7', '#b8e186'], ['0.8', '#7fbc41'], ['0.9', '#4d9221'], ['1', '#276419']], 
-          sequential: [['0', '#0508b8'], ['0.0893854748603352', '#1910d8'], ['0.1787709497206704', '#3c19f0'], ['0.2681564245810056', '#6b1cfb'], ['0.3575418994413408', '#981cfd'], ['0.44692737430167595', '#bf1cfd'], ['0.5363128491620112', '#dd2bfd'], ['0.6256983240223464', '#f246fe'], ['0.7150837988826816', '#fc67fd'], ['0.8044692737430168', '#fe88fc'], ['0.8938547486033519', '#fea5fd'], ['0.9832402234636871', '#febefe'], ['1', '#fec3fe']], 
+          diverging: [['0', '#8e0152'], ['0.1', '#c51b7d'], ['0.2', '#de77ae'], ['0.3', '#f1b6da'], ['0.4', '#fde0ef'], ['0.5', '#f7f7f7'], ['0.6', '#e6f5d0'], ['0.7', '#b8e186'], ['0.8', '#7fbc41'], ['0.9', '#4d9221'], ['1', '#276419']],
+          sequential: [['0', '#0508b8'], ['0.0893854748603352', '#1910d8'], ['0.1787709497206704', '#3c19f0'], ['0.2681564245810056', '#6b1cfb'], ['0.3575418994413408', '#981cfd'], ['0.44692737430167595', '#bf1cfd'], ['0.5363128491620112', '#dd2bfd'], ['0.6256983240223464', '#f246fe'], ['0.7150837988826816', '#fc67fd'], ['0.8044692737430168', '#fe88fc'], ['0.8938547486033519', '#fea5fd'], ['0.9832402234636871', '#febefe'], ['1', '#fec3fe']],
           sequentialminus: [['0', '#0508b8'], ['0.0893854748603352', '#1910d8'], ['0.1787709497206704', '#3c19f0'], ['0.2681564245810056', '#6b1cfb'], ['0.3575418994413408', '#981cfd'], ['0.44692737430167595', '#bf1cfd'], ['0.5363128491620112', '#dd2bfd'], ['0.6256983240223464', '#f246fe'], ['0.7150837988826816', '#fc67fd'], ['0.8044692737430168', '#fe88fc'], ['0.8938547486033519', '#fea5fd'], ['0.9832402234636871', '#febefe'], ['1', '#fec3fe']]
-        }, 
-        plot_bgcolor: 'rgb(17,17,17)', 
-        paper_bgcolor: 'rgb(17,17,17)', 
+        },
+        plot_bgcolor: 'rgb(17,17,17)',
+        paper_bgcolor: 'rgb(17,17,17)',
         shapedefaults: {
-          line: {width: 0}, 
-          opacity: 0.4, 
+          line: { width: 0 },
+          opacity: 0.4,
           fillcolor: '#f2f5fa'
-        }, 
+        },
         sliderdefaults: {
-          bgcolor: '#C8D4E3', 
-          tickwidth: 0, 
-          bordercolor: 'rgb(17,17,17)', 
+          bgcolor: '#C8D4E3',
+          tickwidth: 0,
+          bordercolor: 'rgb(17,17,17)',
           borderwidth: 1
-        }, 
+        },
         annotationdefaults: {
-          arrowhead: 0, 
-          arrowcolor: '#f2f5fa', 
+          arrowhead: 0,
+          arrowcolor: '#f2f5fa',
           arrowwidth: 1
-        }, 
+        },
         updatemenudefaults: {
-          bgcolor: '#506784', 
+          bgcolor: '#506784',
           borderwidth: 0
         }
-      }, 
+      },
       themeRef: 'PLOTLY_DARK'
     },
     showlegend: true,
-    legend: {title: {text: `n=${pointsPerGame.length}<br>` +
-    `Max Score: ${Math.max(...pointsPerGame)}<br>` +
-    `Average Score: ${average}`}}
+    legend: {
+      title: {
+        text: `n=${pointsPerGame.length}<br>` +
+          `Max Score: ${Math.max(...pointsPerGame)}<br>` +
+          `Average Score: ${average}`
+      }
+    }
+  }
+
+  let normal = {
+      name: 'Normal Distribution',
+      x: normalDistData.x,
+      y: normalDistData.y,
+      yaxis: 'y2',
+      type: 'scatter'
   }
 
   var data = {
@@ -258,7 +340,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
       {
         name: `${tier}`,
         x: pointsPerGame,
-        mode: 'markers', 
+        mode: 'markers',
         type: "histogram",
         marker: {
           color: "rgb(141,211,199)",
@@ -277,19 +359,22 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     layout: layout
   };
 
-  var pngOptions = {format: 'png', width: 1000, height: 500};
+  if (hourly) {
+    data.data.push(normal);
+  }
+
+  var pngOptions = { format: 'png', width: 1000, height: 500 };
   Plotly.getImage(data, pngOptions, async (err, imageStream) => {
-    if (err) console.log (err);
+    if (err) console.log(err);
     let file = new MessageAttachment(imageStream, 'hist.png')
-    await interaction.editReply({ 
+    await interaction.editReply({
       embeds: [generateGraphEmbed("attachment://hist.png", tier, discordClient)], files: [file]
     })
   });
 
 }
 
-function getEventName(eventID) 
-{
+function getEventName(eventID) {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
   let currentEventIdx = -1;
   let currentDate = new Date();
@@ -300,7 +385,7 @@ function getEventName(eventID)
       currentEventIdx = i;
     }
   }
-  
+
   return data[currentEventIdx].name
 }
 
@@ -310,10 +395,10 @@ function getEventData(eventID) {
   let currentDate = new Date();
 
   for (let i = 0; i < data.length; i++) {
-      if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
-          Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
-          currentEventIdx = i;
-      }
+    if (Math.floor(data[i].closedAt / 1000) > Math.floor(currentDate / 1000) &&
+      Math.floor(data[i].startAt / 1000) < Math.floor(currentDate / 1000)) {
+      currentEventIdx = i;
+    }
   }
 
   return data[currentEventIdx];
@@ -351,7 +436,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min
         id: userId,
         eventID: eventId
       });
-    if(data.length > 0) {
+    if (data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       rankData.unshift({ timestamp: eventData.startAt, score: 0 })
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] })
@@ -368,19 +453,19 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
-  
+
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
-    
-    const event = discordClient.getCurrentEvent()
+    });
+
+    const event = discordClient.getCurrentEvent();
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
           generateEmbed({
-            name: COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
+            name: COMMAND.INFO.name,
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR,
             client: discordClient.client
           })
         ]
@@ -388,7 +473,7 @@ module.exports = {
       return
     }
 
-    const eventName = getEventName(event.id)
+    const eventName = getEventName(event.id);
     const eventData = getEventData(event.id);
 
     const tier = interaction.options.getInteger('tier');
@@ -398,8 +483,7 @@ module.exports = {
     const max = interaction.options.getInteger('max');
     const hourly = interaction.options.getBoolean('hourly') || false;
 
-    if(tier)
-    {
+    if (tier) {
       var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (Tier=@tier AND EventID=@eventID)').all({
           tier: tier,
@@ -426,16 +510,14 @@ module.exports = {
             id: id,
             eventID: event.id
           });
-        if (data.length > 0)
-        {
+        if (data.length > 0) {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
           let title = `${eventName} ${name} Event Points`;
           postQuickChart(interaction, title, rankData, binSize, min, max, hourly, discordClient);
         }
-        else
-        {
+        else {
           interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
         }
       } catch (err) {
