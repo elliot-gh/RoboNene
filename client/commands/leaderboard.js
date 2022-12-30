@@ -106,7 +106,7 @@ module.exports = {
 
       if (interaction.options._hoistedOptions.length) {
         // User has selected a specific rank to jump to
-          if (interaction.options._hoistedOptions[0].value > 100 || 
+          if (interaction.options._hoistedOptions[0].value > 120 || 
             interaction.options._hoistedOptions[0].value < 1) {
             await interaction.editReply({
               embeds: [
@@ -189,7 +189,7 @@ module.exports = {
       let leaderboardEmbed = new MessageEmbed()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
+        .setDescription(`T120 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
         .addField(`Page ${page+1}`, leaderboardText, false)
         .setThumbnail(event.banner)
         .setTimestamp()
