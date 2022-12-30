@@ -54,7 +54,7 @@ function ensureASCII(str) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, eventData, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, eventData, offset, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -102,7 +102,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
   let maxTimestamp = eventData.startAt + HOUR;
   lastPoint = 0;
 
-  for(let i = 0; i < 18; i++){
+  for(let i = 0; i < offset; i++){
     dayData.push(null);
   }
 
@@ -325,13 +325,6 @@ const postQuickChart = async (interaction, tier, rankData, eventData, discordCli
 
 };
 
-function getEventName(eventID) 
-{
-  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-
-  return data[eventID - 2].name;
-}
-
 function getEventData(eventID) {
   const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
 
@@ -408,13 +401,17 @@ module.exports = {
       return;
     }
 
-    const eventId = interaction.options.getInteger('event') || event.id;
-
-    const eventName = getEventName(eventId);
-    const eventData = getEventData(eventId);
-
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
+    const eventId = interaction.options.getInteger('event') || event.id;
+    let offset = interaction.options.getInteger('offset') || 18;
+
+    offset += 24;
+    offset %= 24;
+
+    const eventData = getEventData(eventId);
+    const eventName = eventData.name;
+
 
     if(tier)
     {
@@ -450,7 +447,7 @@ module.exports = {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, discordClient);
         }
         else
         {

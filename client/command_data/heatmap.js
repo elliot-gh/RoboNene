@@ -50,7 +50,9 @@ module.exports = {
             'type': 'integer',
             'name': 'offset',
             'required': false,
-            'description': 'Offset from UTC'
+            'description': 'Offset from hour 0 (Defaults to 18, EST Start time)',
+            'minValue': 0,
+            'maxValue': 23
           },
           {
             'type': 'integer',
@@ -76,4 +78,4 @@ module.exports = {
   
     'SEKAI_BEST_HOST': 'api.sekai.best'
   }
-}
+};
