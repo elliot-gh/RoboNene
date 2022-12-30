@@ -5,10 +5,9 @@
  */
 
 const { token, secretKey } = require('../config.json');
-const { Client, Intents, Guild } = require('discord.js');
+const { Client, Intents } = require('discord.js');
 const { SekaiClient } = require('sekapi');
-const { RATE_LIMIT, CUTOFF_DATA } = require('../constants');
-const https = require('https');
+const { RATE_LIMIT } = require('../constants');
 
 const winston = require('winston');
 const Database = require('better-sqlite3-multiple-ciphers');
@@ -16,20 +15,20 @@ const Database = require('better-sqlite3-multiple-ciphers');
 const fs = require('fs');
 const path = require('path');
 
-const generateEmbed = require('./methods/generateEmbed') 
-
 // Constants used to locate the directories of data
 const CLIENT_CONSTANTS = {
-  "CMD_DIR": path.join(__dirname, '/commands'),
-  "EVENT_DIR": path.join(__dirname, '/events'),
-  "LOG_DIR": path.join(__dirname, '../logs'),
-  "DB_DIR": path.join(__dirname, '../databases'),
-  "DB_NAME": "databases.db",
-  "CUTOFF_DB_DIR": path.join(__dirname, '../cutoff_data'),
-  "CUTOFF_DB_NAME": "cutoffs.db",
+  'CMD_DIR': path.join(__dirname, '/commands'),
+  'EVENT_DIR': path.join(__dirname, '/events'),
+  'LOG_DIR': path.join(__dirname, '../logs'),
+  'DB_DIR': path.join(__dirname, '../databases'),
+  'DB_NAME': 'databases.db',
+  'CUTOFF_DB_DIR': path.join(__dirname, '../cutoff_data'),
+  'CUTOFF_DB_NAME': 'cutoffs.db',
+  'PRAYER_DB_DIR': path.join(__dirname, '../prayer_data'),
+  'PRAYER_DB_NAME': 'prayers.db',
 
-  "PREFS_DIR": path.join(__dirname, '../prefs')
-}
+  'PREFS_DIR': path.join(__dirname, '../prefs')
+};
 
 /**
  * A client designed to interface discord.js requests and provide
@@ -42,6 +41,7 @@ class DiscordClient {
     this.logger = null;
     this.db = null;
     this.cutoffdb = null;
+    this.prayerdb = null;
 
     this.api = [];
     this.priorityApiQueue = [];
@@ -110,7 +110,7 @@ class DiscordClient {
       this.logger.log({
         level: 'error',
         message: `A websocket connection encountered an error: ${error}`
-      })
+      });
     });
 
     /* Uncomment this in production
@@ -179,6 +179,32 @@ class DiscordClient {
   }
 
   /**
+   * Initializes the prayer databases (if it does not already exist) and loads
+   * the databases for usage.
+   */
+  loadPrayerDb(dir = CLIENT_CONSTANTS.PRAYER_DB_DIR) {
+    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`);
+
+    // Read an encrypted database
+    this.prayerdb.pragma(`key='${secretKey}'`);
+
+    // Initialize the prayer database table
+    this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
+    '(id STRING PRIMARY KEY, luck INTEGER, prays INTEGER, lastTimestamp INTEGER)').run();
+
+    this.prayerdb.prepare('ALTER TABLE prayers ADD COLUMN totalLuck').run();
+
+    let data = this.prayerdb.prepare('SELECT * FROM prayers').all();
+
+    for (let i = 0; i < data.length; i++) {
+      this.prayerdb.prepare('UPDATE prayers SET totalLuck=@totalLuck WHERE id=@id').run({
+        totalLuck: data[i].luck,
+        id: data[i].id,
+      });
+    }
+  }
+
+  /**
    * 
    * @param {string} discord_id users discord ID
    * @returns {int} users unique database ID
@@ -189,9 +215,9 @@ class DiscordClient {
         discord_id: discord_id,
       });
     if (data.length > 0) {
-      return data[0].id
+      return data[0].id;
     } else {
-      return -1
+      return -1;
     }
   }
 
@@ -226,16 +252,16 @@ class DiscordClient {
       this.rateLimit[userId] = {
         timestamp: Date.now() + 3600000,
         usage: 0
-      }
+      };
     }
 
-    console.log(this.rateLimit)
+    console.log(this.rateLimit);
     if (this.rateLimit[userId].usage + 1 > RATE_LIMIT) {
-      return false
+      return false;
     } 
 
-    this.rateLimit[userId].usage++
-    return true
+    this.rateLimit[userId].usage++;
+    return true;
   }
 
   /**
@@ -244,7 +270,7 @@ class DiscordClient {
    * @return {Integer} timestamp in epochsecond when the rate limit will reset
    */
   getRateLimitRemoval(userId) {
-    return this.rateLimit[userId].timestamp
+    return this.rateLimit[userId].timestamp;
   }
 
   /**
@@ -260,7 +286,7 @@ class DiscordClient {
       params: params,
       callback: callback,
       error: error
-    })
+    });
   }
 
   /**
@@ -276,7 +302,7 @@ class DiscordClient {
       params: params,
       callback: callback,
       error: error
-    })
+    });
   }
 
   /**
@@ -296,7 +322,7 @@ class DiscordClient {
         const queryParams = {...request.params};
         delete queryParams.eventId;
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams)
+        const response = await apiClient.eventRanking(request.params.eventId, queryParams);
 
         // If our response is valid we run the callback
         if (response) {
@@ -313,7 +339,7 @@ class DiscordClient {
       } else if (this.apiQueue.length > 0) {
         runRequest(apiClient, this.apiQueue.pop());
       } else {
-        setTimeout(() => {runClient(apiClient, rate)}, rate);
+        setTimeout(() => {runClient(apiClient, rate);}, rate);
       }
     };
 
@@ -341,7 +367,7 @@ class DiscordClient {
           aggregateAt: events[i].aggregateAt,
           closedAt: events[i].closedAt,
           eventType: events[i].eventType
-        }
+        };
       }
     }
 
