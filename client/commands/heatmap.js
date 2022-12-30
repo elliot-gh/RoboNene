@@ -5,7 +5,7 @@
 
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
-const { plotlyKey, plotlyUser } = require('./../config.json');
+const { plotlyKey, plotlyUser } = require('../../config.json');
 const fs = require('fs');
 
 const COMMAND = require('../command_data/heatmap');
