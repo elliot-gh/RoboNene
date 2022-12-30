@@ -17,16 +17,36 @@ const generateOptions = (command, info) => {
       const setOp = (op) => {
         op.setName(option.name)
           .setDescription(option.description)
-          .setRequired(option.required)
+          .setRequired(option.required);
 
         if (option.choices) {
           option.choices.forEach(choice => {
-            op.addChoice(choice[0], choice[1])
-          })
+            op.addChoice(choice[0], choice[1]);
+          });
         }
 
-        return op
-      }
+        if (option.maxLength) {
+          op.setMaxLength(option.maxLength);
+        }
+
+        if (option.minLength) {
+          op.setMinLength(option.minLength);
+        }
+
+        if (option.maxValue) {
+          op.setMaxValue(option.maxValue);
+        }
+
+        if (option.minValue) {
+          op.setMinValue(option.minValue);
+        }
+
+        if (option.channelTypes) {
+          op.setChannelTypes(option.channelTypes);
+        }
+
+        return op;
+      };
 
       if (option.type === 'string') {
         command.addStringOption(setOp)
