@@ -160,8 +160,8 @@ async function getPray(userId, character, discordClient) {
         console.log('Error occured while writing prayers: ', e);
     }
 
-    updatePrays(data, discordClient);
-    returnQuote += ` You have ${data.luck} luck (${data.totalLuck} over Lifetime) and have prayed ${data.prays} times.`;
+    await updatePrays(data, discordClient);
+    returnQuote += ` You have ${data.luck} luck (${data.totalLuck} over lifetime) and have prayed ${data.prays} times.`;
     return returnQuote.format(character);
 }
 
@@ -172,7 +172,7 @@ module.exports = {
     async execute(interaction, discordClient) {
         try {
 
-            let id = interaction.user.id;
+            let id = interaction.user.id.toString();
 
             let character = interaction.options.getString('character') || 'Kohane';
             let pray = await getPray(id, character, discordClient);

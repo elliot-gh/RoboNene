@@ -133,6 +133,7 @@ class DiscordClient {
 
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
+    this.db.pragma('journal_mode = WAL')
 
     this.db.prepare('CREATE TABLE IF NOT EXISTS users ' +
       '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
@@ -162,6 +163,7 @@ class DiscordClient {
 
     // Read an encrypted database
     this.cutoffdb.pragma(`key='${secretKey}'`);
+    this.cutoffdb.pragma('journal_mode = WAL');
 
     // Initialize the tracking database instance
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
@@ -183,25 +185,15 @@ class DiscordClient {
    * the databases for usage.
    */
   loadPrayerDb(dir = CLIENT_CONSTANTS.PRAYER_DB_DIR) {
-    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`);
+    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`, { verbose: console.log });
 
     // Read an encrypted database
     this.prayerdb.pragma(`key='${secretKey}'`);
+    this.prayerdb.pragma('journal_mode = WAL');
 
     // Initialize the prayer database table
     this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
-    '(id STRING PRIMARY KEY, luck INTEGER, prays INTEGER, lastTimestamp INTEGER)').run();
-
-    this.prayerdb.prepare('ALTER TABLE prayers ADD COLUMN totalLuck').run();
-
-    let data = this.prayerdb.prepare('SELECT * FROM prayers').all();
-
-    for (let i = 0; i < data.length; i++) {
-      this.prayerdb.prepare('UPDATE prayers SET totalLuck=@totalLuck WHERE id=@id').run({
-        totalLuck: data[i].luck,
-        id: data[i].id,
-      });
-    }
+    '(id STRING PRIMARY KEY, luck INTEGER, prays INTEGER, lastTimestamp INTEGER, totalLuck INTEGER)').run();
   }
 
   /**
