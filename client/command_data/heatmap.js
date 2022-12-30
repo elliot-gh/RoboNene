@@ -26,7 +26,9 @@ module.exports = {
             'type': 'integer',
             'name': 'offset',
             'required': false,
-            'description': 'Offset from UTC'
+            'description': 'Offset from UTC',
+            'minValue': 0,
+            'maxValue': 23
           },
           {
             'type': 'integer',

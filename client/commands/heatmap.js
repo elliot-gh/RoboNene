@@ -350,7 +350,7 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient) {
+async function sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventId,
     targetRank: tier,
@@ -369,7 +369,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`, rankData, eventData, discordClient);
+      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`, rankData, eventData, offset, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -425,7 +425,7 @@ module.exports = {
         return;
       }
       else {
-        sendTierRequest(eventId, eventName, eventData, tier, interaction, discordClient);
+        sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, discordClient);
       }
     } else if (user) {
       try {
