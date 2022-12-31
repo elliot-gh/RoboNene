@@ -7,8 +7,11 @@ const COMMAND = require('../command_data/gacha');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const fs = require('fs');
+const client = require('https');
+const Axios = require('axios');
+const sharp = require('sharp');
 
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageAttachment } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 /**
@@ -43,18 +46,135 @@ function randn_bm() {
     return Math.random();
 }
 
-async function updatePrays(data, discordClient) {
-    await discordClient.prayerdb.prepare('INSERT OR REPLACE INTO prayers' +
-    '(id, luck, prays, lastTimestamp, totalLuck)' + 
-    'VALUES (@id, @luck, @prays, @lastTimestamp, @totalLuck);').run(
-        {
-            id: data.id.toString(),
-            luck: data.luck,
-            prays: data.prays,
-            lastTimestamp: data.lastTimestamp,
-            totalLuck: data.totalLuck
+async function downloadImage(url, filepath) {
+    const response = await Axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+    });
+    return new Promise((resolve, reject) => {
+        response.data.pipe(fs.createWriteStream(filepath))
+            .on('error', reject)
+            .once('close', () => resolve(filepath));
+    });
+}
+
+/**
+ * @typedef {Object} PRSKImage
+ * @property {String} normal the normal image
+ * @property {String} trained the trained image
+ */
+
+/**
+ * @returns {Promise<PRSKImage>}
+ * @param {sharp} assetBundleName 
+ * @param {sharp} rarity 
+ */
+async function getImage(assetBundleName, rarityType) {
+
+    let images = {'normal': null, 'trained': null};
+    
+    if (fs.existsSync(`./gacha/cached_images/${assetBundleName}_normal.png`)) {
+
+        images.normal = sharp(`./gacha/cached_images/${assetBundleName}_normal.png`);
+
+    } else {
+
+        let normalImage = `https://storage.sekai.best/sekai-assets/thumbnail/chara_rip/${assetBundleName}_normal.webp`;
+        await downloadImage(normalImage, `./gacha/cached_images/${assetBundleName}_normal.png`);
+        images.normal = sharp(`./gacha/cached_images/${assetBundleName}_normal.png`);
+    }
+    
+    if (rarityType == 'rarity_3' || rarityType == 'rarity_4') {
+
+        if (fs.existsSync(`./gacha/cached_images/${assetBundleName}_after_training.png`)) {
+            images.trained = sharp(`./gacha/cached_images/${assetBundleName}_after_training.png`);
+        } else {
+
+            let trainedImage = `https://storage.sekai.best/sekai-assets/thumbnail/chara_rip/${assetBundleName}_after_training.webp`;
+            await downloadImage(trainedImage, `./gacha/cached_images/${assetBundleName}_after_training.png`);
+            images.trained = sharp(`./gacha/cached_images/${assetBundleName}_after_training.png`);
         }
-    );
+    }
+        
+
+    return images;
+}
+
+async function overlayCard(image, rarityType, attributeType) {
+    const rarityStarsDic = {
+        'rarity_1': 'rarity_star_normal',
+        'rarity_2': 'rarity_star_normal',
+        'rarity_3': 'rarity_star_normal',
+        'rarity_4': 'rarity_star_normal',
+        'rarity_birthday': 'rarity_birthday',
+    };
+
+    const framesDic = {
+        'rarity_1': 'cardFrame_S_1',
+        'rarity_2': 'cardFrame_S_2',
+        'rarity_3': 'cardFrame_S_3',
+        'rarity_4': 'cardFrame_S_4',
+        'rarity_birthday': 'cardFrame_S_bd',
+    };
+
+    const numStarsDic = {
+        'rarity_1': '1',
+        'rarity_2': '2',
+        'rarity_3': '3',
+        'rarity_4': '4',
+        'rarity_birthday': '1',
+    };
+
+    let framePath = `./gacha/frames/${framesDic[rarityType]}.png`;
+    let attributePath = `./gacha/attributes/icon_attribute_${attributeType}.png`;
+    let rarityPath = `./gacha/rarity/${rarityStarsDic[rarityType]}.png`;
+
+    let frame = sharp(framePath);
+
+    image = await image
+        .resize(140, 140)
+        .toBuffer();
+    let attribute = await sharp(attributePath)
+        .resize(35, 35)
+        .toBuffer();
+    let star = await sharp(rarityPath)
+        .resize(28, 28)
+        .toBuffer();
+    let numStars = numStarsDic[rarityType];
+
+    let composites = [
+        { input: image, top: 8, left: 8 },
+        { input: attribute, top: 1, left: 1 }
+    ];
+
+    for (let i = 0; i < numStars; i++) {
+        composites.push({ input: star, top: 118, left: 10 + 26 * i });
+    }
+
+    let finalImage = frame.composite(composites);
+    
+    return finalImage;
+}
+
+async function overlayPulls(cards) {
+
+    let frame = sharp('./gacha/pull_frame.png');
+
+    let composites = [];
+
+    var row, col;
+
+    for (let i = 0; i < cards.length; i++) {
+        row = Math.floor(i / 5);
+        col = i % 5;
+        let card = cards[i];
+        composites.push({ input: await card.toBuffer(), top: 41 + row * 175, left: 41 + 175 * col });
+    }
+
+    let finalImage = frame.composite(composites);
+
+    return finalImage;
 }
 
 async function getCards(n, embed) {
@@ -76,22 +196,46 @@ async function getCards(n, embed) {
 
     var returnString = '';
     var rarityString = '';
-    const randomVal = randn_bm();
+    var no3Star = true;
+    var cardImages = [];
 
     for (let i = 0; i < n; i++) {
         var randomCard;
+        let randomVal = randn_bm();
         if (randomVal < 0.06) {
             randomCard = fourStars[Math.floor(Math.random() * fourStars.length)];
+            no3Star = false;
         } else if (randomVal < 0.145) {
             randomCard = threeStars[Math.floor(Math.random() * threeStars.length)];
+            no3Star = false;
         } else {
             randomCard = twoStars[Math.floor(Math.random() * twoStars.length)];
         }
+
+        if (i + 1 == n && no3Star && n >= 10) { 
+            if (randomVal < 0.06) {
+                randomCard = fourStars[Math.floor(Math.random() * fourStars.length)];
+            } else {
+                randomCard = threeStars[Math.floor(Math.random() * threeStars.length)];
+            }
+        }
+
+        let assetBundleName = randomCard.assetbundleName;
+
+        let attribute = randomCard.attr;
+        let rarityType = randomCard.cardRarityType;
+        let rarity = cardRarities[rarityType];
+        
+        let images = await getImage(assetBundleName, rarityType);
+
+        let postImage = await overlayCard(images.normal, rarityType, attribute);
+        cardImages.push(postImage);
+
         let firstName = gameCharacters[randomCard.characterId - 1].firstName;
         let lastName = gameCharacters[randomCard.characterId - 1].givenName;
 
         var cardStr;
-        let rarity = `${cardRarities[randomCard.cardRarityType]}`;
+        
         if (firstName) {
             cardStr = `${randomCard.prefix} ${firstName} ${lastName}`;
         } else {
@@ -105,12 +249,12 @@ async function getCards(n, embed) {
         returnString += '\n';
     }
 
-    embed.addFields(
-        { name: 'Rarity', value: rarityString, inline: true },
-        { name: 'Card', value: returnString, inline: true },
-    );
+    let pullImage = await overlayPulls(cardImages);
 
-    return returnString;
+    let file = new MessageAttachment(await pullImage.toBuffer(), 'pull.png');
+    embed.setImage('attachment://pull.png');
+
+    return file;
 }
 
 module.exports = {
@@ -133,9 +277,9 @@ module.exports = {
 
             let embed = generateEmbed({name: COMMAND.INFO.name, client: discordClient.client});
 
-            await getCards(n, embed);
+            let file = await getCards(n, embed);
 
-            await interaction.editReply({embeds: [embed]});
+            await interaction.editReply({ embeds: [embed], files: [file] });
         } catch (e) {
             console.log(e);
         } // Due to possible null values add a try catch
