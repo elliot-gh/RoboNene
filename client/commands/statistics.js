@@ -9,7 +9,7 @@ const COMMAND = require('../command_data/statistics');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 const HOUR = 3600000;
@@ -231,11 +231,47 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     embed.addFields({ name: 'Broken Hearts', value: '6' });
                 }
 
-                await interaction.editReply({
-                    embeds: [
-                        embed
-                    ]
+                let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+                    `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+                    `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+                    'Average Score per Game over the hour: ' + scorePerGame + '\n' +
+                    `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
+                    `Peak Speed over an hour: ${peakSpeed}\n` +
+                    `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
+                    `Estimated Talent: ${Math.round(teamData.talent)}\n` +
+                    `Estimated Event Bonus: ${(teamData.eventBonus * 100).toFixed(2)}%\n` +
+                    'Last 5 Games:\n';
+
+                var game;
+                for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
+                    game = pointsPerGame[pointsPerGame.length - i];
+                    reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> (Energy Used: ${game.energy})\n`;
+                }
+
+                reply += `Updated: <t:${timestamp}:R>`;
+
+                if (user.id == '475083312772415489' || user.id == '327997209666912256') {
+                    reply += '\nPeople Killed: 1';
+                }
+
+                else if (user.id == '530650499465216000') {
+                    reply += '\nHearts Broken: 6';
+                }
+
+                else if (user.id == '178294808429723648') {
+                    reply += '\nBroken Hearts: 6';
+                }
+
+                let mobileEmbed = generateEmbed({
+                    name: title,
+                    client: discordClient.client
                 });
+
+                mobileEmbed.addFields(
+                    { name: title, value: reply }
+                );
+
+                sendEmbed(interaction, embed, mobileEmbed);
             },
                 (err) => {
                     discordClient.logger.log({
@@ -354,7 +390,7 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
             client: discordClient.client
         });
 
-        //Ignore this entire section
+        // Embed Reply
         embed.addFields(
             { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString()},
             { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
@@ -367,6 +403,33 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
             { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
         );
 
+        //Ignore this entire section
+        let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+            `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+            `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+            `Average Score per Game over the hour: ${scorePerGame}\n` +
+            `Peak Speed over an hour: ${peakSpeed}\n` +
+            `Estimated Energy usage: ${estimatedEnergy}\n` +
+            `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
+            `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
+            'Last 5 Games:\n';
+
+        for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
+            let game = pointsPerGame[pointsPerGame.length - i];
+            reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> \n`;
+        }
+
+        reply += `Updated: <t:${timestamp}:R>`;
+
+        let mobileEmbed = generateEmbed({
+            name: title,
+            client: discordClient.client
+        });
+
+        mobileEmbed.addFields(
+            {name: title, value: reply}
+        );
+
         for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
             let game = pointsPerGame[pointsPerGame.length - i];
             embed.addFields({name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true});
@@ -374,16 +437,61 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
 
         embed.addFields({name: 'Updated:', value: `<t:${timestamp}:R>`});
 
-        await interaction.editReply({
-            embeds: [
-                embed
-            ]
-        });
+        sendEmbed(interaction, embed, mobileEmbed);
+
     }, (err) => {
         discordClient.logger.log({
             level: 'error',
             message: err.toString()
         });
+    });
+}
+
+async function sendEmbed(interaction, embed, mobileEmbed) {
+    const statisticsButtons = new MessageActionRow()
+        .addComponents(
+            new MessageButton()
+                .setCustomId('condensed')
+                .setLabel('CONDENSED')
+                .setStyle('SECONDARY')
+                .setEmoji(COMMAND.CONSTANTS.CONDENSED)
+        );
+
+    const statisticsMessage = await interaction.editReply({
+        embeds: [embed],
+        components: [statisticsButtons],
+        fetchReply: true
+    });
+
+    // Create a filter for valid responses
+    const filter = (i) => {
+        return i.customId == 'condensed';
+    };
+
+    const collector = statisticsMessage.createMessageComponentCollector({
+        filter,
+        time: COMMAND.CONSTANTS.INTERACTION_TIME
+    });
+
+    // Collect user interactions with the prev / next buttons
+    var condensed = false;
+    collector.on('collect', async (i) => {
+        if (i.customId === 'condensed') {
+            condensed = !condensed;
+        }
+
+        if (condensed) {
+            await i.update({
+                embeds: [mobileEmbed],
+                components: [statisticsButtons]
+            });
+        }
+        else {
+            await i.update({
+                embeds: [embed],
+                components: [statisticsButtons]
+            });
+        }
     });
 }
 

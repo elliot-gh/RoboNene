@@ -55,6 +55,8 @@ module.exports = {
             'message': 'There is currently no event going on'
         },
 
-        'SEKAI_BEST_HOST': 'api.sekai.best'
+        'SEKAI_BEST_HOST': 'api.sekai.best',
+
+        'CONDENSED': '📱',
     }
 };
