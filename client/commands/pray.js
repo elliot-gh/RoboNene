@@ -61,12 +61,12 @@ String.prototype.format = function () {
     });
 };
 
-async function updatePrays(data, discordClient) {
+async function updatePrays(data, discordClient, id) {
     discordClient.prayerdb.prepare('UPDATE prayers SET ' +
     'luck=@luck, prays=@prays, lastTimestamp=@lastTimestamp, totalLuck = @totalLuck ' + 
     'WHERE id=@id').run(
         {
-            'id': data.id.toString(),
+            'id': id,
             'luck': data.luck,
             'prays': data.prays,
             'lastTimestamp': data.lastTimestamp,
@@ -175,7 +175,7 @@ async function getPray(userId, character, discordClient) {
         console.log('Error occured while writing prayers: ', e);
     }
 
-    await updatePrays(data, discordClient);
+    await updatePrays(data, discordClient, userId);
     returnQuote += ` You have ${data.luck} luck (${data.totalLuck} over lifetime) and have prayed ${data.prays} times.`;
     return returnQuote.format(character);
 }
