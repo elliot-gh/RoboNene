@@ -20,6 +20,8 @@ silver.json
 mack.json
 pray.json
 
+# cached images
+/gacha/cached_images
 
 # logs, databses, and game data
 /logs
