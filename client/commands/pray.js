@@ -62,7 +62,21 @@ String.prototype.format = function () {
 };
 
 async function updatePrays(data, discordClient) {
-    discordClient.prayerdb.prepare('INSERT OR REPLACE INTO prayers' +
+    discordClient.prayerdb.prepare('UPDATE prayers SET ' +
+    'luck=@luck, prays=@prays, lastTimestamp=@lastTimestamp, totalLuck = @totalLuck ' + 
+    'WHERE id=@id').run(
+        {
+            'id': data.id.toString(),
+            'luck': data.luck,
+            'prays': data.prays,
+            'lastTimestamp': data.lastTimestamp,
+            'totalLuck': data.totalLuck
+        }
+    );
+}
+
+async function insertPrays(data, discordClient) {
+    discordClient.prayerdb.prepare('INSERT INTO prayers' +
     '(id, luck, prays, lastTimestamp, totalLuck)' + 
     'VALUES (@id, @luck, @prays, @lastTimestamp, @totalLuck);').run(data);
 }
@@ -137,6 +151,7 @@ async function getPray(userId, character, discordClient) {
             returnQuote = quote.returnQuote;
             let val = quote.val;
             data = { 'id': userId, 'luck': val, 'totalLuck': val, 'lastTimestamp': Date.now(), 'prays': 1 };
+            insertPrays(data, discordClient);
         }
 
         let time = await getTimeTrunc();
