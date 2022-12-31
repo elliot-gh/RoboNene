@@ -13,35 +13,7 @@ const generateEmbed = require('../methods/generateEmbed');
 const Stocks = require('../stock/stock');
 const stocks = new Stocks(stockApiKey);
 
-const prskChars = {
-    'MIKU': 'SGAMY',
-    'RIN': '',
-    'LEN': '',
-    'LUKA': 'SPY',
-    'MEIK': '',
-    'KAIT': 'UL',
-    'ICHK': '',
-    'SAKI': '',
-    'HONA': '',
-    'SBIB': '',
-    'MINO': '',
-    'HARU': '',
-    'AIRI': '',
-    'SZKU': '',
-    'KOHA': 'MC.PA',
-    'AN': 'FRCOY',
-    'TOE': 'GOOS',
-    'TOYA': 'NKE',
-    'TSKA': 'BTC',
-    'EMU': 'DIS',
-    'NENE': '',
-    'RUI': 'ETH',
-    'KND': 'TSUKF',
-    'MFY': '',
-    'ENA': '',
-    'MZK': '',
-    'BPM': 'CRAI'
-};
+const prskChars = require('../stock/stockTickers.js');
 
 /**
  * Ensures a string is ASCII to be sent through HTML
@@ -122,10 +94,33 @@ module.exports = {
             ephemeral: COMMAND.INFO.ephemeral
         });
 
-        const ticker = interaction.options.getString('ticker');
+        if (interaction.options.getSubcommand() === 'list') {
+            let stockList = '';
+            let keys = Object.keys(prskChars);
+            keys.sort();
+            for(let i = 0; i < keys.length; i++) {
+                stockList += keys[i];
+                stockList += '\r\n';
+            }
+            await interaction.editReply({
+                embeds: [generateEmbed({
+                    name: 'Stocks List',
+                    content: {
+                        'type': 'Symbols',
+                        'message': stockList
+                    },
+                    client: discordClient.client
+                })]
+            });
+            return;
+        }
 
-        if (ticker) {
-            await sendStockData(ticker, interaction, discordClient);
+        else if (interaction.options.getSubcommand() === 'get') {
+            const ticker = interaction.options.getString('ticker');
+
+            if (ticker) {
+                await sendStockData(ticker, interaction, discordClient);
+            }
         }
     }
 };

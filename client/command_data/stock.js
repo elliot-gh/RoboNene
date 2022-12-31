@@ -5,18 +5,29 @@
 
 module.exports = {
     'INFO': {
-        'name': 'ticker',
+        'name': 'stock',
         'utilization': '/stock',
         'description': 'returns the current stock price of the given company ticker',
         'ephemeral': false,
-        'params': [
+        'subcommands': [
             {
-                'type': 'string',
-                'name': 'ticker',
-                'required': true,
-                'description': 'stock ticker'
+                'name': 'get',
+                'description': 'Get current stock/crypto price',
+                'params': [
+                    {
+                        'type': 'string',
+                        'name': 'symbol',
+                        'required': true,
+                        'description': 'stock symbol to get price of'
+                    }
+                ]
+            },
+            {
+                'name': 'list',
+                'description': 'List all available stock/crypto symbols',
             }
         ]
+        
     },
 
     'CONSTANTS': {}
