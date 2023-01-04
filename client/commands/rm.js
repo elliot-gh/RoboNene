@@ -59,7 +59,7 @@ const changeName = async (interaction, channelName, discordClient) => {
                     name: COMMAND.INFO.name,
                     content: {
                         'type': 'error',
-                        'message': `You can only change the name of a channel once every 10 minutes.\nNext change <t:${Math.floor((channels[interaction.channel.id][0] + timeout) / 1000)}:R>`,
+                        'message': `You can only change the name of a channel twice every 10 minutes.\nNext change <t:${Math.floor((channels[interaction.channel.id][0] + timeout) / 1000)}:R>\nChannel Name: \`${channelName}\``,
                     },
                     client: discordClient.client
                 })
