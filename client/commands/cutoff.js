@@ -421,89 +421,34 @@ module.exports = {
       let paramCount = interaction.options._hoistedOptions.length;
       let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value;
 
-      const options = {
-        host: COMMAND.CONSTANTS.SEKAI_BEST_HOST,
-        path: `/event/${event.id}/rankings?rank=${tier}&limit=100000&region=en`,
-        headers: { 'User-Agent': 'request' },
-        timeout: 5000
-      };
+      try {
 
-      const request = https.request(options, (res) => {
-        let json = '';
-        res.on('data', (chunk) => {
-          json += chunk;
+        let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (EventID=@eventID AND Tier=@tier)').all({
+            eventID: event.id,
+            tier: tier
+          });
+        let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+        console.log('Data Read, Generating Internal cutoff');
+        generateCutoff({
+          interaction: interaction,
+          event: event,
+          timestamp: timestamp,
+          tier: tier,
+          score: score,
+          rankData: rankData,
+          detailed: detailed,
+          discordClient: discordClient
         });
-        res.on('end', async () => {
-          if (res.statusCode === 200) {
-            try {
-              const rankData = JSON.parse(json);
-              generateCutoff({
-                interaction: interaction,
-                event: event,
-                timestamp: timestamp,
-                tier: tier,
-                score: score,
-                rankData: rankData.data.eventRankings,
-                detailed: detailed,
-                discordClient: discordClient
-              });
 
-            } catch (err) {
-              discordClient.logger.log({
-                level: 'error',
-                timestamp: Date.now(),
-                message: `Error parsing JSON data from cutoff: ${err}`
-              });
-            }
-          } else {
-            discordClient.logger.log({
-              level: 'error',
-              timestamp: Date.now(),
-              message: `Error retrieving via cutoff data via HTTPS. Status: ${res.statusCode}`
-            });
-          }
-        });
-      });
-      request.on('error', (err) => {
+      } catch (err) {
+        console.log(err);
         discordClient.logger.log({
           level: 'error',
           timestamp: Date.now(),
-          message: `${err}`
+          message: `Error parsing JSON data from cutoff: ${err}`
         });
-      });
-
-      //On Timeout use internal data
-      request.setTimeout(5000, async () => {
-        console.log('Sekai.best Timed out, using internal data');
-        try {
-
-          let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-            'WHERE (EventID=@eventID AND Tier=@tier)').all({
-              eventID: event.id,
-              tier: tier
-            });
-          let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-          console.log('Data Read, Generating Internal cutoff');
-          generateCutoff({
-            interaction: interaction,
-            event: event,
-            timestamp: timestamp,
-            tier: tier,
-            score: score,
-            rankData: rankData,
-            detailed: detailed,
-            discordClient: discordClient
-          });
-
-        } catch (err) {
-          console.log(err);
-          discordClient.logger.log({
-            level: 'error',
-            timestamp: Date.now(),
-            message: `Error parsing JSON data from cutoff: ${err}`
-          });
-        }
-      });
+      }
     }, async (err) => {
       // Log the error
       discordClient.logger.log({
