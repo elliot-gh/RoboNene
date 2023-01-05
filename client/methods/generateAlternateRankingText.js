@@ -48,7 +48,7 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
         }
     });
 
-    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH);
+    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxGamesLength + maxChangeLength) - MAXLENGTH);
     maxNameLength -= difference;
 
     let leaderboardText = '';
