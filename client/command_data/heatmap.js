@@ -5,6 +5,14 @@
  * @author Ai0796
  */
 
+const palatteChoices = [
+  ['Default', 0],
+  ['Legacy', 1],
+  ['Ankoha', 2],
+  ['Cinema', 3],
+  ['Shinonome', 4],
+];
+
 module.exports = {
   'INFO': {
     'name': 'heatmap',
@@ -35,6 +43,13 @@ module.exports = {
             'name': 'event',
             'required': false,
             'description': 'The event to display for',
+          },
+          {
+            'type': 'integer',
+            'name': 'pallete',
+            'required': false,
+            'description': 'The color pallete to use',
+            'choices': palatteChoices
           }
         ]
       },
@@ -61,6 +76,13 @@ module.exports = {
             'name': 'event',
             'required': false,
             'description': 'The event to display for',
+          },
+          {
+            'type': 'integer',
+            'name': 'pallete',
+            'required': false,
+            'description': 'The color pallete to use',
+            'choices': palatteChoices
           }
         ]
       }

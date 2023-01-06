@@ -17,6 +17,60 @@ const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
 const HOUR = 3600000; 
 
+const standard = [
+  ['0.000', '#301934'],
+  ['0.125', '#7953A9'], 
+  ['0.250', '#8B74BD'], 
+  ['0.375', '#3690c0'], 
+  ['0.500', '#67a9cf'], 
+  ['0.625', '#a6bddb'],
+  ['0.750', '#d0d1e6'], 
+  ['0.875', '#ece2f0'], 
+  ['1.000', '#fcd4dc'],
+];
+
+const legacy = [
+  ['0.000', '#f7fbff'], 
+  ['0.125', '#deebf7'], 
+  ['0.250', '#c6dbef'], 
+  ['0.375', '#9ecae1'], 
+  ['0.500', '#6baed6'], 
+  ['0.625', '#4292c6'], 
+  ['0.750', '#2171b5'], 
+  ['0.875', '#08519c'], 
+  ['1.000', '#08306b']
+];
+
+
+const ankoha = [
+    ['0.00', '#f25e74'],
+    ['0.25', '#ff8884'],
+    ['0.50', '#026178'],
+    ['0.75', '#0682a6'],
+    ['1.00', '#34a1c7']
+];
+
+const cinema = [
+  ['0.00', '#8c0d07'],
+  ['0.33', '#ec7c71'],
+  ['0.66', '#7ecccc'],
+  ['1.00', '#2d7d7e']
+];
+
+const shinonome = [
+  ['0.00', '#ff7722'],
+  ['1.00', '#ccaa88']
+];
+
+const palettes = [
+  standard,
+  legacy,
+  ankoha,
+  cinema,
+  shinonome
+];
+
+
 /**
  * Create a graph embed to be sent to the discord interaction
  * @param {string} graphUrl url of the graph we are trying to embed
@@ -54,7 +108,7 @@ function ensureASCII(str) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, eventData, offset, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, eventData, offset, pallete, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -107,7 +161,10 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, di
   }
 
   rankData.forEach(point => {
-    if (point.timestamp > maxTimestamp) {
+    if (point.timestamp > eventData.aggregateAt) {
+      return;
+    }
+    while (point.timestamp > maxTimestamp) {
       maxTimestamp += HOUR;
       if(dayData.length >= 24) {
         heatmapData.unshift(dayData);
@@ -152,9 +209,11 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, di
     yperiod: 0,
     zsmooth: false, 
     hoverongaps: false,
-    'reversescale': true,
+    reversescale: true,
+    colorscale: pallete,
     xgap: 0.3,
     ygap: 0.3,
+    autocolorscale: false,
   };
   
   let layout = {
@@ -170,7 +229,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, di
     },
     legend: { title: { text: '<br>' } },
     autosize: true,
-    colorway: ['#b3e2cd', '#fdcdac', '#cbd5e8', '#f4cae4', '#e6f5c9', '#fff2ae', '#f1e2cc', '#cccccc'],
+    colorway: ['#b3e2cd', '#fdcdac', '#cbd5e8', '#f4cae4', '#e6f5c9', '#fff2ae', '#f1e2cc', '#cccccc'], 
     dragmode: 'zoom',
     template: {
       data: {
@@ -305,7 +364,11 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, di
       themeRef: 'PLOTLY_DARK'
     },
     hovermode: 'closest',
-    colorscale: { sequential: [['0', '#fff7fb'], ['0.125', '#ece7f2'], ['0.25', '#d0d1e6'], ['0.375', '#a6bddb'], ['0.5', '#74a9cf'], ['0.625', '#3690c0'], ['0.75', '#0570b0'], ['0.875', '#045a8d'], ['1', '#023858']] },
+    colorscale: {
+      diverging: [['0', '#40004b'], ['0.1', '#762a83'], ['0.2', '#9970ab'], ['0.3', '#c2a5cf'], ['0.4', '#e7d4e8'], ['0.5', '#f7f7f7'], ['0.6', '#d9f0d3'], ['0.7', '#a6dba0'], ['0.8', '#5aae61'], ['0.9', '#1b7837'], ['1', '#00441b']],
+      sequential: [['0', '#000004'], ['0.1111111111111111', '#1b0c41'], ['0.2222222222222222', '#4a0c6b'], ['0.3333333333333333', '#781c6d'], ['0.4444444444444444', '#a52c60'], ['0.5555555555555556', '#cf4446'], ['0.6666666666666666', '#ed6925'], ['0.7777777777777778', '#fb9b06'], ['0.8888888888888888', '#f7d13d'], ['1', '#fcffa4']],
+      sequentialminus: [['0', '#0508b8'], ['0.08333333333333333', '#1910d8'], ['0.16666666666666666', '#3c19f0'], ['0.25', '#6b1cfb'], ['0.3333333333333333', '#981cfd'], ['0.4166666666666667', '#bf1cfd'], ['0.5', '#dd2bfd'], ['0.5833333333333334', '#f246fe'], ['0.6666666666666666', '#fc67fd'], ['0.75', '#fe88fc'], ['0.8333333333333334', '#fea5fd'], ['0.9166666666666666', '#febefe'], ['1', '#fec3fe']]
+    },
     showlegend: false
   };
 
@@ -350,7 +413,7 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, discordClient) {
+async function sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, pallete, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventId,
     targetRank: tier,
@@ -366,10 +429,11 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
       });
     if(data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      let title = `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`;
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`, rankData, eventData, offset, discordClient);
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -404,9 +468,12 @@ module.exports = {
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
     const eventId = interaction.options.getInteger('event') || event.id;
+    const palleteIndex = interaction.options.getInteger('pallete') || 0;
     let offset = interaction.options.getInteger('offset');
 
     if (offset == null && offset != 0) offset = 18;
+
+    const pallete = palettes[palleteIndex];
 
     const eventData = getEventData(eventId);
     const eventName = eventData.name;
@@ -424,7 +491,7 @@ module.exports = {
         return;
       }
       else {
-        sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, discordClient);
+        sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, pallete, discordClient);
       }
     } else if (user) {
       try {
@@ -446,7 +513,7 @@ module.exports = {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, discordClient);
         }
         else
         {
