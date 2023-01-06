@@ -9,25 +9,66 @@ module.exports = {
         'utilization': '/rm',
         'description': 'Changes the channel name to the given code and players',
         'ephemeral': false,
-        'params': [
+        'subcommands': [
             {
-                'type': 'integer',
                 'name': 'code',
-                'required': false,
-                'description': 'Room code'
+                'description': 'Change a room\'s code',
+                'params': [
+                    {
+                        'type': 'integer',
+                        'name': 'code',
+                        'required': true,
+                        'description': 'The new room code',
+                    }
+                ]
             },
             {
-                'type': 'integer',
                 'name': 'players',
-                'required': false,
-                'description': 'Players needed',
-                'choices': [
-                    ['0 (Full)', 0],
-                    ['1', 1],
-                    ['2', 2],
-                    ['3', 3],
-                    ['4', 4],
+                'description': 'change a rooms players',
+                'params': [
+                    {
+                        'type': 'integer',
+                        'name': 'players',
+                        'required': true,
+                        'description': 'Players needed',
+                        'choices': [
+                            ['0 (Full)', 0],
+                            ['1', 1],
+                            ['2', 2],
+                            ['3', 3],
+                            ['4', 4],
+                        ]
+                    }
                 ]
+            },
+            {
+                'name': 'both',
+                'description': 'Change a room\'s code and players',
+                'params': [
+                    {
+                        'type': 'integer',
+                        'name': 'code',
+                        'required': false,
+                        'description': 'The new room code',
+                    },
+                    {
+                        'type': 'integer',
+                        'name': 'players',
+                        'required': false,
+                        'description': 'Players needed',
+                        'choices': [
+                            ['0 (Full)', 0],
+                            ['1', 1],
+                            ['2', 2],
+                            ['3', 3],
+                            ['4', 4],
+                        ]
+                    }
+                ]
+            }, 
+            {
+                'name': 'close',
+                'description': 'Close a room',
             }
         ]
     },
