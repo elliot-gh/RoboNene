@@ -190,9 +190,9 @@ async function getCards(n, embed) {
     const cards = JSON.parse(fs.readFileSync('./sekai_master/cards.json'));
     const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacters.json'));
 
-    let twoStars = cards.filter(card => card.rarity === 2);
-    let threeStars = cards.filter(card => card.rarity === 3);
-    let fourStars = cards.filter(card => card.rarity === 4);
+    let twoStars = cards.filter(card => card.cardRarityType === 'rarity_2');
+    let threeStars = cards.filter(card => card.cardRarityType === 'rarity_3' || card.cardRarityType === 'rarity_birthday');
+    let fourStars = cards.filter(card => card.cardRarityType === 'rarity_4');
 
     var returnString = '';
     var rarityString = '';
@@ -224,29 +224,11 @@ async function getCards(n, embed) {
 
         let attribute = randomCard.attr;
         let rarityType = randomCard.cardRarityType;
-        let rarity = cardRarities[rarityType];
         
         let images = await getImage(assetBundleName, rarityType);
 
         let postImage = await overlayCard(images.normal, rarityType, attribute);
         cardImages.push(postImage);
-
-        let firstName = gameCharacters[randomCard.characterId - 1].firstName;
-        let lastName = gameCharacters[randomCard.characterId - 1].givenName;
-
-        var cardStr;
-        
-        if (firstName) {
-            cardStr = `${randomCard.prefix} ${firstName} ${lastName}`;
-        } else {
-            cardStr = `${randomCard.prefix} ${lastName}`;
-        }
-
-        rarityString += rarity;
-        rarityString += '\n';
-        
-        returnString += cardStr;
-        returnString += '\n';
     }
 
     let pullImage = await overlayPulls(cardImages);
