@@ -9,15 +9,17 @@ const COMMAND = require('../command_data/bonk');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const fs = require('fs');
 
+const fp = './JSONs/bonk.json';
+
 function getBonks(userId) {
     var bonk = 1;
     var bonkFile;
     try {
-        if (!fs.existsSync('bonk.json')) {
+        if (!fs.existsSync(fp)) {
             bonkFile = new Object();
         }
         else {
-            bonkFile = JSON.parse(fs.readFileSync('bonk.json', 'utf8'));
+            bonkFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if (userId in bonkFile) {
@@ -29,15 +31,7 @@ function getBonks(userId) {
 
         bonk = bonkFile[userId];
 
-        fs.writeFile('bonk.json', JSON.stringify(bonkFile), err => {
-            if (err) {
-                console.log('Error writing Bonk', err);
-            } else {
-                console.log('Wrote Bonk Successfully');
-            }
-        });
-
-        fs.writeFile('backup bonk.json', JSON.stringify(bonkFile), err => {
+        fs.writeFile(fp, JSON.stringify(bonkFile), err => {
             if (err) {
                 console.log('Error writing Bonk', err);
             } else {

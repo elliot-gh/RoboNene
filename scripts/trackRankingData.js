@@ -10,6 +10,9 @@ const RANKING_RANGE = require('./trackRankingRange.json');
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingTextChanges');
 
+const HOUR = 3600000;
+const gameFilePath = './JSONs/games.json';
+
 function getLastHour(sortedList, el) {
   for (let i = 0; i < sortedList.length; i++) {
     if (sortedList[i] > el) {
@@ -18,9 +21,6 @@ function getLastHour(sortedList, el) {
   }
   return 0;
 }
-
-const HOUR = 3600000;
-const gameFilePath = 'games.json';
 
 /**
  * Sends an embed containing the top 20 players to specific Discord servers that have

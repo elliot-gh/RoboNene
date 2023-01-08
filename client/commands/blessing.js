@@ -9,6 +9,8 @@ const COMMAND = require('../command_data/blessing');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const fs = require('fs');
 
+const fp = './JSONs/blessing.json';
+
 const blessingLyrics = [
     'Blessings for your birthday',
     'Blessings for your everyday',
@@ -118,11 +120,11 @@ function getBonks() {
     var bonk = 0;
     var bonkFile;
     try {
-        if (!fs.existsSync('blessings.json')) {
+        if (!fs.existsSync(fp)) {
             bonkFile = new Object();
         }
         else {
-            bonkFile = JSON.parse(fs.readFileSync('blessings.json', 'utf8'));
+            bonkFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if ('blessings' in bonkFile) {
@@ -134,7 +136,7 @@ function getBonks() {
 
         bonk = bonkFile['blessings'];
 
-        fs.writeFile('blessings.json', JSON.stringify(bonkFile), err => {
+        fs.writeFile(fp, JSON.stringify(bonkFile), err => {
             if (err) {
                 console.log('Error writing Bonk', err);
             } else {

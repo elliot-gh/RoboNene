@@ -8,15 +8,17 @@ const COMMAND = require('../command_data/mack');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const fs = require('fs');
 
+const fp = './JSONs/mack.json';
+
 function getBonks(reset) {
     var bonk = 1;
     var bonkFile;
     try {
-        if (!fs.existsSync('mack.json') || reset) {
+        if (!fs.existsSync(fp) || reset) {
             bonkFile = [];
         }
         else {
-            bonkFile = JSON.parse(fs.readFileSync('mack.json', 'utf8'));
+            bonkFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if (bonkFile.length > 0) {
@@ -28,7 +30,7 @@ function getBonks(reset) {
 
         bonk = bonkFile[0];
 
-        fs.writeFile('mack.json', JSON.stringify(bonkFile), err => {
+        fs.writeFile(fp, JSON.stringify(bonkFile), err => {
             if (err) {
                 console.log('Error writing Mack', err);
             } else {

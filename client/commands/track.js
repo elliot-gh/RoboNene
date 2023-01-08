@@ -9,15 +9,17 @@ const COMMAND = require('../command_data/track');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 
+const fp = './JSONs/track.json';
+
 function addTrack(tier, score, mention, channel) {
     tier = tier.toString();
     var trackFile;
     try {
-        if (!fs.existsSync('track.json')) {
+        if (!fs.existsSync(fp)) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if (tier in trackFile && score in trackFile[tier]) {
@@ -31,7 +33,7 @@ function addTrack(tier, score, mention, channel) {
             trackFile[tier][score] = [[channel, mention]];
         }
 
-        fs.writeFile('track.json', JSON.stringify(trackFile), err => {
+        fs.writeFile(fp, JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
             } else {

@@ -6,6 +6,8 @@
 const { CUTOFF_INTERVAL } = require('../constants');
 const fs = require('fs');
 
+const fp = './JSONs/track.json';
+
 /**
  * Writes JSON response from Project Sekai servers to local JSON
  * @param {Object} response from project sekai client
@@ -13,8 +15,8 @@ const fs = require('fs');
 
 async function clearFile() {
     try {
-        if (fs.existsSync('track.json')) {
-            await fs.unlinkSync('track.json');
+        if (fs.existsSync(fp)) {
+            fs.unlinkSync(fp);
         }
     } catch (e) {
         console.log('Error occured while writing Tracking: ', e);
@@ -24,14 +26,12 @@ async function clearFile() {
 function readTiers() {
     var trackFile;
     try {
-        if (!fs.existsSync('track.json')) {
+        if (!fs.existsSync(fp)) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
-
-        console.log(trackFile);
 
         return Object.keys(trackFile);
 
@@ -44,11 +44,11 @@ function readScores(tier) {
     tier = tier.toString();
     var trackFile;
     try {
-        if (!fs.existsSync('track.json')) {
+        if (!fs.existsSync(fp)) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if (tier in trackFile) {
@@ -67,11 +67,11 @@ function getUsers(tier, score) {
     var users = [];
     var trackFile;
     try {
-        if (!fs.existsSync('track.json')) {
+        if (!fs.existsSync(fp)) {
             trackFile = new Object();
         }
         else {
-            trackFile = JSON.parse(fs.readFileSync('track.json', 'utf8'));
+            trackFile = JSON.parse(fs.readFileSync(fp, 'utf8'));
         }
 
         if (tier in trackFile) {
@@ -82,7 +82,7 @@ function getUsers(tier, score) {
             }
         }
 
-        fs.writeFile('track.json', JSON.stringify(trackFile), err => {
+        fs.writeFile(fp, JSON.stringify(trackFile), err => {
             if (err) {
                 console.log('Error writing Tracking', err);
             } else {
