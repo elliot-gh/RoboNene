@@ -11,15 +11,7 @@ config.json
 ecosystem.config.js
 
 # storage json files
-bonk.json
-backup bonk.json
-backup ids.json
-track.json
-blessings.json
-silver.json
-mack.json
-pray.json
-games.json
+JSONs
 
 # cached images
 /gacha/cached_images
