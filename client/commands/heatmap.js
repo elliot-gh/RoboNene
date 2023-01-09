@@ -17,57 +17,81 @@ const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
 const HOUR = 3600000; 
 
-const standard = [
-  ['0.000', '#301934'],
-  ['0.125', '#7953A9'], 
-  ['0.250', '#8B74BD'], 
-  ['0.375', '#3690c0'], 
-  ['0.500', '#67a9cf'], 
-  ['0.625', '#a6bddb'],
-  ['0.750', '#d0d1e6'], 
-  ['0.875', '#ece2f0'], 
-  ['1.000', '#fcd4dc'],
-];
+const formatPallete = (colors) => {
+  const formatted = [];
+  const distance = 1 / (colors.length - 1);
+  colors.forEach((color, i) => {
+    formatted.push([(distance * i).toFixed(3), color]);
+  });
+  return formatted;
+};
 
-const legacy = [
-  ['0.000', '#f7fbff'], 
-  ['0.125', '#deebf7'], 
-  ['0.250', '#c6dbef'], 
-  ['0.375', '#9ecae1'], 
-  ['0.500', '#6baed6'], 
-  ['0.625', '#4292c6'], 
-  ['0.750', '#2171b5'], 
-  ['0.875', '#08519c'], 
-  ['1.000', '#08306b']
-];
+const standard = formatPallete([
+  '#fcd4dc',
+  '#ece2f0', 
+  '#d0d1e6',
+  '#a6bddb',
+  '#67a9cf', 
+  '#3690c0', 
+  '#8B74BD', 
+  '#7953A9', 
+  '#301934',
+]);
+
+const legacy = formatPallete([
+  '#f7fbff', 
+  '#deebf7', 
+  '#c6dbef', 
+  '#9ecae1', 
+  '#6baed6', 
+  '#4292c6', 
+  '#2171b5', 
+  '#08519c', 
+  '#08306b'
+]);
 
 
-const ankoha = [
-    ['0.00', '#f25e74'],
-    ['0.25', '#ff8884'],
-    ['0.50', '#026178'],
-    ['0.75', '#0682a6'],
-    ['1.00', '#34a1c7']
-];
+const ankoha = formatPallete([
+    '#f25e74',
+    '#ff8884',
+    '#026178',
+    '#0682a6',
+    '#34a1c7'
+]);
 
-const cinema = [
-  ['0.00', '#8c0d07'],
-  ['0.33', '#ec7c71'],
-  ['0.66', '#7ecccc'],
-  ['1.00', '#2d7d7e']
-];
+const cinema = formatPallete([
+  '#8c0d07',
+  '#ec7c71',
+  '#7ecccc',
+  '#2d7d7e'
+]);
 
-const shinonome = [
-  ['0.00', '#ff7722'],
-  ['1.00', '#ccaa88']
-];
+const shinonome = formatPallete([
+  '#ff7722',
+  '#ccaa88'
+]);
+
+const miraclePaint = formatPallete([
+  '#83e4d1',
+  '#79c3fd',
+  '#89a4fb',
+  '#af8efe',
+  '#fb8dcc',
+  '#ff88ac',
+  '#fe8b7f',
+  '#fdda99',
+  '#810095',
+  '#5f01ab',
+  '#04186d'
+]);
 
 const palettes = [
   standard,
   legacy,
   ankoha,
   cinema,
-  shinonome
+  shinonome,
+  miraclePaint
 ];
 
 
