@@ -2,12 +2,12 @@
   "name": "robonene",
   "version": "1.0.0",
   "description": "A Prosekai Tiering Discord Bot",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "load": "node ./client/load.js",
-    "loadGuild": "node ./client/loadGuild.js",
-    "unload": "node ./client/unload.js",
-    "unloadGuild": "node ./client/unloadGuild.js",
+    "load": "node ./client/load.ts",
+    "loadGuild": "node ./client/loadGuild.ts",
+    "unload": "node ./client/unload.ts",
+    "unloadGuild": "node ./client/unloadGuild.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --fix"
   },
@@ -25,6 +25,7 @@
     "regression": "2.0.1",
     "sekapi": "github:potor10/sekapi-js",
     "sharp": "^0.31.3",
+    "ts-node": "^10.9.1",
     "winston": "3.3.3"
   },
   "repository": {
@@ -39,6 +40,9 @@
   "homepage": "https://github.com/potor10/RoboNene#readme",
   "devDependencies": {
     "@types/node": "^18.11.18",
-    "eslint": "^8.7.0"
-  }
+    "eslint": "^8.7.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.4"
+  },
+  "postinstall": "$(yarn bin)/pm2 install typecsript"
 }
