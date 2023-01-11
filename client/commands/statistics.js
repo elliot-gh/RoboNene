@@ -53,7 +53,13 @@ module.exports = generateEmbed;
 function getEventData(eventID) {
     const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
 
-    return data[eventID - 2];
+    for (let i = data.length - 1; i >= 0; i--) {
+        if (data[i].id == eventID) {
+            return data[i];
+        }
+    }
+
+    return null;
 }
 
 function generateEnergyTable(eventPoints)
