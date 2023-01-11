@@ -54,6 +54,11 @@ const goodPrays = [
     'こはねに祈る。幸運を20得る'
 ];
 
+const Ai0Prays = [
+    'You pray to Pocket and Ai0. You gain 80 luck.',
+    'You pray to Washii and Ai0. You gain 80 luck.'
+]
+
 String.prototype.format = function () {
     var i = 0, args = arguments;
     return this.replace(/{}/g, function () {
@@ -92,9 +97,9 @@ async function getReturnQuote() {
         if (randn_bm() > 0.95) {
             val = 75;
             returnQuote = 'You pray to Mochi and Ai0. You gain 75 luck.';
-        } else if (randn_bm() > 0.90) {
+        } else if (randn_bm() > 0.80) {
             val = 80;
-            returnQuote = 'You pray to Pocket and Ai0. You gain 80 luck.';
+            returnQuote = Ai0Prays[Math.floor(Math.random() * Ai0Prays.length)];
         }
         else {
             val = 50;
@@ -162,7 +167,7 @@ async function getPray(userId, character, discordClient) {
             
             returnQuote = quote.returnQuote;
             data.luck += quote.val;
-            data.totalLuck += quote.val;
+            data.totalLuck += Math.max(0, quote.val);
             data.lastTimestamp = Date.now();
             data.prays++;
         }
