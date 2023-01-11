@@ -168,7 +168,7 @@ class DiscordClient {
 
     // Initialize the tracking database instance
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
-      '(EventID INTEGER, Tier INTEGER, Timestamp INTEGER, Score INTEGER, ID INTEGER,' +
+      '(EventID INTEGER, Tier INTEGER, Timestamp INTEGER, Score INTEGER, ID INTEGER, GameNum INTEGER, ' +
       'PRIMARY KEY(EventID, Tier, Timestamp))').run();
 
     //Add an index to cutoffs
