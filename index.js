@@ -22,6 +22,7 @@ loadGameData(0, async () => {
   client.loadCutoffDb();
   client.loadPrayerDb();
   client.loadLogger();
+  client.loadMessageHandler();
 
   await client.loadSekaiClient();
   await client.runSekaiRequests();

@@ -47,25 +47,46 @@ const checkTimeout = async (channelid) => {
     }
 };
 
-const changeName = async (interaction, channelName, discordClient) => {
-    if (channelName == interaction.channel.name) return true;
-    if (await checkTimeout(interaction.channel.id)) {
-        await interaction.channel.setName(channelName);
-        return true;
+const changeName = async (channel, channelName, discordClient) => {
+    if (channelName == channel.name) return {
+        embeds: [
+            generateEmbed({
+                name: COMMAND.INFO.name,
+                content: {
+                    'type': 'Success',
+                    'message': `Channel name changed to ${channelName}`
+                },
+                client: discordClient.client
+            })
+        ]
+    };
+    if (await checkTimeout(channel.id)) {
+        await channel.setName(channelName);
+        return {
+            embeds: [
+                generateEmbed({
+                    name: COMMAND.INFO.name,
+                    content: {
+                        'type': 'Success',
+                        'message': `Channel name changed to ${channelName}`
+                    },
+                    client: discordClient.client
+                })
+            ]
+        };
     } else {
-        await interaction.editReply({
+        return {
             embeds: [
                 generateEmbed({
                     name: COMMAND.INFO.name,
                     content: {
                         'type': 'error',
-                        'message': `You can only change the name of a channel twice every 10 minutes.\nNext change <t:${Math.floor((channels[interaction.channel.id][0] + timeout) / 1000)}:R>\nChannel Name: \`${channelName}\``,
+                        'message': `You can only change the name of a channel twice every 10 minutes.\nNext change <t:${Math.floor((channels[channel.id][0] + timeout) / 1000)}:R>\nChannel Name: \`${channelName}\``,
                     },
                     client: discordClient.client
                 })
             ]
-        });
-        return false;
+        };
     }
 };
 
@@ -133,20 +154,7 @@ module.exports = {
                 channelName = `${name}-xxxxx`;
             }
 
-            if (await changeName(interaction, channelName, discordClient)) {
-                await interaction.editReply({
-                    embeds: [
-                        generateEmbed({
-                            name: COMMAND.INFO.name,
-                            content: {
-                                'type': 'Success',
-                                'message': `Channel name changed to ${channelName}`
-                            },
-                            client: discordClient.client
-                        })
-                    ]
-                });
-            }
+            await interaction.editReply(await changeName(interaction.channel, channelName, discordClient));
             
         } catch (e) {
             console.log(e);
@@ -160,6 +168,112 @@ module.exports = {
                 ]
             });
         } // Due to possible null values add a try catch
+    },
+
+    async executeMessage(message, discordClient) {
+
+        let messageSplit = message.content.split(/ +/).slice(1);
+
+        let code = null;
+        let players = null;
+
+        for (let i = 0; i < messageSplit.length; i++) {
+            if (messageSplit[i].length == 5 && 
+                code == null && 
+                !isNaN(messageSplit[i]) &&
+                parseInt(messageSplit[i]) >= 0 &&
+                parseInt(messageSplit[i]) <= 99999) 
+            {
+                code = messageSplit[i];
+            } else if (messageSplit[i].length == 1 && 
+                players == null &&
+                !isNaN(messageSplit[i]) &&
+                parseInt(messageSplit[i]) >= 0 &&
+                parseInt(messageSplit[i]) < 5)
+            {
+                players = messageSplit[i];
+            }
+        }
+
+        if (!(await verify(message.channel.name))) {
+            await message.reply({
+                embeds: [
+                    generateEmbed({
+                        name: COMMAND.INFO.name,
+                        content: COMMAND.CONSTANTS.WRONG_FORMAT,
+                        client: discordClient.client
+                    })
+                ]
+            });
+            return;
+        }
+
+        try {
+            var channelName;
+            if (code || players) {
+                let nameSplit = message.channel.name.split('-');
+
+                let name = nameSplit[0];
+                code = code || nameSplit[1];
+                code = pad(code, 5);
+                if (players == 0) {
+                    players = 'f';
+                }
+                players = players || nameSplit[2];
+
+                if (`${code}`.length != 5) {
+                    await message.reply({
+                        embeds: [
+                            generateEmbed({
+                                name: COMMAND.INFO.name,
+                                content: COMMAND.CONSTANTS.WRONG_CODE_LENGTH,
+                                client: discordClient.client
+                            })
+                        ]
+                    });
+                    return;
+                }
+
+                if (players) {
+                    channelName = `${name}-${code}-${players}`;
+                } else {
+                    channelName = `${name}-${code}`;
+                }
+
+            } else if (messageSplit.length > 0) {
+                await message.reply({
+                    embeds: [
+                        generateEmbed({
+                            name: COMMAND.INFO.name,
+                            content: {
+                                'type': 'error',
+                                'message': `Invalid arguments: ${message.content}`
+                            },
+                            client: discordClient.client
+                        })
+                    ]
+                });
+                return;
+            } else {
+                let nameSplit = message.channel.name.split('-');
+
+                let name = nameSplit[0];
+                channelName = `${name}-xxxxx`;
+            }
+
+            await message.reply(await changeName(message.channel, channelName, discordClient));
+        } catch (e) {
+            console.log(e);
+            await message.reply({
+                embeds: [
+                    generateEmbed({
+                        name: COMMAND.INFO.name,
+                        content: COMMAND.CONSTANTS.ERROR,
+                        client: discordClient.client
+                    })
+                ]
+            });
+        }
     }
 };
 

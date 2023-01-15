@@ -44,6 +44,8 @@ class DiscordClient {
     this.cutoffdb = null;
     this.prayerdb = null;
 
+    this.prefix = '%';
+
     this.api = [];
     this.priorityApiQueue = [];
     this.apiQueue = [];
@@ -51,7 +53,27 @@ class DiscordClient {
     this.rateLimit = {};
 
     this.client = new Client({ 
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ['CHANNEL'] });
+      intents: [
+        Intents.FLAGS.GUILDS, 
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.GUILD_MESSAGES
+      ], 
+      partials: [
+        'CHANNEL'
+      ] });
+  }
+
+  loadMessageHandler() {
+    this.client.on('message', message => {
+      if (!message.content.startsWith(this.prefix) || message.author.bot) return;
+      let command = message.content.slice(this.prefix.length).split(/ +/);
+
+      if (command[0] === 'rm') {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+        event.executeMessage(message, this);
+      }
+    });
   }
 
   /**
