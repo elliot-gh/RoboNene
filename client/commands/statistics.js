@@ -9,7 +9,7 @@ const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
-const { getEventData } = require('../methods/getEventData');
+const getEventData = require('../methods/getEventData');
 
 const HOUR = 3600000;
 const SONGBIAS = 8.00; //Multiplier for Talent to get score
