@@ -41,6 +41,12 @@ module.exports = {
             'description': 'Custom minimum value on the histogram'
           },
           {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
+          },
+          {
             'type': 'boolean',
             'name': 'hourly',
             'required': false,
@@ -75,6 +81,12 @@ module.exports = {
             'name': 'max',
             'required': false,
             'description': 'Custom minimum value on the histogram'
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
           },
           {
             'type': 'boolean',

@@ -6,12 +6,12 @@
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const { plotlyKey, plotlyUser } = require('../../config.json');
-const fs = require('fs');
 
 const COMMAND = require('../command_data/heatmap');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
+const getEventData = require('../methods/getEventData');
 
 const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
@@ -412,18 +412,6 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
 
 };
 
-function getEventData(eventID) {
-  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-
-  for (let i = data.length - 1; i >= 0; i--) {
-    if (data[i].id == eventID) {
-      return data[i];
-    }
-  }
-
-  return null;
-}
-
 async function noDataErrorMessage(interaction, discordClient) {
   let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
   let title = 'Tier Not Found';
@@ -443,9 +431,9 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, pallete, discordClient) {
+async function sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
-    eventId: eventId,
+    eventId: eventData.id,
     targetRank: tier,
     lowerLimit: 0
   }, async (response) => {
@@ -455,15 +443,18 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
-        eventID: eventId
+        eventID: eventData.id
       });
     if(data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      let title = `${eventName} T${tier} ${response['rankings'][0]['name']} Heatmap`;
+      let title = `${eventData.name} T${tier} ${response['rankings'][0]['name']} Heatmap`;
+
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+      
       postQuickChart(interaction, title, rankData, eventData, offset, pallete, discordClient);
+      
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -521,7 +512,7 @@ module.exports = {
         return;
       }
       else {
-        sendTierRequest(eventId, eventName, eventData, tier, interaction, offset, pallete, discordClient);
+        sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient);
       }
     } else if (user) {
       try {

@@ -3,14 +3,13 @@
  * @author Ai0796
  */
 
-const fs = require('fs');
-
 const COMMAND = require('../command_data/statistics');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
+const { getEventData } = require('../methods/getEventData');
 
 const HOUR = 3600000;
 const SONGBIAS = 8.00; //Multiplier for Talent to get score
@@ -47,20 +46,6 @@ const generateEmbed = ({ name, client }) => {
 
     return embed;
 };
-
-module.exports = generateEmbed;
-
-function getEventData(eventID) {
-    const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-
-    for (let i = data.length - 1; i >= 0; i--) {
-        if (data[i].id == eventID) {
-            return data[i];
-        }
-    }
-
-    return null;
-}
 
 function generateEnergyTable(eventPoints)
 {

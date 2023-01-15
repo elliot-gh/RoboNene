@@ -6,12 +6,12 @@
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const { plotlyKey, plotlyUser } = require('../../config.json');
-const fs = require('fs');
 
 const COMMAND = require('../command_data/hist');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
+const getEventData = require('../methods/getEventData');
 
 const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
@@ -336,18 +336,6 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
 
 };
 
-function getEventData(eventID) {
-  const data = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
-
-  for (let i = data.length - 1; i >= 0; i--) {
-    if (data[i].id == eventID) {
-      return data[i];
-    }
-  }
-
-  return null;
-}
-
 async function noDataErrorMessage(interaction, discordClient) {
   let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
   let title = 'Tier Not Found';
@@ -367,9 +355,9 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
+async function sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
-    eventId: eventId,
+    eventId: eventData.id,
     targetRank: tier,
     lowerLimit: 0
   }, async (response) => {
@@ -378,14 +366,14 @@ async function sendTierRequest(eventId, eventName, eventData, tier, binSize, min
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
-        eventID: eventId
+        eventID: eventData.id
       });
     if (data.length > 0) {
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventName} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
+      postQuickChart(interaction, `${eventData.name} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -417,28 +405,28 @@ module.exports = {
       return;
     }
 
-    const eventData = getEventData(event.id);
-    const eventName = eventData.name;
-
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
     const binSize = interaction.options.getInteger('binsize');
     const min = interaction.options.getInteger('min');
     const max = interaction.options.getInteger('max');
     const hourly = interaction.options.getBoolean('hourly') || false;
+    const eventId = interaction.options.getInteger('event') || event.id;
+
+    const eventData = getEventData(eventId);
 
     if (tier) {
       var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (Tier=@tier AND EventID=@eventID)').all({
           tier: tier,
-          eventID: event.id
+          eventID: eventData
         });
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
         return;
       }
       else {
-        sendTierRequest(event.id, eventName, eventData, tier, binSize, min, max, hourly, interaction, discordClient);
+        sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
       }
     } else if (user) {
       try {
@@ -452,13 +440,13 @@ module.exports = {
         let data = discordClient.cutoffdb.prepare('SELECT * FROM users ' +
           'WHERE (id=@id AND EventID=@eventID)').all({
             id: id,
-            eventID: event.id
+            eventID: eventData.id
           });
         if (data.length > 0) {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          let title = `${eventName} ${name} Event Points`;
+          let title = `${eventData.name} ${name} Event Points`;
           postQuickChart(interaction, title, rankData, binSize, min, max, hourly, discordClient);
         }
         else {
