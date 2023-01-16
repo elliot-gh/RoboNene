@@ -85,6 +85,9 @@ module.exports = {
         'ERROR': {
             'type': 'Error',
             'message': 'Error occured trying to change channel name.'
-        }
+        },
+
+        'YES': '✔',
+        'NO': '❌',
     }
 };
