@@ -8,6 +8,9 @@ const COMMAND = require('../command_data/rm');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 
+const { MessageActionRow, MessageButton, MessageEmbed
+ } = require('discord.js');
+
 const timeout = 600000;
 const channels = {};
 
@@ -272,6 +275,85 @@ module.exports = {
                         client: discordClient.client
                     })
                 ]
+            });
+        }
+    },
+
+    async promptExecuteMessage(message, discordClient) {
+        if (await verify(message.channel.name)) {
+            let code = parseInt(message.content);
+            let deleted = false;
+
+            let prompt = new MessageEmbed()
+                .setColor('#0099ff')
+                .setTitle('Room Change')
+                .setDescription(`Do you want to change the room code to ${code}?`)
+                .setFooter('This prompt will expire in 30 seconds');
+            
+            const roomButtons = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('yes')
+                        .setLabel('YES')
+                        .setStyle('SECONDARY')
+                        .setEmoji(COMMAND.CONSTANTS.YES),
+                    new MessageButton()
+                        .setCustomId('no')
+                        .setLabel('NO')
+                        .setStyle('SECONDARY')
+                        .setEmoji(COMMAND.CONSTANTS.NO)
+                );
+
+            message = await message.channel.send({
+                embeds: [prompt],
+                components: [roomButtons],
+                fetchReply: true
+            });
+
+            // Create a filter for valid responses
+            const filter = (i) => {
+                return i.customId == 'yes' ||
+                    i.customId == 'no';
+            };
+
+            const collector = message.createMessageComponentCollector({
+                filter,
+                time: COMMAND.CONSTANTS.INTERACTION_TIME
+            });
+
+            // Collect user interactions with the prev / next buttons
+            collector.on('collect', async (i) => {
+
+                if (i.customId === 'yes') {
+
+                    var channelName, players;
+                    let nameSplit = message.channel.name.split('-');
+
+                    let name = nameSplit[0];
+                    code = code || nameSplit[1];
+                    code = pad(code, 5);
+                    players = players || nameSplit[2];
+
+                    if (players) {
+                        channelName = `${name}-${code}-${players}`;
+                    } else {
+                        channelName = `${name}-${code}`;
+                    }
+
+                await message.channel.send(await changeName(message.channel, channelName, discordClient));
+                await message.delete();
+                deleted = true;
+
+                } else if (i.customId === 'no') {
+                    await message.delete();
+                    deleted = true;
+                }
+            });
+
+            collector.on('end', async () => {
+                if (!deleted) {
+                    await message.delete();
+                }
             });
         }
     }

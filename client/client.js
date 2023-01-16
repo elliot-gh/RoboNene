@@ -65,7 +65,14 @@ class DiscordClient {
 
   loadMessageHandler() {
     this.client.on('message', message => {
-      if (!message.content.startsWith(this.prefix) || message.author.bot) return;
+      if (message.author.bot) return;
+
+      if (message.content.length === 5 && isNaN(message.content) === false) {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+        event.promptExecuteMessage(message, this);
+      } 
+      if (!message.content.startsWith(this.prefix)) return;
       let command = message.content.slice(this.prefix.length).split(/ +/);
 
       if (command[0] === 'rm') {
