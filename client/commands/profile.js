@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { MessageEmbed, MessageAttachment} = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
@@ -13,6 +13,175 @@ const COMMAND = require('../command_data/profile');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
 const binarySearch = require('../methods/binarySearch');
+const calculateTeam = require('../methods/calculateTeam');
+const sharp = require('sharp');
+const Axios = require('axios');
+
+async function downloadImage(url, filepath) {
+  const response = await Axios({
+    url,
+    method: 'GET',
+    responseType: 'stream'
+  });
+  return new Promise((resolve, reject) => {
+    response.data.pipe(fs.createWriteStream(filepath))
+      .on('error', reject)
+      .once('close', () => resolve(filepath));
+  });
+}
+
+/**
+ * @typedef {Object} PRSKImage
+ * @property {String} normal the normal image
+ * @property {String} trained the trained image
+ */
+
+/**
+ * Gets image from cache or downloads it and saves to chache, then returns image
+ * @returns {Promise<PRSKImage>}
+ * @param {sharp} assetBundleName 
+ * @param {sharp} rarity 
+ */
+async function getImage(assetBundleName, rarityType) {
+
+  const folderLocation = './gacha/cached_full_images';
+
+  let images = { 'normal': null, 'trained': null };
+
+  if (fs.existsSync(`${folderLocation}/${assetBundleName}_normal.webp`)) {
+
+    images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
+
+  } else {
+
+    let normalImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/normal.webp`;
+    await downloadImage(normalImage, `${folderLocation}/${assetBundleName}_normal.webp`);
+    images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
+  }
+
+  if (rarityType == 'rarity_3' || rarityType == 'rarity_4') {
+
+    if (fs.existsSync(`${folderLocation}/${assetBundleName}_after_training.webp`)) {
+      images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
+    } else {
+
+      let trainedImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/after_training.webp`;
+      await downloadImage(trainedImage, `${folderLocation}/${assetBundleName}_after_training.webp`);
+      images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
+    }
+  }
+
+  return images;
+}
+
+async function overlayCard(image, rarityType, attributeType, mastery, level, trained) {
+  const rarityStarsDic = {
+    'rarity_1': 'rarity_star_normal',
+    'rarity_2': 'rarity_star_normal',
+    'rarity_3': 'rarity_star_normal',
+    'rarity_4': 'rarity_star_normal',
+    'rarity_birthday': 'rarity_birthday',
+  };
+
+  const framesDic = {
+    'rarity_1': 'cardFrame_M_1',
+    'rarity_2': 'cardFrame_M_2',
+    'rarity_3': 'cardFrame_M_3',
+    'rarity_4': 'cardFrame_M_4',
+    'rarity_birthday': 'cardFrame_M_bd',
+  };
+
+  const numStarsDic = {
+    'rarity_1': '1',
+    'rarity_2': '2',
+    'rarity_3': '3',
+    'rarity_4': '4',
+    'rarity_birthday': '1',
+  };
+
+  let rarityStars = trained ? rarityStarsDic[rarityType].replace('_normal', '_afterTraining') : rarityStarsDic[rarityType];
+
+  const framePath = `./gacha/frames/${framesDic[rarityType]}.png`;
+  const attributePath = `./gacha/attributes/icon_attribute_${attributeType}.png`;
+  const rarityPath = `./gacha/rarity/${rarityStars}.png`;
+  const masteryPath = `./gacha/mastery/masterRank_L_${mastery}.png`;
+
+  const crop = await sharp('./gacha/frameblend.png')
+    .resize(330, 520)
+    .toBuffer();
+  const levelBorder = await sharp('./gacha/levelBorder.png')
+    .toBuffer();
+
+  image = await image
+    .extract({ left: 135, top: 0, width: 330, height: 520 });
+  let frame = await sharp(framePath)
+    .resize(330, 520)
+    .toBuffer();
+  let attribute = await sharp(attributePath)
+    .resize(58, 58)
+    .toBuffer();
+  let star = await sharp(rarityPath)
+    .resize(52, 52)
+    .toBuffer();
+  let masteryImage = await sharp(masteryPath)
+    .resize(95, 95)
+    .toBuffer();
+
+  let levelText = await sharp({
+    text: {
+      text: `<span color="#FFFFFF" background="#444466">Lv.${level}</span>`,
+      font: 'Arial',
+      fontfile: './gacha/Arial.ttf',
+      width: 100, // max width
+      height: 36, // max height
+      rgba: true
+    }
+  })
+    .toFormat('png')
+    .toBuffer();
+  let numStars = numStarsDic[rarityType];
+
+  await sharp(levelText).resize(300, 300).toFile('text_bw.png');
+
+  let composites = [
+    { input: levelBorder, top: 460, left: 0 },
+    { input: crop, blend: 'dest-in' },
+    { input: frame, top: 0, left: 0 },
+    { input: attribute, top: 8, left: 8 },
+    { input: levelText, top: 470, left: 25 }
+  ];
+
+  for (let i = 0; i < numStars; i++) {
+    composites.push({ input: star, top: 405, left: 20 + 52 * i });
+  }
+
+  if (mastery > 0) {
+    composites.push({ input: masteryImage, top: 415, left: 225 });
+  }
+
+  let finalImage = await image.composite(composites);
+
+  return finalImage;
+}
+
+async function overlayCards(cards) {
+  let frame = sharp('./gacha/teamFrame.png');
+
+  let composites = [];
+
+  var row, col;
+
+  for (let i = 0; i < cards.length; i++) {
+    row = Math.floor(i / 5);
+    col = i % 5;
+    let card = cards[i];
+    composites.push({ input: await card.toBuffer(), top: 55 + row * 175, left: 18 + 338 * col });
+  }
+
+  let finalImage = frame.composite(composites);
+
+  return finalImage;
+}
 
 /**
  * Generates an embed for the profile of the player
@@ -22,7 +191,7 @@ const binarySearch = require('../methods/binarySearch');
  * @param {boolean} private if the play has set their profile to private (private by default)
  * @return {MessageEmbed} the embed we will display to the user
  */
-const generateProfileEmbed = (discordClient, userId, data, private) => {
+const generateProfileEmbed = async (discordClient, userId, data, private) => {
   const areas = JSON.parse(fs.readFileSync('./sekai_master/areas.json'));
   const areaItemLevels = JSON.parse(fs.readFileSync('./sekai_master/areaItemLevels.json'));
   const areaItems = JSON.parse(fs.readFileSync('./sekai_master/areaItems.json'));
@@ -56,75 +225,57 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     leaderFullURL += 'card_normal.webp';
   }
 
+  const cardRarities = {
+    'rarity_1': '🌟',
+    'rarity_2': '🌟🌟',
+    'rarity_3': '🌟🌟🌟',
+    'rarity_4': '🌟🌟🌟🌟',
+    'rarity_birthday': '🎀',
+  };
+
+  const specialTrainingPossible = [
+    'rarity_3',
+    'rarity_4',
+  ];
+
+  let cardImages = [];
+
   // Generate Text For Profile's Teams
-  let teamText = '';
-  Object.keys(data.userDecks[0]).forEach((pos) => {
-    if (pos !== 'leader') {
+  for (const pos of Object.keys(data.userDecks[0])) {
+    if (pos !== 'leader' && pos !== 'subLeader') {
       let positionId = data.userDecks[0][pos];
 
-      data.userCards.forEach((card) => {
+      for (const card of data.userCards) {
         if (card.cardId === positionId) {
           const cardInfo = binarySearch(positionId, 'id', cards);
-          const charInfo = gameCharacters[cardInfo.characterId-1];
-          teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`;
-          teamText += `Rarity: ${'⭐'.repeat(cardInfo.rarity)}\n`;
-          teamText += `Type: ${COMMAND.CONSTANTS[cardInfo.attr]}\n`;
 
-          if (!private) {
-            teamText += `Level: \`\`${card.level}\`\`\n`;
+          let image = await getImage(cardInfo.assetbundleName, cardInfo.cardRarityType);
+          var imageOverlayed;
+
+          if (specialTrainingPossible.includes(cardInfo.cardRarityType)) {
+
+            if (card.specialTrainingStatus === 'done') {
+              imageOverlayed = await overlayCard(image.trained, cardInfo.cardRarityType, cardInfo.attr, card.masterRank, card.level, true);
+            } else {
+              imageOverlayed = await overlayCard(image.normal, cardInfo.cardRarityType, cardInfo.attr, card.masterRank, card.level, false);
+            }
+
+          } else {
+            imageOverlayed = await overlayCard(image.normal, cardInfo.cardRarityType, cardInfo.attr, card.masterRank, card.level, false);
           }
 
-          teamText += `Master Rank: \`\`${card.masterRank}\`\`\n`;
-
-          if (cardInfo.rarity > 2) {
-            let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌';
-            teamText += `Special Training: ${trainingText}\n`;
-          }
+          cardImages.push(imageOverlayed);
         }
-      });
+      }
     }
-  });
+  }
 
-  // Generate Text For Profile's Character Ranks
-  let characterRankText = '';
-  let maxNameLength = 0;
-  let maxRankLength = 0;
-
-  data.userCharacters.forEach((char) => {
-    const charInfo = gameCharacters[char.characterId-1];
-    let charName = charInfo.givenName;
-    if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`;
-    }
-    let rankText = `Rank ${char.characterRank}`;
-
-    if (maxNameLength < charName.length) {
-      maxNameLength = charName.length;
-    }
-
-    if (maxRankLength < rankText.length) {
-      maxRankLength = rankText.length;
-    }
-  });
-
-  data.userCharacters.forEach((char) => {
-    const charInfo = gameCharacters[char.characterId-1];
-
-    let charName = charInfo.givenName;
-    if (charInfo.firstName) {
-      charName += ` ${charInfo.firstName}`;
-    }
-    charName += ' '.repeat(maxNameLength-charName.length);
-
-    let rankText = `Rank ${char.characterRank}`; 
-    rankText += ' '.repeat(maxRankLength-rankText.length);
-
-    characterRankText += `\`\`${charName}  ${rankText}\`\`\n`;
-  });
+  let teamImage = await overlayCards(cardImages);
+  let file = new MessageAttachment(await teamImage.toBuffer(), 'team.png');
 
   // Generate Challenge Rank Text
   let challengeRankInfo = {};
-  for(let i = 0; i < data.userChallengeLiveSoloStages.length; i++) {
+  for (let i = 0; i < data.userChallengeLiveSoloStages.length; i++) {
     const currentChallengeRank = data.userChallengeLiveSoloStages[i];
     if (!(currentChallengeRank.characterId in challengeRankInfo)) {
       challengeRankInfo[currentChallengeRank.characterId] = currentChallengeRank.rank;
@@ -135,40 +286,65 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     }
   }
 
-  let challengeRankText = '';
-  maxNameLength = 0;
-  maxRankLength = 0;
+  // Generate Text For Profile's Character Ranks
 
-  Object.keys(challengeRankInfo).forEach((charId) => {
-    const charInfo = gameCharacters[charId-1];
+  let nameTitle = 'Name';
+  let crTitle = 'CR';
+  let chlgTitle = 'CHLG';
+
+  let maxNameLength = nameTitle.length;
+  let maxCRLength = crTitle.length;
+  let maxCHLGLength = chlgTitle.length;
+
+  data.userCharacters.forEach((char) => {
+    const charInfo = gameCharacters[char.characterId-1];
     let charName = charInfo.givenName;
     if (charInfo.firstName) {
       charName += ` ${charInfo.firstName}`;
     }
-    let rankText = `Rank ${challengeRankInfo[charId]}`;
+    let rankText = `${char.characterRank}`;
+
+    let chlgText = '0';
+    if (char.characterId in challengeRankInfo) {
+      chlgText = `${challengeRankInfo[char.characterId]}`;
+    }
 
     if (maxNameLength < charName.length) {
       maxNameLength = charName.length;
     }
 
-    if (maxRankLength < rankText.length) {
-      maxRankLength = rankText.length;
+    if (maxCRLength < rankText.length) {
+      maxCRLength = rankText.length;
+    }
+    
+    if (maxCHLGLength < chlgText.length) {
+      maxCHLGLength = chlgText.length;
     }
   });
 
-  Object.keys(challengeRankInfo).forEach((charId) => {
-    const charInfo = gameCharacters[charId-1];
+  nameTitle = nameTitle + ' '.repeat(maxNameLength-nameTitle.length);
+  crTitle = ' '.repeat(maxCRLength - crTitle.length) + crTitle;
+  chlgTitle = ' '.repeat(maxCHLGLength - chlgTitle.length) + chlgTitle;
+
+  let challengeRankText = `\`${nameTitle} ${crTitle} ${chlgTitle}\`\n`;
+
+  data.userCharacters.forEach((char) => {
+    const charInfo = gameCharacters[char.characterId -1];
 
     let charName = charInfo.givenName;
     if (charInfo.firstName) {
       charName += ` ${charInfo.firstName}`;
     }
+    let rankText = `${char.characterRank}`;
+    let chlgText = '0';
+    if (char.characterId in challengeRankInfo) {
+      chlgText = `${challengeRankInfo[char.characterId]}`;
+    }
     charName += ' '.repeat(maxNameLength-charName.length);
+    rankText = ' '.repeat(maxCRLength-rankText.length) + rankText;
+    chlgText = ' '.repeat(maxCHLGLength-chlgText.length) + chlgText;
 
-    let rankText = `Rank ${challengeRankInfo[charId]}`; 
-    rankText += ' '.repeat(maxRankLength-rankText.length);
-
-    challengeRankText += `\`\`${charName}  ${rankText}\`\`\n`;
+    challengeRankText += `\`\`${charName} ${rankText} ${chlgText}\`\`\n`;
   });
 
   // Create the Embed for the profile using the pregenerated values
@@ -187,11 +363,9 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
       { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
-      { name: 'Cards', value: `${teamText}` },
-      { name: 'Character Ranks', value: `${characterRankText}\u200b` },
-      { name: 'Challenge Rank', value: `${challengeRankText}\u200b`}
+      { name: 'Character & Challenge Ranks', value: `${challengeRankText}\u200b` },
     )
-    .setImage(leaderFullURL)
+    .setImage('attachment://team.png')
     .setTimestamp()
     .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
 
@@ -226,7 +400,7 @@ const generateProfileEmbed = (discordClient, userId, data, private) => {
     });
   }
   
-  return profileEmbed; 
+  return {'embed': profileEmbed, 'file': file}; 
 };
 
 /**
@@ -263,9 +437,10 @@ const getProfile = async (interaction, discordClient, userId) => {
       private = false;
     }
 
-    const profileEmbed = generateProfileEmbed(discordClient, userId, response, private);
+    const profileEmbed = await generateProfileEmbed(discordClient, userId, response, private);
     await interaction.editReply({
-      embeds: [profileEmbed]
+      embeds: [profileEmbed.embed],
+      files: [profileEmbed.file]
     });
   }, async (err) => {
     // Log the error
