@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 
-const MASTERYRANKREWARDS = [0, 50, 100, 150, 200];
+const MASTERYRANKREWARDS = [150, 300, 450, 540, 600];
 const V2MASTERYREWARDS = [0.1, 0.2, 1, 1.5, 2];
 const CARDRARITIES = ['rarity_1', 'rarity_2', 'rarity_3', 'rarity_birthday', 'rarity_4'];
 
@@ -64,7 +64,7 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
         talent += param.power3BonusFixed;
     }
 
-    talent += card.masterRank * MASTERYRANKREWARDS[data.rarity] * 3;
+    talent += card.masterRank * MASTERYRANKREWARDS[CARDRARITIES.indexOf(data.cardRarityType)];
 
     var group = null;
 
