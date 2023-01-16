@@ -419,7 +419,7 @@ module.exports = {
       var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
         'WHERE (Tier=@tier AND EventID=@eventID)').all({
           tier: tier,
-          eventID: eventData
+          eventID: eventData.id
         });
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
