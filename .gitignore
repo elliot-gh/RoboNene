@@ -15,6 +15,7 @@ JSONs
 
 # cached images
 /gacha/cached_images
+test.png
 
 # logs, databses, and game data
 /logs
