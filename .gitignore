@@ -15,7 +15,11 @@ JSONs
 
 # cached images
 /gacha/cached_images
+/gacha/cached_full_images
 test.png
+
+# fonts
+Arial.ttf
 
 # logs, databses, and game data
 /logs
