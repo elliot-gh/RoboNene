@@ -87,6 +87,8 @@ module.exports = {
             'message': 'Error occured trying to change channel name.'
         },
 
+        'INTERACTION_TIME': 30000,
+
         'YES': '✔',
         'NO': '❌',
     }

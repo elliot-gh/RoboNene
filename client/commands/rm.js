@@ -287,7 +287,7 @@ module.exports = {
             let prompt = new MessageEmbed()
                 .setColor('#0099ff')
                 .setTitle('Room Change')
-                .setDescription(`Do you want to change the room code to ${code}?`)
+                .setDescription(`Do you want to change the room code to ${pad(code, 5)}?`)
                 .setFooter('This prompt will expire in 30 seconds');
             
             const roomButtons = new MessageActionRow()
@@ -340,9 +340,9 @@ module.exports = {
                         channelName = `${name}-${code}`;
                     }
 
-                await message.channel.send(await changeName(message.channel, channelName, discordClient));
-                await message.delete();
-                deleted = true;
+                    await message.channel.send(await changeName(message.channel, channelName, discordClient));
+                    await message.delete();
+                    deleted = true;
 
                 } else if (i.customId === 'no') {
                     await message.delete();
