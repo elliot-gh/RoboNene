@@ -141,8 +141,6 @@ async function overlayCard(image, rarityType, attributeType, mastery, level, tra
     .toBuffer();
   let numStars = numStarsDic[rarityType];
 
-  await sharp(levelText).resize(300, 300).toFile('text_bw.png');
-
   let composites = [
     { input: levelBorder, top: 460, left: 0 },
     { input: crop, blend: 'dest-in' },
@@ -419,6 +417,17 @@ const getProfile = async (interaction, discordClient, userId) => {
           message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
             `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
         },
+        client: discordClient.client
+      })]
+    });
+    return;
+  }
+
+  if (isNaN(userId)) {
+    await interaction.editReply({
+      embeds: [generateEmbed({
+        name: COMMAND.INFO.name,
+        content: COMMAND.CONSTANTS.BAD_ID_ERR,
         client: discordClient.client
       })]
     });
