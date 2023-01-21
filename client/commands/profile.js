@@ -207,22 +207,18 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   }
 
   const leaderCard = binarySearch(leaderCardId, 'id', cards);
-  const teamData = calculateTeam(data, discordClient.getCurrentEvent().id)
+  const teamData = calculateTeam(data, discordClient.getCurrentEvent().id);
 
-  let leaderThumbURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
-    `thumbnail/chara_rip/${leaderCard.assetbundleName}`;
-
-  let leaderFullURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
-    `character/member/${leaderCard.assetbundleName}_rip/`;
+  let leaderThumbURL = `https://storage.sekai.best/sekai-assets/thumbnail/chara_rip/${leaderCard.assetbundleName}`;
 
 
   if (leader.defaultImage === 'special_training') {
     leaderThumbURL += '_after_training.webp';
-    leaderFullURL += 'card_after_training.webp';
   } else {
     leaderThumbURL += '_normal.webp';
-    leaderFullURL += 'card_normal.webp';
   }
+
+  console.log(leaderThumbURL);
 
   const cardRarities = {
     'rarity_1': '🌟',
@@ -255,10 +251,13 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
           
           let cardData = teamData.cards.filter((c) => c.cardId === card.cardId)[0];
           teamText += `Base Talent: \`\`${cardData.baseTalent}\`\`\n`;
+          teamText += `Character Decoration Talent: \`\`${cardData.characterDecoTalent.toFixed(0)}\`\`\n`;
+          teamText += `Area Item Talent: \`\`${cardData.areaDecoTalent.toFixed(0)}\`\`\n`;
+          teamText += `Character Rank Talent: \`\`${cardData.CRTalent.toFixed(0)}\`\`\n`;
           teamText += `Total Talent: \`\`${cardData.talent.toFixed(0)}\`\`\n`;
 
           if (cardInfo.rarity > 2) {
-            let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌'
+            let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌';
             teamText += `Special Training: ${trainingText}\n`;
           }
 

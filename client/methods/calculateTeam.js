@@ -11,6 +11,7 @@ const CARDRARITIES = ['rarity_1', 'rarity_2', 'rarity_3', 'rarity_birthday', 'ra
 
 /**
  * @typedef {Object} Team
+ * @property {Card} cardDate - The Card Data of the Team
  * @property {number} talent - The Talent of the Team
  * @property {number} eventBonus - The Event Bonus of the team
  */
@@ -18,6 +19,9 @@ const CARDRARITIES = ['rarity_1', 'rarity_2', 'rarity_3', 'rarity_birthday', 'ra
 /**
  * @typedef {Object} Card
  * @property {number} baseTalent - base talent of card before area or character buffs
+ * @property {number} characterDecoTalent - talent from character decorations
+ * @property {number} areaDecoTalent - talent from area decorations
+ * @property {number} CRTalent - talent from Character Rank
  * @property {number} talent - the total talent of the card
  * @property {string} type - The Type of the card
  * @property {string} group - the group of the card (or side group if Virtual Singer)
@@ -79,6 +83,9 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
 
     return {
         baseTalent : talent,
+        characterDecoTalent: 0,
+        areaDecoTalent: 0,
+        CRTalent: 0,
         talent : talent,
         type : data.attr,
         group : group,
@@ -107,7 +114,11 @@ const getAreaItemBonus = (cards, data, areaItemLevels) => {
         });
 
         areaItemBuffs.forEach(element => {
-            card.talent += Math.round(card.baseTalent * element.power1BonusRate / 100.0);
+            if (element.targetGameCharacterId) {
+                card.characterDecoTalent += Math.floor(card.baseTalent * element.power1BonusRate / 100.0);
+            } else {
+                card.areaDecoTalent += Math.floor(card.baseTalent * element.power1BonusRate / 100.0);
+            }
         });
     });
 };
@@ -160,7 +171,7 @@ const getCharacterRanks = (cards, data) => {
     cards.forEach(card => {
         let rank = data.userCharacters.find(character => character.characterId == card.characterId).characterRank;
 
-        card.talent += card.baseTalent * (rank / 1000.0);
+        card.CRTalent += Math.floor(card.baseTalent * (rank / 1000.0));
     });
 };
 
@@ -249,21 +260,21 @@ const calculateTeam = (data, eventID) => {
     if (group) {
         let buff = getGroupAreaItem(group, data, areaItemLevels);
         cardData.forEach(card => {
-            card.talent += card.baseTalent * buff;
+            card.areaDecoTalent += Math.floor(card.baseTalent * buff);
         });
     }
 
     if (type) {
         let buff = getTypeAreaItem(type, data, areaItemLevels);
         cardData.forEach(card => {
-            card.talent += card.baseTalent * buff;
+            card.areaDecoTalent += Math.floor(card.baseTalent * buff);
         });
     }
 
     getCharacterRanks(cardData, data);
 
     let totalTalent = 0;
-
+    cardData.forEach(card => card.talent += card.CRTalent + card.areaDecoTalent + card.characterDecoTalent);
     cardData.forEach(card => totalTalent += card.talent);
     let eventBonus = getEventBonus(cardData, eventBonusCards, eventCards, eventID);
 
