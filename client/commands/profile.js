@@ -21,7 +21,8 @@ async function downloadImage(url, filepath) {
   const response = await Axios({
     url,
     method: 'GET',
-    responseType: 'stream'
+    responseType: 'stream',
+    timeout: 5000,
   });
   return new Promise((resolve, reject) => {
     response.data.pipe(fs.createWriteStream(filepath))
@@ -47,28 +48,37 @@ async function getImage(assetBundleName, rarityType) {
   const folderLocation = './gacha/cached_full_images';
 
   let images = { 'normal': null, 'trained': null };
+  try {
+    if (fs.existsSync(`${folderLocation}/${assetBundleName}_normal.webp`)) {
 
-  if (fs.existsSync(`${folderLocation}/${assetBundleName}_normal.webp`)) {
-
-    images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
-
-  } else {
-
-    let normalImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/normal.webp`;
-    await downloadImage(normalImage, `${folderLocation}/${assetBundleName}_normal.webp`);
-    images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
+      images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
+  
+    } else {
+  
+      let normalImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/normal.webp`;
+      await downloadImage(normalImage, `${folderLocation}/${assetBundleName}_normal.webp`);
+      images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
+    }
+  } catch {
+    images.normal = sharp(`${folderLocation}/res003_no007_normal.webp`);
   }
+  
 
   if (rarityType == 'rarity_3' || rarityType == 'rarity_4') {
 
-    if (fs.existsSync(`${folderLocation}/${assetBundleName}_after_training.webp`)) {
-      images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
-    } else {
-
-      let trainedImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/after_training.webp`;
-      await downloadImage(trainedImage, `${folderLocation}/${assetBundleName}_after_training.webp`);
-      images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
+    try {
+      if (fs.existsSync(`${folderLocation}/${assetBundleName}_after_training.webp`)) {
+        images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
+      } else {
+  
+        let trainedImage = `https://storage.sekai.best/sekai-assets/character/member_cutout/${assetBundleName}_rip/after_training.webp`;
+        await downloadImage(trainedImage, `${folderLocation}/${assetBundleName}_after_training.webp`);
+        images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
+      }
+    } catch {
+      images.trained = sharp(`${folderLocation}/res003_no007_normal.webp`);
     }
+    
   }
 
   return images;
@@ -211,7 +221,6 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
 
   let leaderThumbURL = `https://storage.sekai.best/sekai-assets/thumbnail/chara_rip/${leaderCard.assetbundleName}`;
 
-
   if (leader.defaultImage === 'special_training') {
     leaderThumbURL += '_after_training.webp';
   } else {
@@ -248,16 +257,13 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
           teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`;
           
           let cardData = teamData.cards.filter((c) => c.cardId === card.cardId)[0];
-          teamText += `Base Talent: \`\`${cardData.baseTalent}\`\`\n`;
-          teamText += `Character Decoration Talent: \`\`${cardData.characterDecoTalent.toFixed(0)}\`\`\n`;
-          teamText += `Area Item Talent: \`\`${cardData.areaDecoTalent.toFixed(0)}\`\`\n`;
-          teamText += `Character Rank Talent: \`\`${cardData.CRTalent.toFixed(0)}\`\`\n`;
-          teamText += `Total Talent: \`\`${cardData.talent.toFixed(0)}\`\`\n`;
-
-          if (specialTrainingPossible.includes(cardInfo.cardRarityType)) {
-            let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌';
-            teamText += `Special Training: ${trainingText}\n`;
-          }
+          teamText += '**Talent:**\n';
+          teamText += `Base: \`${cardData.baseTalent.toLocaleString()}\`\n`;
+          teamText += `Character Deco: \`${cardData.characterDecoTalent.toFixed(0).toLocaleString()}\`\n`;
+          teamText += `Area Deco: \`${cardData.areaDecoTalent.toFixed(0).toLocaleString()}\`\n`;
+          teamText += `Character Rank: \`${cardData.CRTalent.toFixed(0).toLocaleString()}\`\n`;
+          teamText += `Total: \`${cardData.talent.toFixed(0).toLocaleString()}\`\n`;
+          teamText += '\n';
 
           let image = await getImage(cardInfo.assetbundleName, cardInfo.cardRarityType);
           var imageOverlayed;
@@ -372,12 +378,11 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
     })
     .setThumbnail(leaderThumbURL)
     .addFields(
-      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: false },
-      { name: 'User ID', value: `${userId}`, inline: false },
-      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
+      { name: 'Name', value: `${data.user.userGamedata.name}`, inline: true },
+      { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: true },
+      { name: 'Cards', value: `${teamText}` },
       { name: 'Estimated Talent', value: `${teamData.talent.toFixed(0)}`, inline: true },
       { name: 'Estimated Event Bonus', value: `${teamData.eventBonus.toFixed(2) * 100}%`, inline: true },
-      { name: 'Cards', value: `${teamText}` },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
       { name: 'Character & Challenge Ranks', value: `${challengeRankText}\u200b` },
@@ -510,12 +515,19 @@ module.exports = {
     });
 
     let accountId = '';
+    var userid;
 
-    if (interaction.options._hoistedOptions.length) {
-      accountId = (interaction.options._hoistedOptions[0].value);
-    } else {
+    if (interaction.options.getSubcommand() === 'self') {
+      userid = interaction.user.id;
+    }
+    else {
+      userid = interaction.options.getUser('user').id;
+      accountId = interaction.options.getString('id');
+    }
+
+    if (userid) {
       const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
-        discordId: interaction.user.id
+        discordId: userid
       });
 
       if (!user.length) {

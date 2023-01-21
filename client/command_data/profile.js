@@ -11,14 +11,36 @@ module.exports = {
     'utilization': '/profile',
     'description': 'Display your project sekai profile.',
     'ephemeral': false,
-    'params': [
+    'subcommands': [
       {
-        'type': 'string',
-        'name': 'id',
-        'required': false,
-        'description': 'An optional Project Sekai user ID target'
-      }
-    ],
+          'name': 'id',
+          'description': 'Get a profile by user id',
+          'params': [
+            {
+              'type': 'string',
+              'name': 'id',
+              'required': true,
+              'description': 'An optional Project Sekai user ID target'
+            }
+          ]
+      },
+      {
+          'name': 'user',
+          'description': 'Get a profile by discord user',
+          'params': [
+              {
+                  'type': 'user',
+                  'name': 'user',
+                  'required': true,
+                  'description': 'A linked User that has been linked to Ghost Nene'
+              }
+          ]
+      }, 
+      {
+        'name': 'self',
+        'description': 'Get a profile of yourself'
+    }
+  ],
 
     'requiresLink': true
   },
