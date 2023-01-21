@@ -192,7 +192,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   let binsize = binSize || Math.max(5, energyBoost[estimatedEnergy]);
 
   if (hourly) {
-    binsize = 10000;
+    binsize = Math.max(1000, binSize || 10000);
   }
 
   const average = (pointsPerGame.reduce((a, b) => a + b) / pointsPerGame.length).toFixed(2);
@@ -424,6 +424,12 @@ module.exports = {
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
         return;
+      } else if (tier >= 200) {
+        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+        rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+        rankData.push({ timestamp: Date.now(), score: data[0].Score });
+        rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+        postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
       }
       else {
         sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
