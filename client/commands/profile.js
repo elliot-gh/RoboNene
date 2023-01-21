@@ -207,6 +207,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   }
 
   const leaderCard = binarySearch(leaderCardId, 'id', cards);
+  const teamData = calculateTeam(data, discordClient.getCurrentEvent().id)
 
   let leaderThumbURL = 'https://sekai-res.dnaroma.eu/file/sekai-assets/' + 
     `thumbnail/chara_rip/${leaderCard.assetbundleName}`;
@@ -237,6 +238,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   ];
 
   let cardImages = [];
+  let teamText = [];
 
   // Generate Text For Profile's Teams
   for (const pos of Object.keys(data.userDecks[0])) {
@@ -246,6 +248,19 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
       for (const card of data.userCards) {
         if (card.cardId === positionId) {
           const cardInfo = binarySearch(positionId, 'id', cards);
+          const charInfo = gameCharacters[cardInfo.characterId-1];
+          teamText += `${cardRarities[cardInfo.cardRarityType]}`;
+          teamText += ' ';
+          teamText += `__${cardInfo.prefix} ${charInfo.givenName} ${charInfo.firstName}__\n`;
+          
+          let cardData = teamData.cards.filter((c) => c.cardId === card.cardId)[0];
+          teamText += `Base Talent: \`\`${cardData.baseTalent}\`\`\n`;
+          teamText += `Total Talent: \`\`${cardData.talent.toFixed(0)}\`\`\n`;
+
+          if (cardInfo.rarity > 2) {
+            let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌'
+            teamText += `Special Training: ${trainingText}\n`;
+          }
 
           let image = await getImage(cardInfo.assetbundleName, cardInfo.cardRarityType);
           var imageOverlayed;
@@ -351,7 +366,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
     .setTitle(`${data.user.userGamedata.name}'s Profile`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
     .setAuthor({ 
-      name: `${userId}`, 
+      name: `${data.user.userGamedata.name}`, 
       iconURL: `${leaderThumbURL}` 
     })
     .setThumbnail(leaderThumbURL)
@@ -359,6 +374,9 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
       { name: 'Name', value: `${data.user.userGamedata.name}`, inline: false },
       { name: 'User ID', value: `${userId}`, inline: false },
       { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: false },
+      { name: 'Estimated Talent', value: `${teamData.talent.toFixed(0)}`, inline: true },
+      { name: 'Estimated Event Bonus', value: `${teamData.eventBonus.toFixed(2) * 100}%`, inline: true },
+      { name: 'Cards', value: `${teamText}` },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
       { name: 'Character & Challenge Ranks', value: `${challengeRankText}\u200b` },
@@ -493,7 +511,7 @@ module.exports = {
     let accountId = '';
 
     if (interaction.options._hoistedOptions.length) {
-      accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
+      accountId = (interaction.options._hoistedOptions[0].value);
     } else {
       const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
         discordId: interaction.user.id
@@ -514,7 +532,7 @@ module.exports = {
       accountId = user[0].sekai_id;
     }
 
-    if (!accountId) {
+    if (!accountId || isNaN(accountId)) {
       // Do something because there is an empty account id input
       await interaction.editReply({
         embeds: [
