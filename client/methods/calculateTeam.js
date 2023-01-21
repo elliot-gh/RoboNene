@@ -91,10 +91,14 @@ const readCardTalent = (card, cards, cardEpisodes, gameCharacters) => {
 };
 
 const getAreaItemBonus = (cards, data, areaItemLevels) => {
-    let itemLevels = data.userAreaItems.map(param => (param.level));
+    let itemLevels = data.userAreaItems.map(param => ({'level': param.level, 'areaItemId': param.areaItemId}));
+    let idArray = {};
+    itemLevels.forEach(element => {
+        idArray[element.areaItemId] = element.level;
+    });
     cards.forEach(card => {
         let areaItemBuffs = areaItemLevels.filter(param => {
-            if ((itemLevels[param.areaItemId - 1] === param.level)) {
+            if ((idArray[param.areaItemId] === param.level)) {
                 return ((card.type === param.targetCardAttr) ||
                     (card.group === param.targetUnit) ||
                     (card.characterId === param.targetGameCharacterId));
@@ -109,9 +113,14 @@ const getAreaItemBonus = (cards, data, areaItemLevels) => {
 };
 
 const getTypeAreaItem = (type, data, areaItemLevels) => {
-    let itemLevels = data.userAreaItems.map(param => (param.level));
+    let itemLevels = data.userAreaItems.map(param => ({'level': param.level, 'areaItemId': param.areaItemId}));
+    let idArray = {};
+    itemLevels.forEach(element => {
+        idArray[element.areaItemId] = element.level;
+    });
+    
     let areaItemBuffs = areaItemLevels.filter(param => {
-        if ((itemLevels[param.areaItemId - 1] === param.level)) 
+        if ((idArray[param.areaItemId] === param.level)) 
         {
             return (type === param.targetCardAttr);
         }
@@ -127,9 +136,13 @@ const getTypeAreaItem = (type, data, areaItemLevels) => {
 };
 
 const getGroupAreaItem = (group, data, areaItemLevels) => {
-    let itemLevels = data.userAreaItems.map(param => (param.level));
+    let itemLevels = data.userAreaItems.map(param => ({'level': param.level, 'areaItemId': param.areaItemId}));
+    let idArray = {};
+    itemLevels.forEach(element => {
+        idArray[element.areaItemId] = element.level;
+    });
     let areaItemBuffs = areaItemLevels.filter(param => {
-        if ((itemLevels[param.areaItemId - 1] === param.level)) {
+        if ((idArray[param.areaItemId] === param.level)) {
             return (group === param.targetUnit);
         }
     });
@@ -224,6 +237,7 @@ const calculateTeam = (data, eventID) => {
     var type = cardData[0].type;
 
     cardData.forEach(card => {
+
         if(card.group != group){
             group = undefined;
         }
@@ -254,6 +268,7 @@ const calculateTeam = (data, eventID) => {
     let eventBonus = getEventBonus(cardData, eventBonusCards, eventCards, eventID);
 
     return {
+        cards: cardData,
         talent: totalTalent,
         eventBonus: eventBonus
     };
