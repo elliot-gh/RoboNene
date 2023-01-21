@@ -3,15 +3,15 @@
  * @author Potor10
  */
 
-const DiscordClient = require('./client/client');
-const loadGameData = require('./scripts/loadGameData');
-const loadMusicMeta = require('./scripts/loadMusicMeta');
-const trackGameData = require('./scripts/trackGameData');
-const trackRankingData = require('./scripts/trackRankingData');
-const trackCutoffData = require('./scripts/trackCutoffData');
-const trackUserCutoffs = require('./scripts/trackUserCutoffs');
-const trackTierData = require('./scripts/trackTierData');
-const fs = require('fs');
+import {DiscordClient} from './client/client.js';
+import {loadGameData} from './scripts/loadGameData.js';
+import {loadMusicMeta} from './scripts/loadMusicMeta.js';
+import {trackGameData} from './scripts/trackGameData.js';
+import {trackRankingData} from './scripts/trackRankingData.js';
+import {trackCutoffData} from './scripts/trackCutoffData.js';
+import {trackUserCutoffs} from './scripts/trackUserCutoffs.js';
+import {trackTierData} from './scripts/trackTierData.js';
+import fs from 'fs';
 
 loadMusicMeta(0);
 loadGameData(0, async () => {

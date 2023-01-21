@@ -197,4 +197,4 @@ const trackTierData = async (discordClient) => {
     getCutoffs(discordClient); //Run function once since setInterval waits an interval to run it
 };
 
-module.exports = trackTierData;
+export { trackTierData }

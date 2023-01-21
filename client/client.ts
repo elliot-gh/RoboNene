@@ -4,16 +4,16 @@
  * @author Potor10
  */
 
-const { token, secretKey } = require('../config.json');
-const { Client, Intents } = require('discord.js');
-const { SekaiClient } = require('sekapi');
-const { RATE_LIMIT } = require('../constants');
+import { token, secretKey } from '../config.json';
+import { Client, Intents } from 'discord.js';
+import { SekaiClient } from 'sekapi';
+import { RATE_LIMIT } from '../constants.js';
 
-const winston = require('winston');
-const Database = require('better-sqlite3-multiple-ciphers');
+import winston from 'winston';
+import Database from 'better-sqlite3-multiple-ciphers';
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Constants used to locate the directories of data
 const CLIENT_CONSTANTS = {
@@ -404,7 +404,7 @@ class DiscordClient {
    * @return {Object} event data of the event that is currently taking place
    */
   getCurrentEvent() {
-    const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
+    const events = JSON.parse(fs.readFileSync('./sekai_master/events.json').toString());
     const currentTime = Date.now();
 
     for (let i = 0; i < events.length; i++) {
@@ -437,6 +437,6 @@ class DiscordClient {
   }
 }
 
-export {};
+// module.exports = DiscordClient;
 
-module.exports = DiscordClient;
+export { DiscordClient }

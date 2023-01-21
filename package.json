@@ -2,7 +2,8 @@
   "name": "robonene",
   "version": "1.0.0",
   "description": "A Prosekai Tiering Discord Bot",
-  "main": "index.ts",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
     "load": "node ./client/load.ts",
     "loadGuild": "node ./client/loadGuild.ts",

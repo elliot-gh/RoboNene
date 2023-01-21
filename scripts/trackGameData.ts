@@ -71,4 +71,4 @@ const trackGameData = async (discordClient) => {
   setTimeout(() => {trackGameData(discordClient);}, 7200000);
 };
 
-module.exports = trackGameData;
+export { trackGameData }

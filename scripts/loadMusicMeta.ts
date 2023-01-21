@@ -55,4 +55,4 @@ const loadMusicMeta = async (idx) => {
     }
 };
 
-module.exports = loadMusicMeta;
+export { loadMusicMeta }

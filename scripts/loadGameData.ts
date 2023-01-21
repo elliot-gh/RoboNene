@@ -73,4 +73,4 @@ const loadGameData = (idx, callback) => {
   }
 };
 
-module.exports = loadGameData;
+export { loadGameData };

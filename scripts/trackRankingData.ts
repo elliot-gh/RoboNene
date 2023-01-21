@@ -106,7 +106,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
   };
 
   const removeDuplicates = async (arr) => {
-    return [...new Set(arr)];
+    return Array.from(new Set(arr));
   };
 
   if (rankingData.length > 0) {
@@ -290,6 +290,4 @@ const trackRankingData = async (discordClient) => {
   }
 };
 
-module.exports = trackRankingData;
-
-export {};
+export { trackRankingData };
