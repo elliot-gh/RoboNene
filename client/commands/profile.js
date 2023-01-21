@@ -60,7 +60,7 @@ async function getImage(assetBundleName, rarityType) {
       images.normal = sharp(`${folderLocation}/${assetBundleName}_normal.webp`);
     }
   } catch {
-    images.normal = sharp(`${folderLocation}/res003_no007_normal.webp`);
+    images.normal = sharp('./gacha/default_error_image.png');
   }
   
 
@@ -76,7 +76,7 @@ async function getImage(assetBundleName, rarityType) {
         images.trained = sharp(`${folderLocation}/${assetBundleName}_after_training.webp`);
       }
     } catch {
-      images.trained = sharp(`${folderLocation}/res003_no007_normal.webp`);
+      images.trained = sharp('./gacha/default_error_image.png');
     }
     
   }
