@@ -218,8 +218,6 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
     leaderThumbURL += '_normal.webp';
   }
 
-  console.log(leaderThumbURL);
-
   const cardRarities = {
     'rarity_1': '🌟',
     'rarity_2': '🌟🌟',
@@ -256,7 +254,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
           teamText += `Character Rank Talent: \`\`${cardData.CRTalent.toFixed(0)}\`\`\n`;
           teamText += `Total Talent: \`\`${cardData.talent.toFixed(0)}\`\`\n`;
 
-          if (cardInfo.rarity > 2) {
+          if (specialTrainingPossible.includes(cardInfo.cardRarityType)) {
             let trainingText = (card.specialTrainingStatus === 'done') ? '✅' : '❌';
             teamText += `Special Training: ${trainingText}\n`;
           }
@@ -285,7 +283,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   let teamImage = await overlayCards(cardImages);
   let file = new MessageAttachment(await teamImage.toBuffer(), 'team.png');
 
-  // Generate Challenge Rank Text
+  // Get Challenge Rank Data for all characters
   let challengeRankInfo = {};
   for (let i = 0; i < data.userChallengeLiveSoloStages.length; i++) {
     const currentChallengeRank = data.userChallengeLiveSoloStages[i];
@@ -308,6 +306,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   let maxCRLength = crTitle.length;
   let maxCHLGLength = chlgTitle.length;
 
+  // Get Max Lengths for each column
   data.userCharacters.forEach((char) => {
     const charInfo = gameCharacters[char.characterId-1];
     let charName = charInfo.givenName;
@@ -334,12 +333,15 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
     }
   });
 
+  // Set column headers
   nameTitle = nameTitle + ' '.repeat(maxNameLength-nameTitle.length);
   crTitle = ' '.repeat(maxCRLength - crTitle.length) + crTitle;
   chlgTitle = ' '.repeat(maxCHLGLength - chlgTitle.length) + chlgTitle;
 
   let challengeRankText = `\`${nameTitle} ${crTitle} ${chlgTitle}\`\n`;
 
+
+  // Add each character's rank and Challenge show to the text
   data.userCharacters.forEach((char) => {
     const charInfo = gameCharacters[char.characterId -1];
 
