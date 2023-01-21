@@ -351,8 +351,12 @@ module.exports = {
             });
 
             collector.on('end', async () => {
-                if (!deleted) {
-                    await message.delete();
+                try {
+                    if (!deleted) {
+                        await message.delete();
+                    }
+                } catch (e) {
+                    console.log(e);
                 }
             });
         }
