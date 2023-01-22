@@ -10,6 +10,7 @@ const fs = require('fs');
  * @param {Object} response from project sekai client
 */
 
+const pointsCache = {};
 
 
 /**
@@ -28,7 +29,21 @@ async function getCutoffs(discordClient) {
                 let rank = response['rankings'][0]['rank'];
                 let timestamp = Date.now();
 
-                discordClient.cutoffdb.prepare('INSERT INTO users ' +
+                let change = false;
+
+                if (id in pointsCache) {
+                    if (score >= pointsCache[id] + 100) {
+                        pointsCache[id] = score;
+                        change = true;
+                    }
+                } else {
+                    pointsCache[id] = score;
+                    change = true;
+                }
+                
+
+                if (change) {
+                    discordClient.cutoffdb.prepare('INSERT INTO users ' +
                     '(id, Tier, EventID, Timestamp, Score) ' +
                     'VALUES(@id, @tier, @EventID, @timestamp, @score)').run({
                         id: id,
@@ -37,6 +52,7 @@ async function getCutoffs(discordClient) {
                         tier: rank,
                         timestamp: timestamp
                     });
+                }
             }
         } catch (e) {
             console.log('Error occured while adding cutoffs: ', e);
