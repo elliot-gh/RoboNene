@@ -60,6 +60,8 @@ const generateOptions = (command, info) => {
         command.addUserOption(setOp);
       } else if (option.type === 'integer') {
         command.addIntegerOption(setOp);
+      } else if (option.type === 'role') {
+        command.addRoleOption(setOp);
       }
     });
   }
