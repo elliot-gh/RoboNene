@@ -521,7 +521,7 @@ module.exports = {
       userid = interaction.user.id;
     }
     else {
-      userid = interaction.options.getUser('user').id;
+      userid = interaction.options.getUser('user')?.id;
       accountId = interaction.options.getString('id');
     }
 
