@@ -9,6 +9,7 @@ const COMMAND = require('../command_data/twittertracker');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const { addTwitterData, getRecentTweet, removeTwitterData } = require('../../scripts/trackTwitterData.js');
 const { MessageActionRow, MessageButton } = require('discord.js');
+const generateEmbed = require('../methods/generateEmbed');
 
 module.exports = {
     ...COMMAND.INFO,
@@ -20,6 +21,20 @@ module.exports = {
 
         const username = interaction.options.getString('username');
         const role = interaction.options.getRole('role')?.id;
+
+        if (interaction.channel.type !== 'GUILD_TEXT') {
+            await interaction.editReply({
+                embeds: [
+                    generateEmbed({
+                        name: COMMAND.INFO.name,
+                        content: COMMAND.CONSTANTS.INVALID_CHANNEL_ERR,
+                        client: discordClient.client
+                    })
+                ]
+            });
+
+            return;
+        }
 
         try {
             if (interaction.options.getSubcommand() === 'remove') {

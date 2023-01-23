@@ -48,6 +48,12 @@ module.exports = {
     },
 
     'CONSTANTS': {
+        
+        'INVALID_CHANNEL_ERR': {
+            type: 'Error',
+            message: 'The channel you have selected is not a valid text channel.'
+        },
+
         'CORRECT': '✅',
         'INCORRECT': '❌',
     }
