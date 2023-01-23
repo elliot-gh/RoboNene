@@ -12,6 +12,7 @@ const trackCutoffData = require('./scripts/trackCutoffData');
 const trackUserCutoffs = require('./scripts/trackUserCutoffs');
 const trackTierData = require('./scripts/trackTierData');
 const fs = require('fs');
+const { trackTwitterData } = require('./scripts/trackTwitterData');
 
 loadMusicMeta(0);
 loadGameData(0, async () => {
@@ -34,7 +35,7 @@ loadGameData(0, async () => {
   trackCutoffData(client);
   trackUserCutoffs(client);
   trackTierData(client);
-
+  trackTwitterData(client);
 
   //This is a very duct tape solution
   if(fs.existsSync('messages.json')) {

@@ -25,6 +25,7 @@
     "regression": "2.0.1",
     "sekapi": "github:potor10/sekapi-js",
     "sharp": "^0.31.3",
+    "twitter-api-v2": "^1.14.0",
     "winston": "3.3.3"
   },
   "repository": {
