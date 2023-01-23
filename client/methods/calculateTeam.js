@@ -281,7 +281,7 @@ const calculateTeam = (data, eventID) => {
     return {
         cards: cardData,
         talent: totalTalent,
-        eventBonus: eventBonus
+        eventBonus: `${(eventBonus * 100).toFixed(2)}%`
     };
 };
 
