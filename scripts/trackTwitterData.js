@@ -1,7 +1,7 @@
 const { TwitterApi } = require('twitter-api-v2');
     
 const { TwitterApiKey, TwitterApiKeySecret, TwitterAccessToken, TwitterAccessTokenSecret } = require('../config');
-const { CUTOFF_INTERVAL } = require('../constants');
+const { TWITTER_INTERVAL } = require('../constants');
 
 const client = new TwitterApi({
     appKey: TwitterApiKey,
@@ -124,7 +124,7 @@ const getRecentTweet = async (username, discordClient) => {
  * @param {DiscordClient} discordClient the client we are using 
  */
 const trackTwitterData = async (discordClient) => {
-    let dataUpdater = setInterval(collectTwitterData, CUTOFF_INTERVAL, discordClient);
+    let dataUpdater = setInterval(collectTwitterData, TWITTER_INTERVAL, discordClient);
     collectTwitterData(discordClient); //Run function once since setInterval waits an interval to run it
 };
 

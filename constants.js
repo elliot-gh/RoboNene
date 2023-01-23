@@ -34,6 +34,9 @@ module.exports = {
   //Amount of Time between Cutoff data in milliseconds
   'CUTOFF_INTERVAL': 60000,
 
+  //Amount of Time between Twitter calls
+  'TWITTER_INTERVAL': 60000,
+
   // Source of game data
   'DIR_DATA': './sekai_master',
 };
