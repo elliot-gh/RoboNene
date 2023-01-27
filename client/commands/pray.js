@@ -182,6 +182,10 @@ async function getPray(userId, character, discordClient) {
 
     await updatePrays(data, discordClient, userId);
     returnQuote += ` You have ${data.luck} luck (${data.totalLuck} over lifetime) and have prayed ${data.prays} times.`;
+    // Discord limits message to 2000 characters so limit it if gets past that
+    if (returnQuote.length + character.length > 2000) {
+        character = character.slice(0, 2000 - returnQuote.length - character.length);
+    }
     return returnQuote.format(character);
 }
 
@@ -198,6 +202,23 @@ module.exports = {
             let pray = await getPray(id, character, discordClient);
 
             await interaction.reply(pray);
+        } catch (e) {
+            console.log(e);
+        } // Due to possible null values add a try catch
+    },
+
+    async executeMessage(message, discordClient) {
+        try {
+
+            let id = message.author.id.toString();
+
+            let character = message.content.split(' ') || 'Kohane';
+            if (Array.isArray(character)) {
+                character = character.slice(1).join(' ');
+            }
+            let pray = await getPray(id, character, discordClient);
+
+            await message.channel.send(pray);
         } catch (e) {
             console.log(e);
         } // Due to possible null values add a try catch

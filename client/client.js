@@ -79,6 +79,10 @@ class DiscordClient {
         const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
 
         event.executeMessage(message, this);
+      } else if (command[0] === 'pray') {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/pray.js`);
+
+        event.executeMessage(message, this);
       }
     });
   }
