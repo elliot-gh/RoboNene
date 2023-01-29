@@ -103,7 +103,6 @@ const removeTwitterData = (username, channelid) => {
 
 const collectTwitterData = async (discordClient) => {
     let data = readTwitterData();
-    console.log(JSON.stringify(data))
     for (let i = 0; i < data.length; i++) {
         data[i] = await collectTwitter(data[i], discordClient);
     };
