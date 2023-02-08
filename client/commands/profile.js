@@ -382,7 +382,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
       { name: 'Rank', value: `${data.user.userGamedata.rank}`, inline: true },
       { name: 'Cards', value: `${teamText}` },
       { name: 'Estimated Talent', value: `${teamData.talent.toFixed(0)}`, inline: true },
-      { name: 'Estimated Event Bonus', value: `${teamData.eventBonus}`, inline: true },
+      { name: 'Estimated Event Bonus', value: `${teamData.eventBonusText}`, inline: true },
       { name: 'Description', value: `${data.userProfile.word}\u200b` },
       { name: 'Twitter', value: `@${data.userProfile.twitterId}\u200b` },
       { name: 'Character & Challenge Ranks', value: `${challengeRankText}\u200b` },

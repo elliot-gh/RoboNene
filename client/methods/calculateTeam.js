@@ -14,6 +14,7 @@ const CARDRARITIES = ['rarity_1', 'rarity_2', 'rarity_3', 'rarity_birthday', 'ra
  * @property {Card} cardDate - The Card Data of the Team
  * @property {number} talent - The Talent of the Team
  * @property {number} eventBonus - The Event Bonus of the team
+ * @property {String} eventBonusText - The Event Bonus in Percetage format
  */
 
 /**
@@ -281,7 +282,8 @@ const calculateTeam = (data, eventID) => {
     return {
         cards: cardData,
         talent: totalTalent,
-        eventBonus: `${(eventBonus * 100).toFixed(2)}%`
+        eventBonus: eventBonus,
+        eventBonusText: `${(eventBonus * 100).toFixed(2)}%`
     };
 };
 

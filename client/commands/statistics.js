@@ -199,13 +199,13 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     { name: 'Total Energy Used', value: energyUsed.toLocaleString(), inline: true },
                     { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
                     { name: 'Estimated Talent', value: `${Math.round(teamData.talent).toLocaleString()}`, inline: true },
-                    { name: 'Estimated Event Bonus', value: `${teamData.eventBonus}`, inline: true },
+                    { name: 'Estimated Event Bonus', value: `${teamData.eventBonusText}`, inline: true },
                     { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` }
                 );
 
                 for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
                     let game = pointsPerGame[pointsPerGame.length - i];
-                    embed.addFields({ name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true });
+                    embed.addFields({ name: `**Game ${i}:**`, value: `${game.points} **x${game.energy}**\n<t:${game.timestamp}:R>`, inline: true });
                 }
 
                 embed.addFields({ name: 'Updated:', value: `<t:${timestamp}:R>` });
@@ -230,7 +230,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     `Peak Speed over an hour: ${peakSpeed}\n` +
                     `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
                     `Estimated Talent: ${Math.round(teamData.talent)}\n` +
-                    `Estimated Event Bonus: ${teamData.eventBonus}\n` +
+                    `Estimated Event Bonus: ${teamData.eventBonusText}\n` +
                     'Last 5 Games:\n';
 
                 var game;
