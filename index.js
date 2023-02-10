@@ -22,6 +22,7 @@ loadGameData(0, async () => {
   client.loadDb();
   client.loadCutoffDb();
   client.loadPrayerDb();
+  client.loadStockDb();
   client.loadLogger();
   client.loadMessageHandler();
 
