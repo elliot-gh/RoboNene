@@ -24,8 +24,21 @@ async function ensureAtoZ(str) {
     return str.replace(/[^a-zA-Z]/gi, '');
 }
 
-async function sendStockData(ticker, interaction, discordClient) {
+async function updatePrays(data, discordClient, id) {
+    discordClient.prayerdb.prepare('UPDATE prayers SET ' +
+        'luck=@luck, prays=@prays, lastTimestamp=@lastTimestamp, totalLuck = @totalLuck ' +
+        'WHERE id=@id').run(
+            {
+                'id': id,
+                'luck': data.luck,
+                'prays': data.prays,
+                'lastTimestamp': data.lastTimestamp,
+                'totalLuck': data.totalLuck
+            }
+        );
+}
 
+async function getStockData(ticker) {
     var swappedTicker = '';
     ticker = await ensureAtoZ(ticker.toUpperCase());
     if (ticker in prskChars) {
@@ -42,20 +55,47 @@ async function sendStockData(ticker, interaction, discordClient) {
 
     else {
         reply = await stocks.getCryptoData(swappedTicker);
+        reply['Price'] = reply['Exchange Rate'];
     }
+
+    return reply;
+}
+
+async function sendInvalidTickerError(interaction, ticker, discordClient) {
+    await interaction.editReply({
+        embeds: [
+            generateEmbed({
+                name: `$${ticker}`,
+                content: {
+                    'type': 'ERROR',
+                    'message': 'Invalid stock ticker'
+                },
+                client: discordClient.client
+            })
+        ]
+    });
+}
+
+async function sendNoPrayers(interaction, discordClient) {
+    await interaction.editReply({
+        embeds: [
+            generateEmbed({
+                name: 'ERROR',
+                content: {
+                    'type': 'ERROR',
+                    'message': 'ERROR, you have not prayed yet'
+                },
+                client: discordClient.client
+            })
+        ]
+    });
+}
+
+async function sendStockData(ticker, interaction, discordClient) {
+    ticker = await ensureAtoZ(ticker.toUpperCase());
+    let reply = await getStockData(ticker);
     if (Object.keys(reply).length === 0) {
-        await interaction.editReply({
-            embeds: [
-                generateEmbed({
-                    name: `$${ticker}`,
-                    content: {
-                        'type': 'ERROR',
-                        'message': 'Invalid stock ticker'
-                    },
-                    client: discordClient.client
-                })
-            ]
-        });
+        await sendInvalidTickerError(interaction, ticker, discordClient);
         return;
     }
 
@@ -84,6 +124,197 @@ async function sendStockData(ticker, interaction, discordClient) {
         ]
     });
 }
+
+async function buyStock(ticker, amount, interaction, discordClient) {
+    ticker = await ensureAtoZ(ticker.toUpperCase());
+    let reply = await getStockData(ticker);
+
+    if (Object.keys(reply).length === 0) {
+        await sendInvalidTickerError(interaction, ticker, discordClient);
+        return;
+    }
+
+    let praydata = discordClient.prayerdb.prepare('SELECT * FROM prayers ' +
+        'WHERE (id=@id)').all({
+            id: interaction.user.id
+        });
+
+    if (praydata.length > 0) {
+        praydata = praydata[0];
+    } else {
+        await sendNoPrayers(interaction, discordClient);
+        return;
+    }
+
+    let luck = praydata.luck;
+    let price = parseFloat(reply.Price);
+
+    if (price * amount > luck) {
+        await interaction.editReply({
+            embeds: [
+                generateEmbed({
+                    name: 'ERROR',
+                    content: {
+                        'type': 'ERROR',
+                        'message': `ERROR, you do not have enough luck to buy this stock\n cost: ${price * amount}\nluck: ${luck}`
+                    },
+                    client: discordClient.client
+                })
+            ]
+        });
+        return;
+    }
+
+    let data = await discordClient.stockdb.ref(`stocks/${interaction.user.id}`).get();
+    if (data.exists()) {
+        data = data.val();
+    }
+    else {
+        data = {};
+    }
+
+    if (ticker in data) {
+        data[ticker] += amount;
+    } else {
+        data[ticker] = amount;
+    }
+    
+    let message = `You have bought ${amount} shares of ${ticker} for ${(price * amount).toFixed(2)} luck.\n` + 
+        `You now have ${(luck - price * amount).toFixed(2)} luck left.\n` +
+        `You now have ${data[ticker]} shares of ${ticker}.`;
+
+    await interaction.editReply({
+        embeds: [
+            generateEmbed({
+                name: `$${ticker}`,
+                content: {
+                    'type': 'Stock',
+                    'message': message
+                },
+                client: discordClient.client
+            })
+        ]
+    });
+
+    praydata.luck -= price * amount;
+
+    await updatePrays(praydata, discordClient, interaction.user.id);
+    discordClient.stockdb.ref(`stocks/${interaction.user.id}`).set(data);
+}
+
+async function sellStock(ticker, amount, interaction, discordClient) {
+    ticker = await ensureAtoZ(ticker.toUpperCase());
+    let reply = await getStockData(ticker);
+
+    if (Object.keys(reply).length === 0) {
+        await sendInvalidTickerError(interaction, ticker, discordClient);
+        return;
+    }
+
+    let praydata = discordClient.prayerdb.prepare('SELECT * FROM prayers ' +
+        'WHERE (id=@id)').all({
+            id: interaction.user.id
+        });
+
+    if (praydata.length > 0) {
+        praydata = praydata[0];
+    } else {
+        await sendNoPrayers(interaction, discordClient);
+        return;
+    }
+
+    let luck = praydata.luck;
+    let price = parseFloat(reply.Price);
+
+    let data = await discordClient.stockdb.ref(`stocks/${interaction.user.id}`).get();
+
+    if (data.exists()) {
+        data = data.val();
+    }
+    else {
+        data = {};
+    }
+
+    if (!(ticker in data) || data[ticker] < amount) {
+        let amountHeld = data[ticker] || 0;
+        await interaction.editReply({
+            embeds: [
+                generateEmbed({
+                    name: 'ERROR',
+                    content: {
+                        'type': 'ERROR',
+                        'message': `ERROR, you do not have enough of this stock to sell\n given: ${amount}\nheld: ${amountHeld}`
+                    },
+                    client: discordClient.client
+                })
+            ]
+        });
+        return;
+    }
+
+    data[ticker] -= amount;
+
+    let message = `You have sold ${amount} shares of ${ticker} for ${(price * amount).toFixed(2)} luck.\n` +
+        `You now have ${(luck + price * amount).toFixed(2)} luck.\n` +
+        `You now have ${data[ticker]} shares of ${ticker}.`;
+
+    await interaction.editReply({
+        embeds: [
+            generateEmbed({
+                name: `$${ticker}`,
+                content: {
+                    'type': 'Stock',
+                    'message': message
+                },
+                client: discordClient.client
+            })
+        ]
+    });
+
+    praydata.luck += price * amount;
+
+    await updatePrays(praydata, discordClient, interaction.user.id);
+    discordClient.stockdb.ref(`stocks/${interaction.user.id}`).set(data);
+}
+
+async function getStocks(interaction, discordClient) {
+    let data = await discordClient.stockdb.ref(`stocks/${interaction.user.id}`).get();
+
+    if (data.exists()) {
+        data = data.val();
+    }
+    else {
+        data = {};
+    }
+
+    let message = '';
+    let keys = Object.keys(data);
+    keys.sort();
+    for(let i = 0; i < keys.length; i++) {
+        if (data[keys[i]] === 0) {
+            continue;
+        }
+        message += `${keys[i]}: ${data[keys[i]]}\r\n`;
+    }
+
+    if (message === '') {
+        message = 'You have no stocks.';
+    }
+
+    await interaction.editReply({
+        embeds: [
+            generateEmbed({
+                name: `${interaction.user.username}'s Stocks`,
+                content: {
+                    'type': 'Stock',
+                    'message': message
+                },
+                client: discordClient.client
+            })
+        ]
+    });
+}
+
 
 module.exports = {
     ...COMMAND.INFO,
@@ -116,11 +347,33 @@ module.exports = {
         }
 
         else if (interaction.options.getSubcommand() === 'get') {
-            const ticker = interaction.options.getString('ticker');
+            const ticker = interaction.options.getString('symbol');
 
             if (ticker) {
                 await sendStockData(ticker, interaction, discordClient);
             }
+        }
+
+        else if (interaction.options.getSubcommand() === 'buy') {
+            const ticker = interaction.options.getString('symbol');
+            const amount = interaction.options.getInteger('amount');
+
+            if (ticker) {
+                await buyStock(ticker, amount, interaction, discordClient);
+            }
+        }
+
+        else if (interaction.options.getSubcommand() === 'sell') {
+            const ticker = interaction.options.getString('symbol');
+            const amount = interaction.options.getInteger('amount');
+
+            if (ticker) {
+                await sellStock(ticker, amount, interaction, discordClient);
+            }
+        } 
+
+        else if (interaction.options.getSubcommand() === 'portfolio') {
+            await getStocks(interaction, discordClient);
         }
     }
 };
