@@ -11,6 +11,7 @@ const { RATE_LIMIT } = require('../constants');
 
 const winston = require('winston');
 const Database = require('better-sqlite3-multiple-ciphers');
+const { AceBase } = require('acebase');
 
 const fs = require('fs');
 const path = require('path');
@@ -27,6 +28,8 @@ const CLIENT_CONSTANTS = {
   'CUTOFF_DB_NAME': 'cutoffs.db',
   'PRAYER_DB_DIR': path.join(__dirname, '../prayer_data'),
   'PRAYER_DB_NAME': 'prayers.db',
+  'STOCK_DB_DIR': path.join(__dirname, '../stock_data'),
+  'STOCK_DB_NAME': 'stocks',
 
   'PREFS_DIR': path.join(__dirname, '../prefs')
 };
@@ -43,6 +46,7 @@ class DiscordClient {
     this.db = null;
     this.cutoffdb = null;
     this.prayerdb = null;
+    this.stockdb = null;
 
     this.prefix = '%';
 
@@ -227,8 +231,36 @@ class DiscordClient {
 
     // Initialize the prayer database table
     this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
-    '(id STRING PRIMARY KEY, luck INTEGER, prays INTEGER, lastTimestamp INTEGER, totalLuck INTEGER)').run();
-  
+    '(id STRING PRIMARY KEY, luck REAL, prays INTEGER, lastTimestamp INTEGER, totalLuck REAL)').run();
+
+    let data = JSON.parse(fs.readFileSync('prayers.json'));
+    
+    data.forEach((prayer) => {
+      let result = this.prayerdb.prepare('SELECT * FROM prayers WHERE id = ?').get(prayer.id);
+      if (result.length > 0 && result[0].luck > prayer.luck) return;
+      this.prayerdb.prepare('INSERT OR REPLACE INTO prayers (id, luck, prays, lastTimestamp, totalLuck) ' +
+        'VALUES (@id, @luck, @prays, @lastTimestamp, @totalLuck)').run({
+          id: prayer.id,
+          luck: prayer.luck * 1.0,
+          prays: prayer.prays,
+          lastTimestamp: prayer.lastTimestamp,
+          totalLuck: prayer.totalLuck * 1.0,
+        });
+    });
+    
+      // this.prayerdb.prepare('ALTER TABLE prayers MODIFY luck REAL').run();
+    // this.prayerdb.prepare('ALTER TABLE prayers MODIFY totalLuck REAL').run();
+  }
+
+  /**
+   * Initializes the Stock AceBase NoSQL database (if it does not already exist) and loads
+   * the databases for usage.
+   */
+  async loadStockDb(dir = CLIENT_CONSTANTS.STOCK_DB_DIR) {
+    const options = { storage: { path: dir } };
+    this.stockdb = new AceBase(`${CLIENT_CONSTANTS.STOCK_DB_NAME}`, options);
+
+    await this.stockdb.ready();
   }
 
   /**
