@@ -12,6 +12,7 @@ ecosystem.config.js
 
 # storage json files
 JSONs
+prayers.json
 
 # cached images
 /gacha/cached_images
@@ -29,6 +30,7 @@ Arial.ttf
 /sekai_master
 /cutoff_data
 /prayer_data
+/stock_data
 
 # local env files
 .env.local
