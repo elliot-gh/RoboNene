@@ -179,7 +179,7 @@ async function buyStock(ticker, amount, interaction, discordClient) {
         data[ticker] = amount;
     }
     
-    let message = `You have bought ${amount} shares of ${ticker} for ${(price * amount).toFixed(2)} luck.\n` + 
+    let message = `You have bought ${amount} shares of ${ticker} @ ${price.toFixed(2)} for ${(price * amount).toFixed(2)} luck.\n` + 
         `You now have ${(luck - price * amount).toFixed(2)} luck left.\n` +
         `You now have ${data[ticker]} shares of ${ticker}.`;
 
@@ -254,7 +254,7 @@ async function sellStock(ticker, amount, interaction, discordClient) {
 
     data[ticker] -= amount;
 
-    let message = `You have sold ${amount} shares of ${ticker} for ${(price * amount).toFixed(2)} luck.\n` +
+    let message = `You have sold ${amount} shares of ${ticker} @ ${price.toFixed(2)} for ${(price * amount).toFixed(2)} luck.\n` +
         `You now have ${(luck + price * amount).toFixed(2)} luck.\n` +
         `You now have ${data[ticker]} shares of ${ticker}.`;
 
