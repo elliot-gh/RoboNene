@@ -64,6 +64,14 @@ module.exports = {
             },
             {
                 'name': 'portfolio',
+                'params': [
+                    {
+                        'type': 'user',
+                        'name': 'user',
+                        'required': false,
+                        'description': 'the user to get the portfolio of, defaults to the user who ran the command'
+                    }
+                ],
                 'description': 'List your current stock portfolio',
             }
         ]

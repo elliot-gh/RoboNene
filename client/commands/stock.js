@@ -277,8 +277,8 @@ async function sellStock(ticker, amount, interaction, discordClient) {
     discordClient.stockdb.ref(`stocks/${interaction.user.id}`).set(data);
 }
 
-async function getStocks(interaction, discordClient) {
-    let data = await discordClient.stockdb.ref(`stocks/${interaction.user.id}`).get();
+async function getStocks(interaction, user, discordClient) {
+    let data = await discordClient.stockdb.ref(`stocks/${user.id}`).get();
 
     if (data.exists()) {
         data = data.val();
@@ -298,13 +298,13 @@ async function getStocks(interaction, discordClient) {
     }
 
     if (message === '') {
-        message = 'You have no stocks.';
+        message = `${user.username} has no stocks.`;
     }
 
     await interaction.editReply({
         embeds: [
             generateEmbed({
-                name: `${interaction.user.username}'s Stocks`,
+                name: `${user.username}'s Stocks`,
                 content: {
                     'type': 'Stock',
                     'message': message
@@ -373,7 +373,10 @@ module.exports = {
         } 
 
         else if (interaction.options.getSubcommand() === 'portfolio') {
-            await getStocks(interaction, discordClient);
+
+            const user = interaction.options.getUser('user') || interaction.user;
+
+            await getStocks(interaction, user, discordClient);
         }
     }
 };
