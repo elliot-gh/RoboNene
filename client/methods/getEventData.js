@@ -15,7 +15,11 @@ function getEventData(eventID) {
         }
     }
 
-    return null;
+    return {
+        id: -1,
+        name: 'Unknown Event',
+        description: 'Unknown Event',
+    };
 }
 
 module.exports = getEventData;
