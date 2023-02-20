@@ -496,6 +496,13 @@ module.exports = {
         });
 
         const event = discordClient.getCurrentEvent();
+
+        const user = interaction.options.getUser('user');
+        const tier = interaction.options.getInteger('tier');
+        const eventId = interaction.options.getInteger('event') || event.id;
+
+        const eventData = getEventData(eventId);
+
         if (event.id === -1) {
             await interaction.editReply({
                 embeds: [
@@ -508,12 +515,6 @@ module.exports = {
             });
             return;
         }
-
-        const user = interaction.options.getUser('user');
-        const tier = interaction.options.getInteger('tier');
-        const eventId = interaction.options.getInteger('event') || event.id;
-
-        const eventData = getEventData(eventId);
 
         if (user) {
             try {

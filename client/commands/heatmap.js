@@ -473,18 +473,6 @@ module.exports = {
     });
     
     const event = discordClient.getCurrentEvent();
-    if (event.id === -1) {
-      await interaction.editReply({
-        embeds: [
-          generateEmbed({
-            name: COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
-            client: discordClient.client
-          })
-        ]
-      });
-      return;
-    }
 
     const tier = interaction.options.getInteger('tier');
     const user = interaction.options.getUser('user');
@@ -498,6 +486,19 @@ module.exports = {
 
     const eventData = getEventData(eventId);
     const eventName = eventData.name;
+
+    if (event.id === -1) {
+      await interaction.editReply({
+        embeds: [
+          generateEmbed({
+            name: COMMAND.INFO.name,
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR,
+            client: discordClient.client
+          })
+        ]
+      });
+      return;
+    }
 
 
     if(tier)
