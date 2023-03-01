@@ -16,6 +16,7 @@ const getEventData = require('../methods/getEventData');
 const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
 const HOUR = 3600000; 
+const DAY = 86400000;
 
 const formatPallete = (colors) => {
   const formatted = [];
@@ -211,12 +212,24 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
   let xValues = [];
   let yValues = [];
 
+  const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  let daysofweek = [];
+
+  for(let i = 0; i < heatmapData.length; i++) {
+    let date = new Date((eventData.startAt + (i * DAY)));
+    if(offset < 15) date.setDate(date.getDate() + + 1);
+
+    daysofweek.push(weekday[date.getDay()]);
+  }
+
+
   for(let i = 0; i < 24; i++) {
     xValues.push(i + 0.5);
   }
 
   for(let i = 0; i < heatmapData.length; i++) {
-    yValues.unshift(`Day ${i + 1}`);
+    yValues.unshift(`${daysofweek[i]} Day ${i + 1}`);
   }
 
   let trace1 = {
