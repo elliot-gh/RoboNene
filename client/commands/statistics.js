@@ -54,10 +54,10 @@ function generateEnergyTable(eventPoints)
 
 function calculateEventPoints(score, multiscore, eventBoost, isCheerful)
 {
-    let scorePoints = score / 20000;
-    let multiPoints = Math.min(multiscore, 11000000) / 1000000;
+    let scorePoints = score / 17500;
+    let multiPoints = Math.min(multiscore, 1100000) / 100000;
     let cheerfulPoints = isCheerful ? 50 : 0;
-    return (100 + scorePoints + multiPoints + cheerfulPoints) * eventBoost;
+    return (114 + scorePoints + multiPoints + cheerfulPoints) * (1 + eventBoost);
 }
 
 function calculateScore(talent)
@@ -200,6 +200,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
                     { name: 'Estimated Talent', value: `${Math.round(teamData.talent).toLocaleString()}`, inline: true },
                     { name: 'Estimated Event Bonus', value: `${teamData.eventBonusText}`, inline: true },
+                    { name: 'Estimated Base Event Points', value: `${eventPoints.toLocaleString()}`, inline: true },
                     { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` }
                 );
 
@@ -231,6 +232,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                     `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
                     `Estimated Talent: ${Math.round(teamData.talent)}\n` +
                     `Estimated Event Bonus: ${teamData.eventBonusText}\n` +
+                    `Estimated Base Event Points: ${eventPoints.toLocaleString()}\n` +
                     'Last 5 Games:\n';
 
                 var game;
