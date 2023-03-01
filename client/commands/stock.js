@@ -173,15 +173,30 @@ async function buyStock(ticker, amount, interaction, discordClient) {
         data = {};
     }
 
+    if (ticker in data && (typeof data[ticker] != 'object' || !('average' in data[ticker]))) {
+        var tempamount;
+        if (typeof data[ticker] == 'object') {
+            tempamount = data[ticker]['amount'];
+        } else {
+            tempamount = data[ticker];
+        }
+        data[ticker] = {};
+        data[ticker]['average'] = price;
+        data[ticker]['amount'] = tempamount;
+    }
+
     if (ticker in data) {
-        data[ticker] += amount;
+        data[ticker]['average'] = (data[ticker]['average'] * data[ticker]['amount'] + price * amount) / (data[ticker]['amount'] + amount);
+        data[ticker]['amount'] += amount;
     } else {
-        data[ticker] = amount;
+        data[ticker] = {};
+        data[ticker]['average'] = price;
+        data[ticker]['amount'] = amount;
     }
     
     let message = `You have bought ${amount} shares of ${ticker} @ ${price.toFixed(2)} for ${(price * amount).toFixed(2)} luck.\n` + 
         `You now have ${(luck - price * amount).toFixed(2)} luck left.\n` +
-        `You now have ${data[ticker]} shares of ${ticker}.`;
+        `You now have ${data[ticker]['amount']} shares of ${ticker}.`;
 
     await interaction.editReply({
         embeds: [
@@ -252,11 +267,23 @@ async function sellStock(ticker, amount, interaction, discordClient) {
         return;
     }
 
-    data[ticker] -= amount;
+    if (ticker in data && (typeof data[ticker] != 'object' || !('average' in data[ticker]))) {
+        var tempamount;
+        if (typeof data[ticker] == 'object') {
+            tempamount = data[ticker]['amount'];
+        } else {
+            tempamount = data[ticker];
+        }
+        data[ticker] = {};
+        data[ticker]['average'] = price;
+        data[ticker]['amount'] = tempamount;
+    }
+
+    data[ticker]['amount'] -= amount;
 
     let message = `You have sold ${amount} shares of ${ticker} @ ${price.toFixed(2)} for ${(price * amount).toFixed(2)} luck.\n` +
         `You now have ${(luck + price * amount).toFixed(2)} luck.\n` +
-        `You now have ${data[ticker]} shares of ${ticker}.`;
+        `You now have ${data[ticker]['amount']} shares of ${ticker}.`;
 
     await interaction.editReply({
         embeds: [
@@ -291,10 +318,15 @@ async function getStocks(interaction, user, discordClient) {
     let keys = Object.keys(data);
     keys.sort();
     for(let i = 0; i < keys.length; i++) {
-        if (data[keys[i]] === 0) {
+        if (typeof data[keys[i]] != 'object' || !('average' in data[keys[i]])) {
+            let tempamount = data[keys[i]];
+            data[keys[i]] = {};
+            data[keys[i]]['amount'] = tempamount;
+        }
+        if (data[keys[i]['amount']] == 0) {
             continue;
         }
-        message += `${keys[i]}: ${data[keys[i]]}\r\n`;
+        message += `${keys[i]}: ${data[keys[i]]['amount']} @ ${(data[keys[i]]['average'] || 0.00).toFixed(2)}\r\n`;
     }
 
     if (message === '') {
