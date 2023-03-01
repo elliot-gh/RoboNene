@@ -392,6 +392,17 @@ module.exports = {
     });
 
     const event = discordClient.getCurrentEvent();
+
+    const tier = interaction.options.getInteger('tier');
+    const user = interaction.options.getUser('user');
+    const binSize = interaction.options.getInteger('binsize');
+    const min = interaction.options.getInteger('min');
+    const max = interaction.options.getInteger('max');
+    const hourly = interaction.options.getBoolean('hourly') || false;
+    const eventId = interaction.options.getInteger('event') || event.id;
+
+    const eventData = getEventData(eventId);
+
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
@@ -405,15 +416,6 @@ module.exports = {
       return;
     }
 
-    const tier = interaction.options.getInteger('tier');
-    const user = interaction.options.getUser('user');
-    const binSize = interaction.options.getInteger('binsize');
-    const min = interaction.options.getInteger('min');
-    const max = interaction.options.getInteger('max');
-    const hourly = interaction.options.getBoolean('hourly') || false;
-    const eventId = interaction.options.getInteger('event') || event.id;
-
-    const eventData = getEventData(eventId);
 
     if (tier) {
       var data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
