@@ -9,9 +9,10 @@ const COMMAND = require('../command_data/restart');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const APP = require('process');
 const fs = require('fs');
+const { PermissionFlagsBits } = require('discord.js');
 
 function isAdmin(msg) {
-    return msg.member.permissionsIn(msg.channel).has('0x0000000000000010');
+    return msg.member.permissionsIn(msg.channel).has(PermissionFlagsBits.Administrator);
 }
 
 function addMessage(message, channel) {

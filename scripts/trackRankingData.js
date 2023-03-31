@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { NENE_COLOR } = require('../constants');
 const RANKING_RANGE = require('./trackRankingRange.json');
 const fs = require('fs');
@@ -89,8 +89,8 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
     const channel = discordClient.client.channels.cache.get(target.channel_id);
     if (channel) {
       const guild = discordClient.client.guilds.cache.get(channel.guild.id);
-      const perms = guild.me.permissionsIn(channel);
-      if (perms.has('SEND_MESSAGES') && perms.has('EMBED_LINKS')) {
+      const perms = guild.members.me.permissionsIn(channel);
+      if (perms.has(PermissionFlagsBits.SendMessages) && perms.has(PermissionFlagsBits.EmbedLinks)) {
         await channel.send({ embeds: [embed] });
         return;
       }
