@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 const COMMAND = require('../command_data/unlink');
@@ -19,7 +19,7 @@ const generateEmbed = require('../methods/generateEmbed');
  * @param {Integer} expires in epochseconds before the linking expires
  * @param {Object} content the message body within the link embed (ex: success, or failure)
  * @param {DiscordClient} client we are using to interact with disc
- * @return {MessageEmbed} embed that we recieve to display to the user
+ * @return {EmbedBuilder} embed that we recieve to display to the user
  */
 const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
   const unlinkInformation = {
@@ -29,18 +29,20 @@ const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
       `Expires: <t:${Math.floor(expires/1000)}>`
   };
 
-  const unlinkEmbed = new MessageEmbed()
+  const unlinkEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(COMMAND.INFO.name.charAt(0).toUpperCase() + COMMAND.INFO.name.slice(1))
-    .addField(unlinkInformation.type, unlinkInformation.message)
-    .addField(COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.type, COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.message)
+    .addFields(
+      {name: unlinkInformation.type, value: unlinkInformation.message},
+      {name: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.type, value: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.message}
+    )
     .setImage(COMMAND.CONSTANTS.UNLINK_IMG)
     .setThumbnail(client.user.displayAvatarURL())
     .setTimestamp()
-    .setFooter(FOOTER, client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
 
   if (content) {
-    unlinkEmbed.addField(content.type, content.message);
+    unlinkEmbed.addFields({name: content.type, value: content.message});
   }
 
   return unlinkEmbed;
@@ -113,11 +115,11 @@ module.exports = {
       const code = Math.random().toString(36).slice(-5);
       const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME;
 
-      const unlinkButton = new MessageActionRow()
-        .addComponents(new MessageButton()
+      const unlinkButton = new ActionRowBuilder()
+        .addComponents(new ButtonBuilder()
           .setCustomId('unlink')
           .setLabel('UNLINK')
-          .setStyle('DANGER')
+          .setStyle(ButtonStyle.Danger)
           .setEmoji(COMMAND.CONSTANTS.UNLINK_EMOJI));
 
       const unlinkMessage = await interaction.editReply({

@@ -4,7 +4,7 @@
  * @author Ai0796
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 const { NENE_COLOR, FOOTER} = require('../../constants');
 
@@ -128,11 +128,11 @@ module.exports = {
                 let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
 
                 //Generate Embed with given text
-                let skillOrderEmbed = new MessageEmbed()
+                let skillOrderEmbed = new EmbedBuilder()
                     .setColor(NENE_COLOR)
                     .setTitle(`${musicData.musics[id]}`)
                     .setTimestamp()
-                    .addField('Skill Orders', skillOrderText, false)
+                    .addFields({name: 'Skill Orders', value: skillOrderText, inline: false})
                     .setFooter(FOOTER, interaction.user.displayAvatarURL());
 
                 await interaction.reply({

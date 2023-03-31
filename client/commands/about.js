@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { BOT_NAME } = require('../../constants');
 
 const COMMAND = require('../command_data/about');
@@ -131,17 +131,17 @@ module.exports = {
       })
     ];
 
-    const aboutButtons = new MessageActionRow()
+    const aboutButtons = new ActionRowBuilder()
       .addComponents(
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId('prev')
           .setLabel('PREV')
-          .setStyle('SECONDARY')
+          .setStyle(ButtonStyle.Secondary)
           .setEmoji(COMMAND.CONSTANTS.LEFT),
-        new MessageButton()
+        new ButtonBuilder()
           .setCustomId('next')
           .setLabel('NEXT')
-          .setStyle('SECONDARY')
+          .setStyle(ButtonStyle.Secondary)
           .setEmoji(COMMAND.CONSTANTS.RIGHT));
 
     let page = 0;

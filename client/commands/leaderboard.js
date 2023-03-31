@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
 const COMMAND = require('../command_data/leaderboard');
@@ -190,41 +190,41 @@ module.exports = {
 
       let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile);
       
-      let leaderboardEmbed = new MessageEmbed()
+      let leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
         .setDescription(`T120 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
-        .addField(`Page ${page+1}`, leaderboardText, false)
+        .addFields({name: `Page ${page+1}`, value: leaderboardText, inline: false})
         .setThumbnail(event.banner)
         .setTimestamp()
-        .setFooter(FOOTER, interaction.user.displayAvatarURL());
+        .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
       
-      const leaderboardButtons = new MessageActionRow()
+      const leaderboardButtons = new ActionRowBuilder()
         .addComponents(
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('prev')
             .setLabel('PREV')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.LEFT),
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('next')
             .setLabel('NEXT')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.RIGHT),
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('mobile')
             .setLabel('MOBILE')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.MOBILE),
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('offset')
             .setLabel('OFFSET')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.OFFSET),
-          new MessageButton()
+          new ButtonBuilder()
             .setCustomId('alt')
             .setLabel('ALT')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.ALT));
 
       const leaderboardMessage = await interaction.editReply({ 
@@ -309,14 +309,14 @@ module.exports = {
         else {
           leaderboardText = generateAlternateRankingText(slice, page, target, sliceGamesPlayed, sliceGPH, mobile);
         }
-        leaderboardEmbed = new MessageEmbed()
+        leaderboardEmbed = new EmbedBuilder()
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
           .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
-          .addField(`Page ${page+1} / ${MAX_PAGE+1}`, leaderboardText, false)
+          .addFields({name: `Page ${page+1} / ${MAX_PAGE+1}`, value: leaderboardText, inline: false})
           .setThumbnail(event.banner)
           .setTimestamp()
-          .setFooter(FOOTER, interaction.user.displayAvatarURL());
+          .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
 
         await i.update({ 
           embeds: [leaderboardEmbed], 

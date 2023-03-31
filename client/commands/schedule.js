@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
@@ -63,7 +63,7 @@ const createScheduleEmbed = (data, client) => {
     }
   }
 
-  let scheduleEmbed = new MessageEmbed()
+  let scheduleEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle('Event Schedule')
     .setDescription('')

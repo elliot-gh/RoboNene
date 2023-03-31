@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 const fs = require('fs');
@@ -301,30 +301,40 @@ const generateCutoff = async ({ interaction, event,
 
   const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100);
 
-  const cutoffEmbed = new MessageEmbed()
+  const cutoffEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(`${event.name} T${tier} Cutoff`)
     .setDescription(`**Requested:** <t:${Math.floor(timestamp / 1000)}:R>`)
     .setThumbnail(event.banner)
-    .addField('Cutoff Statistics', `Points: \`\`${score.toLocaleString()}\`\`\n` +
+    .addFields(
+    {
+      name: 'Cutoff Statistics', value: `Points: \`\`${score.toLocaleString()}\`\`\n` +
       `Avg. Speed (Per Hour): \`\`${scorePH.toLocaleString()}/h\`\`\n` +
-      `Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp / 1000)}:R>] (Per Hour): \`\`${lastHourPtSpeed.toLocaleString()}/h\`\`\n`)
-    .addField('Event Information', `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` +
+      `Avg. Speed [<t:${lastHourPtTime}:R> to <t:${Math.floor(timestamp / 1000)}:R>] ` +
+      `(Per Hour): \`\`${lastHourPtSpeed.toLocaleString()}/h\`\`\n`
+    },
+    {
+      name: 'Event Information', value: `Ranking Started: <t:${Math.floor(event.startAt / 1000)}:R>\n` +
       `Ranking Ends: <t:${Math.floor(event.aggregateAt / 1000)}:R>\n` +
-      `Percentage Through Event: \`\`${+(eventPercentage).toFixed(2)}%\`\`\n`)
+      `Percentage Through Event: \`\`${+(eventPercentage).toFixed(2)}%\`\`\n`
+    })
     .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: discordClient.client.user.displayAvatarURL()});
 
   if (tier < 100) {
-    cutoffEmbed.addField('Warning', `*${COMMAND.CONSTANTS.PRED_WARNING}*`);
+    cutoffEmbed.addFields({name: 'Warning', value: `*${COMMAND.CONSTANTS.PRED_WARNING}*`});
   }
 
-  cutoffEmbed.addField('Point Estimation (Predictions)', `Estimated Points: \`\`${noSmoothingEstimate}` +
+  cutoffEmbed.addFields(
+    {
+    name: 'Point Estimation (Predictions)', 
+    value: `Estimated Points: \`\`${noSmoothingEstimate}` +
     ` ± ${noSmoothingError}\`\`\n` +
     ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*${linEquationStr}\n\n` : '') +
     `Estimated Points (Smoothing): \`\`${smoothingEstimate}` +
     ` ± ${smoothingError}\`\`\n` +
-    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : ''));
+    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : '')
+    });
 
 
   // Add a Naive Estimate if the user requests detailed information
@@ -334,10 +344,13 @@ const generateCutoff = async ({ interaction, event,
     const naiveLastHrEstimate = (oneDayIdx === -1) ? 'N/A' :
       Math.round(score + Math.max((event.aggregateAt - timestamp), 0) * (lastHourPtSpeed / 3600000)).toLocaleString();
 
-    cutoffEmbed.addField('Naive Estimation (Predictions)', `Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
+    cutoffEmbed.addFields({
+      name: 'Naive Estimation (Predictions)', 
+      value:`Naive Estimate: \`\`${naiveEstimate}\`\`\n` +
       `*${COMMAND.CONSTANTS.NAIVE_DESC}*\n\n` +
       `Naive Estimate (Last Hour): \`\`${naiveLastHrEstimate}\`\`\n` +
-      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`);
+      `*${COMMAND.CONSTANTS.NAIVE_LAST_HR_DESC}*\n`
+    });
   }
 
   await interaction.editReply({

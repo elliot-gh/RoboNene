@@ -8,8 +8,7 @@ const COMMAND = require('../command_data/rm');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 
-const { MessageActionRow, MessageButton, MessageEmbed
- } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 
 const timeout = 600000;
 const channels = {};
@@ -284,11 +283,11 @@ module.exports = {
             let code = parseInt(message.content);
             let deleted = false;
 
-            let prompt = new MessageEmbed()
+            let prompt = new EmbedBuilder()
                 .setColor('#0099ff')
                 .setTitle('Room Change')
                 .setDescription(`Do you want to change the room code to ${pad(code, 5)}?`)
-                .setFooter('This prompt will expire in 30 seconds');
+                .setFooter({value: 'This prompt will expire in 30 seconds'});
             
             const roomButtons = new MessageActionRow()
                 .addComponents(

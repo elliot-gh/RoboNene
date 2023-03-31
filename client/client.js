@@ -233,6 +233,7 @@ class DiscordClient {
     this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
     '(id STRING PRIMARY KEY, luck REAL, prays INTEGER, lastTimestamp INTEGER, totalLuck REAL)').run();
 
+    if (!fs.existsSync('prayers.json')) return;
     let data = JSON.parse(fs.readFileSync('prayers.json'));
     
     data.forEach((prayer) => {

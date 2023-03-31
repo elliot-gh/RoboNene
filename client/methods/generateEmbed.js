@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 /**
@@ -22,14 +22,16 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
  * @return {MessageEmbed} a generated embed
  */
 const generateEmbed = ({name, content, image, client}) => {
-  const embed = new MessageEmbed()
+  const embed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(name.charAt(0).toUpperCase() + name.slice(1))
-    .addField(content.type.charAt(0).toUpperCase() + content.type.slice(1), 
-      content.message.charAt(0).toUpperCase() + content.message.slice(1),)
+    .addFields({
+      name: content.type.charAt(0).toUpperCase() + content.type.slice(1), 
+      value: content.message.charAt(0).toUpperCase() + content.message.slice(1)
+    })
     .setThumbnail(client.user.displayAvatarURL())
     .setTimestamp()
-    .setFooter(FOOTER, client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
 
   if (image) {
     embed.setImage(image);
