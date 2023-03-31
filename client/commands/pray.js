@@ -181,7 +181,7 @@ async function getPray(userId, character, discordClient) {
     }
 
     await updatePrays(data, discordClient, userId);
-    returnQuote += ` You have ${data.luck} luck (${data.totalLuck} over lifetime) and have prayed ${data.prays} times.`;
+    returnQuote += ` You have ${Math.floor(data.luck)} luck (${Math.floor(data.totalLuck)} over lifetime) and have prayed ${data.prays} times.`;
     // Discord limits message to 2000 characters so limit it if gets past that
     if (returnQuote.length + character.length > 2000) {
         character = character.slice(0, 2000 - returnQuote.length - character.length);
