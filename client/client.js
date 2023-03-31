@@ -387,6 +387,12 @@ class DiscordClient {
         if (response) {
           request.callback(response);
         }
+      } else if (request.type === 'master') {
+        const response = await apiClient.master();
+
+        if (response) {
+          request.callback(response);
+        }
       }
       return runClient(apiClient, rate);
     };
