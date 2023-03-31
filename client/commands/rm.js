@@ -287,19 +287,19 @@ module.exports = {
                 .setColor('#0099ff')
                 .setTitle('Room Change')
                 .setDescription(`Do you want to change the room code to ${pad(code, 5)}?`)
-                .setFooter({value: 'This prompt will expire in 30 seconds'});
+                .setFooter({text: 'This prompt will expire in 30 seconds'});
             
-            const roomButtons = new MessageActionRow()
+            const roomButtons = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('yes')
                         .setLabel('YES')
-                        .setStyle('SECONDARY')
+                        .setStyle(ButtonStyle.Secondary)
                         .setEmoji(COMMAND.CONSTANTS.YES),
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('no')
                         .setLabel('NO')
-                        .setStyle('SECONDARY')
+                        .setStyle(ButtonStyle.Secondary)
                         .setEmoji(COMMAND.CONSTANTS.NO)
                 );
 
