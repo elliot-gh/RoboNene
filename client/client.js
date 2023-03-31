@@ -5,7 +5,7 @@
  */
 
 const { token, secretKey } = require('../config.json');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { SekaiClient } = require('sekapi');
 const { RATE_LIMIT } = require('../constants');
 
@@ -60,7 +60,8 @@ class DiscordClient {
       intents: [
         GatewayIntentBits.Guilds, 
         GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildMessages
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
       ], 
       partials: [
         'CHANNEL'
@@ -68,7 +69,7 @@ class DiscordClient {
   }
 
   loadMessageHandler() {
-    this.client.on('message', message => {
+    this.client.on(Events.MessageCreate, async message => {
       if (message.author.bot) return;
 
       if (message.content.length === 5 && isNaN(message.content) === false) {
