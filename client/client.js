@@ -5,7 +5,7 @@
  */
 
 const { token, secretKey } = require('../config.json');
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 const { SekaiClient } = require('sekapi');
 const { RATE_LIMIT } = require('../constants');
 
@@ -58,9 +58,9 @@ class DiscordClient {
 
     this.client = new Client({ 
       intents: [
-        Intents.FLAGS.GUILDS, 
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_MESSAGES
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessages
       ], 
       partials: [
         'CHANNEL'
