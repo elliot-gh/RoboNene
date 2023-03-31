@@ -7,7 +7,7 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageSelectMenu } = require('discord.js');
+const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const fs = require('fs');
 
 const COMMAND = require('../command_data/quiz');
@@ -363,8 +363,8 @@ module.exports = {
     console.log(answerOptions);
 
     // Initialize our question selection menu
-    const questionSelect = new MessageActionRow()
-      .addComponents(new MessageSelectMenu()
+    const questionSelect = new ActionRowBuilder()
+      .addComponents(new StringSelectMenuBuilder()
           .setCustomId('quiz')
           .setPlaceholder('Select Your Answer!')
           .addOptions(answerOptions));

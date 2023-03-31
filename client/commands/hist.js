@@ -3,7 +3,7 @@
  * @author Potor10
  */
 
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const { plotlyKey, plotlyUser } = require('../../config.json');
 
@@ -65,17 +65,17 @@ async function generateNormalDist(xData) {
  * @param {string} graphUrl url of the graph we are trying to embed
  * @param {Integer} tier the ranking that the user wants to find
  * @param {DiscordClient} client we are using to interact with discord
- * @return {MessageEmbed} graph embed to be used as a reply via interaction
+ * @return {EmbedBuilder} graph embed to be used as a reply via interaction
  */
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
-  const graphEmbed = new MessageEmbed()
+  const graphEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(`${tier}`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now() / 1000)}:R>`)
     .setThumbnail(discordClient.client.user.displayAvatarURL())
     .setImage(graphUrl)
     .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: discordClient.client.user.displayAvatarURL()});
 
   return graphEmbed;
 };
@@ -328,7 +328,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   var pngOptions = { format: 'png', width: 1000, height: 500 };
   Plotly.getImage(data, pngOptions, async (err, imageStream) => {
     if (err) console.log(err);
-    let file = new MessageAttachment(imageStream, 'hist.png');
+    let file = new AttachmentBuilder(imageStream, {name: 'hist.png'});
     await interaction.editReply({
       embeds: [generateGraphEmbed('attachment://hist.png', tier, discordClient)], files: [file]
     });

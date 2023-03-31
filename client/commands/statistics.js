@@ -7,7 +7,7 @@ const COMMAND = require('../command_data/statistics');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const getEventData = require('../methods/getEventData');
 
@@ -34,15 +34,15 @@ const energyBoost = [
  * @param {Object} content the content of the message
  * @param {String} image an image URL (if applicable)
  * @param {DiscordClient} client the client we are using to handle Discord requests
- * @return {MessageEmbed} a generated embed
+ * @return {EmbedBuilder} a generated embed
  */
 const generateEmbed = ({ name, client }) => {
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(name.charAt(0).toUpperCase() + name.slice(1))
         .setThumbnail(client.user.displayAvatarURL())
         .setTimestamp()
-        .setFooter(FOOTER, client.user.displayAvatarURL());
+        .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
 
     return embed;
 };
@@ -441,12 +441,12 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
 }
 
 async function sendEmbed(interaction, embed, mobileEmbed) {
-    const statisticsButtons = new MessageActionRow()
+    const statisticsButtons = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId('condensed')
                 .setLabel('CONDENSED')
-                .setStyle('SECONDARY')
+                .setStyle(ButtonStyle.Secondary)
                 .setEmoji(COMMAND.CONSTANTS.CONDENSED)
         );
 

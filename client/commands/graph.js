@@ -3,7 +3,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
 
@@ -20,14 +20,14 @@ const generateEmbed = require('../methods/generateEmbed');
  * @return {MessageEmbed} graph embed to be used as a reply via interaction
  */
 const generateGraphEmbed = (graphUrl, tier, discordClient) => {
-  const graphEmbed = new MessageEmbed()
+  const graphEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(`${tier}`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
     .setThumbnail(discordClient.client.user.displayAvatarURL())
     .setImage(graphUrl)
     .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+    .setFooter({ text: FOOTER, iconURL: discordClient.client.user.displayAvatarURL()});
 
   return graphEmbed;
 };

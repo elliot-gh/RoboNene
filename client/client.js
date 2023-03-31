@@ -5,7 +5,7 @@
  */
 
 const { token, secretKey } = require('../config.json');
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 const { SekaiClient } = require('sekapi');
 const { RATE_LIMIT } = require('../constants');
 
@@ -58,9 +58,9 @@ class DiscordClient {
 
     this.client = new Client({ 
       intents: [
-        Intents.FLAGS.GUILDS, 
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.GUILD_MESSAGES
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildMessages
       ], 
       partials: [
         'CHANNEL'
@@ -233,6 +233,7 @@ class DiscordClient {
     this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
     '(id STRING PRIMARY KEY, luck REAL, prays INTEGER, lastTimestamp INTEGER, totalLuck REAL)').run();
 
+    if (!fs.existsSync('prayers.json')) return;
     let data = JSON.parse(fs.readFileSync('prayers.json'));
     
     data.forEach((prayer) => {

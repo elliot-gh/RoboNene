@@ -11,7 +11,7 @@ const client = require('https');
 const Axios = require('axios');
 const sharp = require('sharp');
 
-const { MessageEmbed, MessageAttachment } = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 
 /**
@@ -26,14 +26,14 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
  * @param {Content} content the content of the message
  * @param {String} image an image URL (if applicable)
  * @param {DiscordClient} client the client we are using to handle Discord requests
- * @return {MessageEmbed} a generated embed
+ * @return {EmbedBuilder} a generated embed
  */
 const generateEmbed = ({ name, image, client }) => {
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(name.charAt(0).toUpperCase() + name.slice(1))
         .setTimestamp()
-        .setFooter(FOOTER, client.user.displayAvatarURL());
+        .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
 
     if (image) {
         embed.setImage(image);
@@ -242,7 +242,7 @@ async function getCards(n, embed) {
 
     let pullImage = await overlayPulls(cardImages);
 
-    let file = new MessageAttachment(await pullImage.toBuffer(), 'pull.png');
+    let file = new AttachmentBuilder(await pullImage.toBuffer(), {name: 'pull.png'});
     embed.setImage('attachment://pull.png');
 
     return file;

@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR } = require('../constants');
 const RANKING_RANGE = require('./trackRankingRange.json');
 const fs = require('fs');
@@ -72,11 +72,13 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
 
       let leaderboardText = generateRankingText(rankingData, 1, null, lastHourCutoffs, mobile);
       
-      let leaderboardEmbed = new MessageEmbed()
+      let leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
         .setDescription(`T20 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
-        .addField('T20', leaderboardText, false)
+        .addFields(
+          {name: 'T20', value: leaderboardText, inline: false}
+        )
         .setThumbnail(event.banner)
         .setTimestamp();
   
@@ -155,6 +157,7 @@ async function getGames() {
     return gameFile;
   } catch (e) {
     console.log('Error occured while reading game tracking file: ', e);
+    return new Object();
   }
 }
 

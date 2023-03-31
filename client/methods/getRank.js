@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 const generateRankingText = require('../methods/generateRankingText');
 const generateEmbed = require('../methods/generateEmbed'); 
@@ -126,13 +126,17 @@ const getRank = async (commandName, interaction, discordClient, requestParams) =
       const timestamp = Date.now();    
   
       let leaderboardText = generateRankingText(response.rankings, 0, requestParams.higherLimit+1);
-      const leaderboardEmbed = new MessageEmbed()
+      const leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .addField(`**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, leaderboardText, false)
+        .addFields({
+          name: `**Requested:** <t:${Math.floor(timestamp/1000)}:R>`, 
+          value: leaderboardText, 
+          inline: false
+        })
         .setThumbnail(event.banner)
         .setTimestamp()
-        .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+        .setFooter({text: FOOTER, iconURL: discordClient.client.user.displayAvatarURL()});
   
       await interaction.editReply({ 
         embeds: [leaderboardEmbed]

@@ -8,7 +8,7 @@ const COMMAND = require('../command_data/twittertracker');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const { addTwitterData, getRecentTweet, removeTwitterData } = require('../../scripts/trackTwitterData.js');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const generateEmbed = require('../methods/generateEmbed');
 
 module.exports = {
@@ -49,17 +49,17 @@ module.exports = {
 
                 let recentTweet = await getRecentTweet(username, discordClient);
 
-                const tweetButtons = new MessageActionRow()
+                const tweetButtons = new ActionRowBuilder()
                     .addComponents(
-                        new MessageButton()
+                        new ButtonBuilder()
                             .setCustomId('correct')
                             .setLabel('CORRECT')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji(COMMAND.CONSTANTS.CORRECT),
-                        new MessageButton()
+                        new ButtonBuilder()
                             .setCustomId('incorrect')
                             .setLabel('INCORRECT')
-                            .setStyle('SECONDARY')
+                            .setStyle(ButtonStyle.Secondary)
                             .setEmoji(COMMAND.CONSTANTS.INCORRECT)
                     );
 

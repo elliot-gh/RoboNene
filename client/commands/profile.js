@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageEmbed, MessageAttachment} = require('discord.js');
+const { EmbedBuilder, AttachmentBuilder} = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
@@ -287,7 +287,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   }
 
   let teamImage = await overlayCards(cardImages);
-  let file = new MessageAttachment(await teamImage.toBuffer(), 'team.png');
+  let file = new AttachmentBuilder(await teamImage.toBuffer(), {name: 'team.png'});
 
   // Get Challenge Rank Data for all characters
   let challengeRankInfo = {};
@@ -368,7 +368,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
   });
 
   // Create the Embed for the profile using the pregenerated values
-  const profileEmbed = new MessageEmbed()
+  const profileEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(`${data.user.userGamedata.name}'s Profile`)
     .setDescription(`**Requested:** <t:${Math.floor(Date.now()/1000)}:R>`)
