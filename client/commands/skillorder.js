@@ -42,6 +42,8 @@ class music {
                 this.musics[music.id] = music.title;
                 tempIDs.add(music.id);
             }
+            this.musics[226] = 'Lost and Found'; //Temp solution until song is brought to EN
+            tempIDs.add(226);
         });
 
         this.ids = this.getIntersection(this.ids, tempIDs);
