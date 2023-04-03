@@ -66,13 +66,12 @@ const createScheduleEmbed = (data, client) => {
   let scheduleEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle('Event Schedule')
-    .setDescription('')
     .addFields(
       { name: '**__Next Daily Reset__**', value: `<t:${nextReset}> - <t:${nextReset}:R>` },
       { name: '** **', value: '** **' },
     )
     .setTimestamp()
-    .setFooter(FOOTER, client.user.avatar_url);
+    .setFooter({text: FOOTER, iconURL: client.user.avatar_url});
 
   // Determine if there is a event currently going on
   if (currentEventIdx !== -1) {
