@@ -500,7 +500,7 @@ module.exports = {
     const eventData = getEventData(eventId);
     const eventName = eventData.name;
 
-    if (event.id === -1) {
+    if (eventData.id === -1) {
       await interaction.editReply({
         embeds: [
           generateEmbed({
