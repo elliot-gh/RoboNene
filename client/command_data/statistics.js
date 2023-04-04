@@ -52,7 +52,7 @@ module.exports = {
     'CONSTANTS': {
         'NO_EVENT_ERR': {
             'type': 'Error',
-            'message': 'There is currently no event going on'
+            'message': 'What do you want statistics to do? There isn\'t even an event right now.'
         },
 
         'SEKAI_BEST_HOST': 'api.sekai.best',

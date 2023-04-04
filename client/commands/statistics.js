@@ -101,7 +101,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
     let id = discordClient.getId(user.id);
 
     if(id == -1) {
-        interaction.editReply({ content: 'Discord User not found (are you sure that account is linked?)' });
+        interaction.editReply({ content: 'You haven\'t linked to the bot, do you expect GhostNene to just know where you live?' });
         return;
     }
 

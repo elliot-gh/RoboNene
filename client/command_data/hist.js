@@ -107,7 +107,7 @@ module.exports = {
   
     'NO_DATA_ERR': {
       'type': 'Error',
-      'message': 'No data found (have you played a game after linking?)'
+      'message': 'Couldn\'t find anything, what a surprise.'
     },
   
     'SEKAI_BEST_HOST': 'api.sekai.best'

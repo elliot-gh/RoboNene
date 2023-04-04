@@ -54,17 +54,17 @@ module.exports = {
 
     'NO_ACC_ERR': {
       'type': 'Error',
-      'message': 'This user does not have an account with the bot'
+      'message': 'Did you just try to profile yourself without ever linking your account?'
     },
   
     'BAD_ID_ERR': {
       'type': 'Error', 
-      'message': 'You have provided an invalid ID.'
+      'message': 'Have you ever heard of a valid ID? Because that\'s not one.'
     },
   
     'BAD_ACC_ERR': {
       'type': 'Error',
-      'message': 'There was an issue in finding this account. Please try again with the correct id'
+      'message': 'Whoever you\'re trying to profile, the didn\'t link.'
     },
   
     'cool': '<:attCool:930717822756204575>',
