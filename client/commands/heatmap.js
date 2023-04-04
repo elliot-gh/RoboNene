@@ -552,7 +552,7 @@ module.exports = {
         }
         else
         {
-          interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
+          interaction.editReply({ content: 'Have you tried linking to the bot it\'s not magic ya know' });
         }
       } catch (err) {
         // Error parsing JSON: ${err}`

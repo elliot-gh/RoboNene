@@ -93,12 +93,12 @@ module.exports = {
   'CONSTANTS': {
     'NO_EVENT_ERR': {
       'type': 'Error',
-      'message': 'There is currently no event going on'
+      'message': 'Did you seriously try to heatmap events that don\'t exist'
     },
   
     'NO_DATA_ERR': {
       'type': 'Error',
-      'message': 'No data found (have you played a game after linking?)'
+      'message': 'No data found (not like your data is work keeping track of anyways)'
     },
   
     'SEKAI_BEST_HOST': 'api.sekai.best'
