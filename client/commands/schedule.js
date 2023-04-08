@@ -90,7 +90,7 @@ const createScheduleEmbed = (data, client) => {
 
   // Determine if there is the next event in the future (closest)
   if (nextEventIdx !== -1) {
-    if (currentEventIdx !== -1) { scheduleEmbed.addField('** **','** **');}
+    if (currentEventIdx !== -1) { scheduleEmbed.addFields({name: '** **', value: '** **'});}
 
     let startTime = Math.floor(data[nextEventIdx].startAt / 1000);
     let aggregateTime = Math.floor(data[nextEventIdx].aggregateAt / 1000);
