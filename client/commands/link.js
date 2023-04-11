@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
 const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
 
 const COMMAND = require('../command_data/link');
@@ -29,18 +29,20 @@ const generateLinkEmbed = ({code, accountId, expires, content, client}) => {
       `Expires: <t:${Math.floor(expires/1000)}>`
   };
 
-  const linkEmbed = new MessageEmbed()
+  const linkEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(COMMAND.INFO.name.charAt(0).toUpperCase() + COMMAND.INFO.name.slice(1))
-    .addField(linkInformation.type, linkInformation.message)
-    .addField(COMMAND.CONSTANTS.LINK_INSTRUCTIONS.type, COMMAND.CONSTANTS.LINK_INSTRUCTIONS.message)
+    .addFields(
+      {name: linkInformation.type, value: linkInformation.message},
+      {name: COMMAND.CONSTANTS.LINK_INSTRUCTIONS.type, value: COMMAND.CONSTANTS.LINK_INSTRUCTIONS.message}
+    )
     .setImage(COMMAND.CONSTANTS.LINK_IMG)
     .setThumbnail(client.user.displayAvatarURL())
     .setTimestamp()
-    .setFooter(FOOTER, client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
 
   if (content) {
-    linkEmbed.addField(content.type, content.message);
+    linkEmbed.addFields({name: content.type, value: content.message});
   }
 
   return linkEmbed;
@@ -164,8 +166,8 @@ module.exports = {
       const code = Math.random().toString(36).slice(-5); 
       const expires = Date.now() + COMMAND.CONSTANTS.INTERACTION_TIME;
 
-      const linkButton = new MessageActionRow()
-        .addComponents(new MessageButton()
+      const linkButton = new ActionRowBuilder()
+        .addComponents(new ButtonBuilder()
           .setCustomId('link')
           .setLabel('LINK')
           .setStyle('SUCCESS')
