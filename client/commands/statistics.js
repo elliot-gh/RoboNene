@@ -125,7 +125,11 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                 lowerLimit: 0
             }, async (response) => {
                 rankData.unshift({ timestamp: eventData.startAt, score: 0});
-                rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
+                try {
+                    rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
+                } catch (e) {
+                    null;
+                }
                 let lastTimestamp = rankData[rankData.length - 1].timestamp;
                 let timestamps = rankData.map(x => x.timestamp);
                 let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
