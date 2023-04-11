@@ -11,6 +11,7 @@ const trackRankingData = require('./scripts/trackRankingData');
 const trackCutoffData = require('./scripts/trackCutoffData');
 const trackUserCutoffs = require('./scripts/trackUserCutoffs');
 const trackTierData = require('./scripts/trackTierData');
+const updateActivity = require('./scripts/updateActivity');
 const fs = require('fs');
 const { trackTwitterData } = require('./scripts/trackTwitterData');
 
@@ -37,6 +38,7 @@ loadGameData(0, async () => {
   trackUserCutoffs(client);
   trackTierData(client);
   trackTwitterData(client);
+  updateActivity(client);
 
   //This is a very duct tape solution
   if(fs.existsSync('messages.json')) {
