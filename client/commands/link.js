@@ -4,7 +4,7 @@
  * @author Potor10
  */
 
-const { ActionRowBuilder, ButtonBuilder, EmbedBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
 const { ERR_COMMAND, NENE_COLOR, FOOTER } = require('../../constants');
 
 const COMMAND = require('../command_data/link');
@@ -170,7 +170,7 @@ module.exports = {
         .addComponents(new ButtonBuilder()
           .setCustomId('link')
           .setLabel('LINK')
-          .setStyle('SUCCESS')
+          .setStyle(ButtonStyle.Success)
           .setEmoji(COMMAND.CONSTANTS.LINK_EMOJI));
 
       const linkMessage = await interaction.editReply({
