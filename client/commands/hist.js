@@ -33,6 +33,18 @@ const energyBoost = [
 
 const average = array => array.reduce((a, b) => a + b) / array.length;
 
+const modeOf = a =>
+  Object.values(
+    a.reduce((count, e) => {
+      if (!(e in count)) {
+        count[e] = [0, e];
+      }
+
+      count[e][0]++;
+      return count;
+    }, {})
+  ).reduce((a, v) => v[0] < a[0] ? a : v, [0, null])[1];
+
 async function getStdDev(data) {
   let mean = average(data);
   let sum = 0;
@@ -196,6 +208,7 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
   }
 
   const average = (pointsPerGame.reduce((a, b) => a + b) / pointsPerGame.length).toFixed(2);
+  const mode = modeOf(pointsPerGame);
 
   let layout = {
     title: tier,
@@ -284,7 +297,8 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
       title: {
         text: `n=${pointsPerGame.length}<br>` +
           `Max Score: ${Math.max(...pointsPerGame)}<br>` +
-          `Average Score: ${average}`
+          `Average Score: ${average}<br>` +
+          `Mode Score: ${mode}<br>`
       }
     }
   };
