@@ -389,7 +389,7 @@ const generateProfileEmbed = async (discordClient, userId, data, private) => {
     )
     .setImage('attachment://team.png')
     .setTimestamp()
-    .setFooter(FOOTER, discordClient.client.user.displayAvatarURL());
+    .setFooter({text: FOOTER, iconURL: discordClient.client.user.displayAvatarURL()});
 
   // Hidden Because Of Sensitive Information
   if (!private) {
