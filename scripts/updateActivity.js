@@ -1,14 +1,8 @@
 const fs = require('fs');
 
 const updateActivityLoop = async (client) => {
-    let time = new Date();
-    if (time.getMinutes() % 5 == 0) {
-        console.log('Updating activity with server count');
-        serverNumActivity(client);
-    } else {
-        console.log('Updating activity with next event');
-        nextEventActivity(client);
-    }
+    console.log('Updating activity with next event');
+    nextEventActivity(client);
 };
 
 const serverNumActivity = async (client) => {
