@@ -250,8 +250,20 @@ async function sellStock(ticker, amount, interaction, discordClient) {
         data = {};
     }
 
-    if (!(ticker in data) || data[ticker] < amount) {
-        let amountHeld = data[ticker] || 0;
+    if (ticker in data && (typeof data[ticker] != 'object' || !('average' in data[ticker]))) {
+        var tempamount;
+        if (typeof data[ticker] == 'object') {
+            tempamount = data[ticker]['amount'];
+        } else {
+            tempamount = data[ticker];
+        }
+        data[ticker] = {};
+        data[ticker]['average'] = price;
+        data[ticker]['amount'] = tempamount;
+    }
+
+    if (!(ticker in data) || data[ticker].amount < amount) {
+        let amountHeld = data[ticker].amount || 0;
         await interaction.editReply({
             embeds: [
                 generateEmbed({
@@ -265,18 +277,6 @@ async function sellStock(ticker, amount, interaction, discordClient) {
             ]
         });
         return;
-    }
-
-    if (ticker in data && (typeof data[ticker] != 'object' || !('average' in data[ticker]))) {
-        var tempamount;
-        if (typeof data[ticker] == 'object') {
-            tempamount = data[ticker]['amount'];
-        } else {
-            tempamount = data[ticker];
-        }
-        data[ticker] = {};
-        data[ticker]['average'] = price;
-        data[ticker]['amount'] = tempamount;
     }
 
     data[ticker]['amount'] -= amount;
@@ -323,7 +323,7 @@ async function getStocks(interaction, user, discordClient) {
             data[keys[i]] = {};
             data[keys[i]]['amount'] = tempamount;
         }
-        if (data[keys[i]['amount']] == 0) {
+        if (data[keys[i]]['amount'] == 0) {
             continue;
         }
         message += `${keys[i]}: ${data[keys[i]]['amount']} @ ${(data[keys[i]]['average'] || 0.00).toFixed(2)}\r\n`;
