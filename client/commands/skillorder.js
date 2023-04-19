@@ -133,7 +133,7 @@ module.exports = {
                     .setTitle(`${musicData.musics[id]}`)
                     .setTimestamp()
                     .addFields({name: 'Skill Orders', value: skillOrderText, inline: false})
-                    .setFooter(FOOTER, interaction.user.displayAvatarURL());
+                    .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
 
                 await interaction.reply({
                     embeds: [skillOrderEmbed],
