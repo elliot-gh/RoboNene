@@ -26,6 +26,7 @@ loadGameData(0, async () => {
   client.loadStockDb();
   client.loadLogger();
   client.loadMessageHandler();
+  client.loadServerHandler();
 
   await client.loadSekaiClient();
   await client.runSekaiRequests();

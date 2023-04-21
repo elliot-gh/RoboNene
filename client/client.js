@@ -92,6 +92,18 @@ class DiscordClient {
     });
   }
 
+  loadServerHandler() {
+    this.client.on(Events.GuildCreate, async guild => {
+      
+      console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
+      const fs = require('fs');
+
+      fs.appendFile('./ServerJoins.txt', `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`, function (err) {
+        if (err) throw err;
+      });
+    });
+  }
+
   /**
    * Loads the commands code into the bot via a provided directory
    * @param {string} dir the directory containing the code for the commands
@@ -211,6 +223,9 @@ class DiscordClient {
 
     //Add an index to cutoffs
     this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS IDs ON cutoffs (ID, Timestamp, Score)').run();
+
+    //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS userIndex ON cutoffs (EventId, ID)').run();
 
     // Initialize User Tracking
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
