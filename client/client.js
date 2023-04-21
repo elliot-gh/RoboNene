@@ -98,7 +98,7 @@ class DiscordClient {
       console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
       const fs = require('fs');
 
-      fs.appendFile('./ServerJoins.txt', `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`, function (err) {
+      fs.appendFile('./logs/ServerJoins.txt', `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`, function (err) {
         if (err) throw err;
       });
     });
