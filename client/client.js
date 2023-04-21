@@ -94,12 +94,9 @@ class DiscordClient {
 
   loadServerHandler() {
     this.client.on(Events.GuildCreate, async guild => {
-      
-      console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
-      const fs = require('fs');
-
-      fs.appendFile('./logs/ServerJoins.txt', `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`, function (err) {
-        if (err) throw err;
+      this.logger.log({
+        level: 'join', 
+        message: `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`
       });
     });
   }
@@ -146,13 +143,19 @@ class DiscordClient {
   loadLogger(dir=CLIENT_CONSTANTS.LOG_DIR) {
     // Winston logger initialization
     this.logger = winston.createLogger({
-      level: 'info',
+      levels: {
+        'info': 0,
+        'join': 1,
+        'error': 2
+      },
       format: winston.format.json(),
       defaultMeta: { service: 'user-service' },
       transports: [
         // - Write all logs with level `error` and below to `error.log`
         // - Write all logs with level `info` and below to `combined.log`
+        // - Write all logs with level `join` and below to `joins.log`
         new winston.transports.File({ filename: `${dir}/error.log`, level: 'error' }),
+        new winston.transports.File({ filename: `${dir}/joins.log`, level: 'join' }),
         new winston.transports.File({ filename: `${dir}/combined.log` }),
       ],
     });
