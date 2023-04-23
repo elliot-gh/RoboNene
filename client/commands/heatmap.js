@@ -178,6 +178,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
   let dayData = [];
   let heatmapData = [];
   let gamesPerHour = 0;
+  let maxGamesPerHour = 0;
   let maxTimestamp = eventData.startAt + HOUR;
   lastPoint = 0;
 
@@ -195,6 +196,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
         heatmapData.unshift(dayData);
         dayData = [];
       }
+      maxGamesPerHour = Math.max(maxGamesPerHour, gamesPerHour);
       dayData.push(gamesPerHour);
       gamesPerHour = 0;
     }
@@ -239,7 +241,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     y: yValues,
     z: heatmapData,
     ytype: 'array',
-    zauto: true,
+    zauto: false,
     opacity: 1,
     visible: true,
     xperiod: 0,
@@ -251,6 +253,8 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     xgap: 0.3,
     ygap: 0.3,
     autocolorscale: false,
+    zmin: 0,
+    zmax: maxGamesPerHour,
   };
   
   let layout = {
