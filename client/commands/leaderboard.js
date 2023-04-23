@@ -307,7 +307,7 @@ module.exports = {
           leaderboardText = generateRankingText(slice, page, target, sliceOffset, mobile);
         }
         else {
-          leaderboardText = generateAlternateRankingText(slice, page, target, sliceGamesPlayed, sliceGPH, mobile);
+          leaderboardText = generateAlternateRankingText(slice, page, target, sliceOffset, sliceGamesPlayed, sliceGPH, mobile);
         }
         leaderboardEmbed = new EmbedBuilder()
           .setColor(NENE_COLOR)

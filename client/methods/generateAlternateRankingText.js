@@ -7,19 +7,26 @@
 const { RESULTS_PER_PAGE } = require('../../constants');
 var MAXLENGTH = 42;
 
+const floatSettings = {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+};
+
 /**
  * Generates an ranking embed from the provided params
  * @param {Object} data a collection of player data on the leaderboard
  * @param {Integer} page the current page (if applicable)
  * @param {Integer} target the rank that we will highlight on the embed with a star
+ * @param {Object} changes an array of old score values correlating to data
  * @param {Object} gamesPlayed an array of old score values correlating to data
+ * @param {Object} GPH an array of old score values correlating to data
  * @param {Boolean} mobile whether it's a mobile display or not
  * @return {MessageEmbed} a generated embed of the current leaderboard
  */
-const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobile) => {
+const generateAlternateRankingText = (data, page, target, hourBeforeData, gamesPlayed, GPH, mobile) => {
     let rankLabel = 'T';
     let nameLabel = 'Name';
-    let scoreLabel = 'Score'; 
+    let scoreLabel = 'Score/GH'; 
     let gamesLabel = 'Games';
     let changeLabel = 'GPH';
 
@@ -36,15 +43,26 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
     let maxGamesLength = gamesLabel.length;
     let maxChangeLength = changeLabel.length;
 
-    data.forEach((user) => {
+    let changes = [];
+    data.forEach((user, i) => {
+        changes.push(user.score - hourBeforeData[i]);
+    });
+
+    data.forEach((user, i) => {
         if (user.rank.toString().length > maxRankLength) {
             maxRankLength = user.rank.toString().length;
         }
         if (user.name.length > maxNameLength) {
             maxNameLength = user.name.length;
         }
-        if (user.score.toLocaleString().length > maxScoreLength) {
-            maxScoreLength = user.score.toLocaleString().length;
+        if ((changes[i] / GPH[i]).toLocaleString(undefined, floatSettings).length > maxScoreLength) {
+            maxScoreLength = (changes[i] / GPH[i]).toLocaleString(undefined, floatSettings).length;
+        }
+        if (gamesPlayed[i].toLocaleString().length > maxGamesLength) {
+            maxGamesLength = gamesPlayed[i].toLocaleString().length;
+        }
+        if (GPH[i].toLocaleString().length > maxChangeLength) {
+            maxChangeLength = GPH[i].toLocaleString().length;
         }
     });
 
@@ -68,8 +86,14 @@ const generateAlternateRankingText = (data, page, target, gamesPlayed, GPH, mobi
         let rank = ' '.repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank;
         let nameStr = data[i].name.substring(0, maxNameLength).replace('`', '\'');
         let name = nameStr + ' '.repeat(maxNameLength - nameStr.length);
-        let score = ' '.repeat(maxScoreLength - data[i].score.toLocaleString().length) +
-            data[i].score.toLocaleString();
+        var scoreStr;
+        if (GPH[i] == -1 || GPH[i] == 0 || changes[i] == -1) {
+            scoreStr = 'N/A';
+        } else {
+            scoreStr = (changes[i] / GPH[i]).toLocaleString(undefined, floatSettings);
+        }
+        let score = ' '.repeat(maxScoreLength - scoreStr.length) +
+            scoreStr;
         var gamesStr;
         if (gamesPlayed[i] == -1) {
             gamesStr = 'N/A';
