@@ -263,10 +263,10 @@ module.exports = {
                 channelName = `${name}-xxxxx`;
             }
 
-            await message.reply(await changeName(message.channel, channelName, discordClient));
+            await message.channel.send(await changeName(message.channel, channelName, discordClient));
         } catch (e) {
             console.log(e);
-            await message.reply({
+            await message.channel.send({
                 embeds: [
                     generateEmbed({
                         name: COMMAND.INFO.name,
