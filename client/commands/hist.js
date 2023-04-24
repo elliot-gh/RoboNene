@@ -369,6 +369,35 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
+async function sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
+  
+  let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
+    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY SCORE DESC').all({
+      eventID: eventData.id,
+      tier: tier
+    });
+  if (response.length > 0) {
+
+    let userId = response[0]['ID'];//Get the last ID in the list
+    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+      'WHERE (ID=@id AND EventID=@eventID)').all({
+        id: userId,
+        eventID: eventData.id
+      });
+    if (data.length > 0) {
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+      rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+      postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
+    } else {
+      noDataErrorMessage(interaction, discordClient);
+    }
+  } else {
+    noDataErrorMessage(interaction, discordClient);
+  }
+}
+
+
 async function sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventData.id,
@@ -446,8 +475,9 @@ module.exports = {
         rankData.push({ timestamp: Date.now(), score: data[0].Score });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
         postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
-      }
-      else {
+      } else if (eventData.id < discordClient.getCurrentEvent().id) {
+        sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
+      } else {
         sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
       }
     } else if (user) {

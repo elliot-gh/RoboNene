@@ -283,6 +283,113 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
     }
 }
 
+async function tierStatisticsEmbed(rankData, title, discordClient, interaction) {
+    let lastTimestamp = rankData[rankData.length - 1].timestamp;
+    let timestamps = rankData.map(x => x.timestamp);
+    let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+
+    let lastHour = rankData[lastHourIndex];
+    let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
+
+    let lastPoint = rankData[0].score;
+
+    let gamesPlayed = 0;
+    let gamesPlayedHr = 0;
+    let pointsPerGame = [];
+    let energyPossibilities = energyBoost.map(() => 0);
+    let energyPossiblitiesHour = energyBoost.map(() => 0);
+    let timestampIndex = 0;
+    let movingWindowSpeeds = [];
+
+    rankData.slice(1).forEach((point, i) => {
+        if (point.score - lastPoint >= 100) {
+            let gain = point.score - lastPoint;
+            let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
+            timestamps = timestamps.slice(windowIndex);
+            timestampIndex += windowIndex;
+            movingWindowSpeeds.push(point.score - rankData[timestampIndex].score);
+            energyBoost.forEach((x, idx) => {
+                if (x != 1 && gain % x == 0 && gain < 2000 * x) {
+                    energyPossibilities[idx] += 1;
+                    if (i >= lastHourIndex) {
+                        energyPossiblitiesHour[idx] += 1;
+                    }
+                }
+            });
+            gamesPlayed++;
+            pointsPerGame.push({ points: gain, timestamp: parseInt(point.timestamp / 1000) });
+            if (i >= lastHourIndex) {
+                gamesPlayedHr++;
+            }
+            lastPoint = point.score;
+        }
+    });
+
+    let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000);
+
+    let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score);
+
+    let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
+
+    let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
+    let estimatedEnergyHour = energyPossiblitiesHour.indexOf(Math.max(...energyPossiblitiesHour));
+    let peakSpeed = Math.max(...movingWindowSpeeds);
+
+    let embed = generateEmbed({
+        name: title,
+        client: discordClient.client
+    });
+
+    // Embed Reply
+    embed.addFields(
+        { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString() },
+        { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
+        { name: 'Games Played in the Last Hour', value: `${gamesPlayedHr.toLocaleString()}`, inline: true },
+        { name: 'Games Played', value: `${gamesPlayed.toLocaleString()}`, inline: true },
+        { name: 'Average Score per Game over the hour', value: scorePerGame.toLocaleString() },
+        { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
+        { name: 'Estimated Energy usage', value: `${estimatedEnergy}x` },
+        { name: 'Estimated Energy usage over the hour', value: `${estimatedEnergyHour}x` },
+        { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
+    );
+
+    //Ignore this entire section
+    let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
+        `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
+        `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
+        `Average Score per Game over the hour: ${scorePerGame}\n` +
+        `Peak Speed over an hour: ${peakSpeed}\n` +
+        `Estimated Energy usage: ${estimatedEnergy}\n` +
+        `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
+        `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
+        'Last 5 Games:\n';
+
+    for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
+        let game = pointsPerGame[pointsPerGame.length - i];
+        reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> \n`;
+    }
+
+    reply += `Updated: <t:${timestamp}:R>`;
+
+    let mobileEmbed = generateEmbed({
+        name: title,
+        client: discordClient.client
+    });
+
+    mobileEmbed.addFields(
+        { name: title, value: reply }
+    );
+
+    for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
+        let game = pointsPerGame[pointsPerGame.length - i];
+        embed.addFields({ name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true });
+    }
+
+    embed.addFields({ name: 'Updated:', value: `<t:${timestamp}:R>` });
+
+    sendEmbed(interaction, embed, mobileEmbed);
+}
+
 async function tierStatistics(tier, eventId, eventData, discordClient, interaction) {
 
     discordClient.addPrioritySekaiRequest('ranking', {
@@ -328,113 +435,9 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
         rankData.unshift({ timestamp: eventData.startAt, score: 0 });
         rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-            
-        let lastTimestamp = rankData[rankData.length - 1].timestamp;
-        let timestamps = rankData.map(x => x.timestamp);
-        let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
-
-        let lastHour = rankData[lastHourIndex];
-        let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
-
-        let lastPoint = rankData[0].score;
-
-        let gamesPlayed = 0;
-        let gamesPlayedHr = 0;
-        let pointsPerGame = [];
-        let energyPossibilities = energyBoost.map(() => 0);
-        let energyPossiblitiesHour = energyBoost.map(() => 0);
-        let timestampIndex = 0;
-        let movingWindowSpeeds = [];
-
-        rankData.slice(1).forEach((point, i) => {
-            if (point.score - lastPoint >= 100) {
-                let gain = point.score - lastPoint;
-                let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
-                timestamps = timestamps.slice(windowIndex);
-                timestampIndex += windowIndex;
-                movingWindowSpeeds.push(point.score - rankData[timestampIndex].score);
-                energyBoost.forEach((x, idx) => {
-                    if (x != 1 && gain % x == 0 && gain < 2000 * x) {
-                        energyPossibilities[idx] += 1;
-                        if (i >= lastHourIndex) {
-                            energyPossiblitiesHour[idx] += 1;
-                        }
-                    }
-                });
-                gamesPlayed++;
-                pointsPerGame.push({ points: gain, timestamp: parseInt(point.timestamp / 1000) });
-                if (i >= lastHourIndex) {
-                    gamesPlayedHr++;
-                }
-                lastPoint = point.score;
-            }
-        });
-
-        let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000);
-
-        let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score);
-
-        let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
-
-        let estimatedEnergy = energyPossibilities.indexOf(Math.max(...energyPossibilities));
-        let estimatedEnergyHour = energyPossiblitiesHour.indexOf(Math.max(...energyPossiblitiesHour));
-        let peakSpeed = Math.max(...movingWindowSpeeds);
-
         let title = `T${tier} ${response['rankings'][0].name} Statistics`;
 
-        let embed = generateEmbed({
-            name: title,
-            client: discordClient.client
-        });
-
-        // Embed Reply
-        embed.addFields(
-            { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString()},
-            { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
-            { name: 'Games Played in the Last Hour', value: `${gamesPlayedHr.toLocaleString()}`, inline: true },
-            { name: 'Games Played', value: `${gamesPlayed.toLocaleString()}`, inline: true },
-            { name: 'Average Score per Game over the hour', value: scorePerGame.toLocaleString() },
-            { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
-            { name: 'Estimated Energy usage', value: `${estimatedEnergy}x`},
-            { name: 'Estimated Energy usage over the hour', value: `${estimatedEnergyHour}x` },
-            { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` },
-        );
-
-        //Ignore this entire section
-        let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
-            `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-            `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-            `Average Score per Game over the hour: ${scorePerGame}\n` +
-            `Peak Speed over an hour: ${peakSpeed}\n` +
-            `Estimated Energy usage: ${estimatedEnergy}\n` +
-            `Estimated Energy usage over the hour: ${estimatedEnergyHour}\n` +
-            `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
-            'Last 5 Games:\n';
-
-        for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
-            let game = pointsPerGame[pointsPerGame.length - i];
-            reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> \n`;
-        }
-
-        reply += `Updated: <t:${timestamp}:R>`;
-
-        let mobileEmbed = generateEmbed({
-            name: title,
-            client: discordClient.client
-        });
-
-        mobileEmbed.addFields(
-            {name: title, value: reply}
-        );
-
-        for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
-            let game = pointsPerGame[pointsPerGame.length - i];
-            embed.addFields({name: `**Game ${i}:**`, value: `${game.points}\n<t:${game.timestamp}:R>`, inline: true});
-        }
-
-        embed.addFields({name: 'Updated:', value: `<t:${timestamp}:R>`});
-
-        sendEmbed(interaction, embed, mobileEmbed);
+        tierStatisticsEmbed(rankData, title,discordClient, interaction);
 
     }, (err) => {
         discordClient.logger.log({
@@ -442,6 +445,76 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
             message: err.toString()
         });
     });
+}
+
+async function tierHistoricalStatistics(tier, eventId, eventData, discordClient, interaction) {
+    
+    let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY Score DESC').all({
+            eventID: eventId,
+            tier: tier
+        });
+
+    if (response.length > 0) {
+        let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
+            'WHERE (EventID=@eventID AND ID=@id)').all({
+                id: response[0].ID,
+                eventID: eventId
+            });
+
+        if (data.length == 0) {
+            let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+            let title = 'Tier Not Found';
+
+            await interaction.editReply({
+                embeds: [
+                    generateEmbed({
+                        name: title,
+                        content: {
+                            'type': 'ERROR',
+                            'message': reply
+                        },
+                        client: discordClient.client
+                    })
+                ]
+            });
+
+            return;
+        }
+
+        let points = new Set();
+        let rankData = [];
+
+        data.forEach(x => {
+            if (!points.has(x.Score)) {
+                rankData.push({ timestamp: x.Timestamp, score: x.Score });
+                points.add(x.Score);
+            }
+        });
+        rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+        rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+
+        let title = `${eventData.name} T${tier} Statistics`;
+
+        tierStatisticsEmbed(rankData, title, discordClient, interaction);
+
+    } else {
+        let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+        let title = 'Tier Not Found';
+
+        await interaction.editReply({
+            embeds: [
+                generateEmbed({
+                    name: title,
+                    content: {
+                        'type': 'ERROR',
+                        'message': reply
+                    },
+                    client: discordClient.client
+                })
+            ]
+        });
+    }
 }
 
 async function sendEmbed(interaction, embed, mobileEmbed) {
@@ -532,7 +605,11 @@ module.exports = {
 
         else if (tier) {
             try {
-                tierStatistics(tier, eventId, eventData, discordClient, interaction);
+                if (eventId < event.id) {
+                    tierHistoricalStatistics(tier, eventId, eventData, discordClient, interaction);
+                } else {
+                    tierStatistics(tier, eventId, eventData, discordClient, interaction);
+                }
             } catch (err) {
                 console.log(err);
             }

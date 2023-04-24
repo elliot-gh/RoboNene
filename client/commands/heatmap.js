@@ -448,6 +448,39 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
+async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, discordClient) {
+  
+  let response = discordClient.cutoffdb.prepare('SELECT ID, score FROM cutoffs ' +
+    'WHERE (Tier=@tier AND EventID=@eventID) ORDER BY SCORE DESC').all({
+      tier: tier,
+      eventID: eventData.id
+    });
+
+  if (response.length == 0) {
+    noDataErrorMessage(interaction, discordClient);
+  } else {
+    let userId = response[0]['ID']; //Get the last ID in the list
+
+    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+      'WHERE (ID=@id AND EventID=@eventID)').all({
+        id: userId,
+        eventID: eventData.id
+      });
+    if (data.length > 0) {
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      let title = `${eventData.name} T${tier} Heatmap`;
+
+      rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+      rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, discordClient);
+
+    } else {
+      noDataErrorMessage(interaction, discordClient);
+    }
+  }
+}
+
 async function sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventData.id,
@@ -528,6 +561,9 @@ module.exports = {
       if (data.length == 0) {
         noDataErrorMessage(interaction, discordClient);
         return;
+      }
+      else if (eventId < discordClient.getCurrentEvent().id) {
+        sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, discordClient);
       }
       else {
         sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient);
