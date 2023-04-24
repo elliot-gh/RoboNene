@@ -164,19 +164,21 @@ module.exports = {
           timestamp: timestampIndex,
         });
 
+      lastHourData.sort((a, b) => a.Tier - b.Tier);
       currentData.sort((a, b) => a.Tier - b.Tier);
       let currentGamesPlayed = currentData.map(x => {
         return {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
       });
 
       lastHourData.forEach((data) => {
-        let index = userIds.indexOf(data.ID);
+        let gamesPlayedData = currentGamesPlayed.find(x => x.id === data.ID);
 
-        if (index != -1) {
+        if (gamesPlayedData) {
+          let index = userIds.indexOf(data.ID);
           lastHourCutoffs[index] = data.Score;
-          GPH[index] = Math.max(currentGamesPlayed[index].games - data.GameNum, 0);
-          gamesPlayed[index] = currentGamesPlayed[index].games;
-          if (rankingData[index].score >= currentGamesPlayed[index].score + 100) {
+          GPH[index] = Math.max(gamesPlayedData.games - data.GameNum, 0);
+          gamesPlayed[index] = gamesPlayedData.games;
+          if (rankingData[index].score >= gamesPlayedData.score + 100) {
             GPH[index]++;
             gamesPlayed[index]++;
           }
