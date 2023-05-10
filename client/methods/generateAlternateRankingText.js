@@ -34,7 +34,7 @@ const generateAlternateRankingText = (data, page, target, hourBeforeData, gamesP
     if(mobile) {
         MAXLENGTH = 30;
     } else {
-        MAXLENGTH = 42;
+        MAXLENGTH = 41;
     }
 
     let maxRankLength = rankLabel.length;
