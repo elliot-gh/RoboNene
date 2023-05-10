@@ -144,9 +144,9 @@ class DiscordClient {
     // Winston logger initialization
     this.logger = winston.createLogger({
       levels: {
-        'info': 0,
+        'error': 2,
         'join': 1,
-        'error': 2
+        'info': 2
       },
       format: winston.format.json(),
       defaultMeta: { service: 'user-service' },
@@ -229,6 +229,12 @@ class DiscordClient {
 
     //Add an index to cutoffs for user
     this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS userIndex ON cutoffs (EventId, ID)').run();
+
+    // //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS EventIDTier ON cutoffs (EventId, Tier)').run();
+
+    // //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS EventIDTimestamp ON cutoffs (EventId, Timestamp)').run();
 
     // Initialize User Tracking
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
