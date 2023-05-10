@@ -16,6 +16,9 @@ module.exports = {
     data: generateSlashCommand(COMMAND.INFO),
 
     async execute(interaction, discordClient) {
+
+        await interaction.reply({ content: 'Twitter API has Shut Down', ephemeral: COMMAND.INFO.ephemeral });
+        return;
         
         await interaction.deferReply({ ephemeral: COMMAND.INFO.ephemeral });
 
