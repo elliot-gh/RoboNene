@@ -127,15 +127,16 @@ module.exports = {
       let start = page * RESULTS_PER_PAGE;
       let end = start + RESULTS_PER_PAGE;
 
-      let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-        'WHERE (EventID=@eventID AND Tier=@tier)').all({
-          eventID: event.id,
-          tier: 1
+      let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND ID=@id)').all({
+          id: response['rankings'][0]['userId'],
+          eventID: event.id
         });
 
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       let timestamps = rankData.map(x => x.timestamp);
-      let lastTimestamp = Math.max(...timestamps);
+      timestamps.sort((a, b) => a - b);
+      let lastTimestamp = timestamps[timestamps.length - 1];
 
       let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
       let timestampIndex = timestamps[lastHourIndex];
@@ -165,13 +166,13 @@ module.exports = {
         });
 
       lastHourData.sort((a, b) => a.Tier - b.Tier);
-      currentData.sort((a, b) => a.Tier - b.Tier);
-      let currentGamesPlayed = currentData.map(x => {
-        return {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
+      let currentGamesPlayed = {};
+      currentData.forEach(x => {
+        currentGamesPlayed[x.ID] = {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
       });
 
       lastHourData.forEach((data) => {
-        let gamesPlayedData = currentGamesPlayed.find(x => x.id === data.ID);
+        let gamesPlayedData = currentGamesPlayed[data.ID];
 
         if (gamesPlayedData) {
           let index = userIds.indexOf(data.ID);
