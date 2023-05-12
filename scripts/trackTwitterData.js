@@ -1,22 +1,30 @@
-const { TwitterApi } = require('twitter-api-v2');
-    
-const { TwitterApiKey, TwitterApiKeySecret, TwitterAccessToken, TwitterAccessTokenSecret } = require('../config');
-const { TWITTER_INTERVAL } = require('../constants');
 
-const client = new TwitterApi({
-    appKey: TwitterApiKey,
-    appSecret: TwitterApiKeySecret,
-    accessToken: TwitterAccessToken,
-    accessSecret: TwitterAccessTokenSecret,
-});
+const { TWITTER_INTERVAL } = require('../constants');
+const axios = require('axios');
 
 const fp = './JSONs/twitter.json';
+const { TwitterToken } = require('../config');
+
+const getTweets = async (username) => {
+    const get = async (url) => {
+        const h = {
+            'Authorization': TwitterToken
+        };
+
+        const res = await axios.get(url, { headers: h });
+        return res.data;
+    };
+
+    const url = `https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=${username}`;
+    let data = await get(url);
+
+    return data.map((tweet) => { return tweet.id_str; });
+};
 
 const collectTwitter = async (data, discordClient) => {
 
     const username = data.username;
     const channelid = data.channel;
-    const id = data.id;
   
     let date = new Date();
     let hour = date.getHours();
@@ -29,19 +37,14 @@ const collectTwitter = async (data, discordClient) => {
     }
     date.setHours(hour);
     date.setMinutes(minute);
-  
-    const user = await client.v2.userTimeline(id, {'start_time': date.toISOString()});
-    const tweets = [];
-  
-    for (const tweet of user) {
-        tweets.unshift(tweet);
-    }
+
+    const tweets = await getTweets(username);
     for (let i = 0; i < tweets.length; i++) {
-        if (!(data.tweets.includes(tweets[i].id))) {
-            data.tweets.push(tweets[i].id);
+        if (!(data.tweets.includes(tweets[i]))) {
+            data.tweets.push(tweets[i]);
 
             let channel = discordClient.client.channels.cache.get(channelid);
-            let str = `https://twitter.com/${username}/status/${tweets[i].id}`;
+            let str = `https://twitter.com/${username}/status/${tweets[i]}`;
 
             if (data.role) {
                 str = `<@&${data.role}> ${str}`;
@@ -69,19 +72,10 @@ const writeTwitterData = (data) => {
 
 const addTwitterData = async (username, channelid, role) => {
     const data = readTwitterData();
-    const user = await client.v2.userByUsername(username);
-    const id = user.data.id;
-
-    for (const item of data) {
-        if (item.username === username && item.channel === channelid) {
-            return false;
-        }
-    }
 
     data.push({
         username: username,
         channel: channelid,
-        id: id,
         role: role,
         tweets: []
     });
@@ -109,15 +103,6 @@ const collectTwitterData = async (discordClient) => {
     writeTwitterData(data);
 };
 
-const getRecentTweet = async (username, discordClient) => {
-    const user = await client.v2.userByUsername(username);
-    const id = user.data.id;
-    const tweets = await client.v2.userTimeline(id, {'max_results': 5});
-    for (const tweet of tweets) {
-        return `https://twitter.com/${username}/status/${tweet.id}`;
-    }
-};
-
 /**
  * Continaully grabs and updates the Cutoff data
  * @param {DiscordClient} discordClient the client we are using 
@@ -127,4 +112,4 @@ const trackTwitterData = async (discordClient) => {
     collectTwitterData(discordClient); //Run function once since setInterval waits an interval to run it
 };
 
-module.exports = {trackTwitterData, addTwitterData, removeTwitterData, getRecentTweet};
+module.exports = {trackTwitterData, addTwitterData, removeTwitterData, getTweets};

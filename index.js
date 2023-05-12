@@ -38,7 +38,7 @@ loadGameData(0, async () => {
   trackCutoffData(client);
   trackUserCutoffs(client);
   trackTierData(client);
-  // trackTwitterData(client);
+  trackTwitterData(client);
   updateActivity(client);
 
   //This is a very duct tape solution

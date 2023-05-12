@@ -7,8 +7,8 @@
 const COMMAND = require('../command_data/twittertracker');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
-const { addTwitterData, getRecentTweet, removeTwitterData } = require('../../scripts/trackTwitterData.js');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { addTwitterData, getTweets, removeTwitterData } = require('../../scripts/trackTwitterData.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
 const generateEmbed = require('../methods/generateEmbed');
 
 module.exports = {
@@ -16,16 +16,13 @@ module.exports = {
     data: generateSlashCommand(COMMAND.INFO),
 
     async execute(interaction, discordClient) {
-
-        await interaction.reply({ content: 'Twitter API has Shut Down', ephemeral: COMMAND.INFO.ephemeral });
-        return;
         
         await interaction.deferReply({ ephemeral: COMMAND.INFO.ephemeral });
 
         const username = interaction.options.getString('username');
         const role = interaction.options.getRole('role')?.id;
 
-        if (interaction.channel.type !== 'GUILD_TEXT') {
+        if (interaction.channel.type !== ChannelType.GuildText) {
             await interaction.editReply({
                 embeds: [
                     generateEmbed({
@@ -50,7 +47,12 @@ module.exports = {
 
             else if (username) {
 
-                let recentTweet = await getRecentTweet(username, discordClient);
+                let tweets = await getTweets(username);
+                if (recentTweet.length === 0) {
+                    await interaction.editReply(`No tweets found for ${username}`);
+                    return;
+                };
+                let recentTweet = `https://twitter.com/${username}/status/${tweets[0]}`;
 
                 const tweetButtons = new ActionRowBuilder()
                     .addComponents(
