@@ -7,12 +7,11 @@ const COMMAND = require('../command_data/games');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const getEventData = require('../methods/getEventData');
 
-const HOUR = 3600000;
-const SONGBIAS = 8.00; //Multiplier for Talent to get score
+const SONGBIAS = 7.00; //Multiplier for Talent to get score
 
 const energyBoost = [
     1,
@@ -52,7 +51,7 @@ function generateEnergyTable(eventPoints) {
 }
 
 function calculateEventPoints(score, multiscore, eventBoost, isCheerful) {
-    let scorePoints = score / 17500;
+    let scorePoints = score / (isCheerful ? 12500 : 17500);
     let multiPoints = Math.min(multiscore, 1100000) / 100000;
     let cheerfulPoints = isCheerful ? 50 : 0;
     return (114 + scorePoints + multiPoints + cheerfulPoints) * (1 + eventBoost);
@@ -71,24 +70,6 @@ function getEnergyPerGame(energyTable, eventPoints) {
     });
 
     return energyTable[index][0];
-}
-
-function getLastHour(sortedList, el) {
-    for (let i = 0; i < sortedList.length; i++) {
-        if (sortedList[i] >= el) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-function sanityLost(gamesPlayed, finalPoint) {
-    let sanity = Math.pow(finalPoint, 0.75) * gamesPlayed;
-    let sanityNum = parseInt(Math.log(sanity) / Math.log(1000));
-    sanity /= Math.pow(1000, sanityNum);
-    let suffix = sanityNum * 3;
-    sanity = sanity.toFixed(6);
-    return { sanity: sanity, suffix: suffix };
 }
 
 async function userStatistics(user, eventId, eventData, discordClient, interaction) {
