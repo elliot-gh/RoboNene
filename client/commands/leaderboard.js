@@ -176,6 +176,7 @@ module.exports = {
 
         if (gamesPlayedData) {
           let index = userIds.indexOf(data.ID);
+          if (index === -1) return;
           lastHourCutoffs[index] = data.Score;
           GPH[index] = Math.max(gamesPlayedData.games - data.GameNum, 0);
           gamesPlayed[index] = gamesPlayedData.games;
