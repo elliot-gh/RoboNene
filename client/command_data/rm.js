@@ -27,16 +27,16 @@ module.exports = {
                 'description': 'change a rooms players',
                 'params': [
                     {
-                        'type': 'integer',
+                        'type': 'string',
                         'name': 'players',
                         'required': true,
                         'description': 'Players needed',
                         'choices': [
-                            ['0 (Full)', 0],
-                            ['1', 1],
-                            ['2', 2],
-                            ['3', 3],
-                            ['4', 4],
+                            ['0 (Full)', 'f'],
+                            ['1', '1'],
+                            ['2', '2'],
+                            ['3', '3'],
+                            ['4', '4'],
                         ]
                     }
                 ]
@@ -52,16 +52,16 @@ module.exports = {
                         'description': 'The new room code',
                     },
                     {
-                        'type': 'integer',
+                        'type': 'string',
                         'name': 'players',
                         'required': false,
                         'description': 'Players needed',
                         'choices': [
-                            ['0 (Full)', 0],
-                            ['1', 1],
-                            ['2', 2],
-                            ['3', 3],
-                            ['4', 4],
+                            ['0 (Full)', 'f'],
+                            ['1', '1'],
+                            ['2', '2'],
+                            ['3', '3'],
+                            ['4', '4'],
                         ]
                     }
                 ]

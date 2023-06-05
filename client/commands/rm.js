@@ -102,7 +102,7 @@ module.exports = {
         });
 
         let code = interaction.options.getInteger('code');
-        let players = interaction.options.getInteger('players');
+        let players = interaction.options.getString('players');
 
         if (!(await verify(interaction.channel.name))) {
             await interaction.editReply({
@@ -125,9 +125,6 @@ module.exports = {
                 let name = nameSplit[0];
                 code = code || nameSplit[1];
                 code = pad(code, 5);
-                if (players == 0) {
-                    players = 'f';
-                }
                 players = players || nameSplit[2];
                 
                 if (`${code}`.length != 5) {
