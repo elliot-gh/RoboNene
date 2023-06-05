@@ -51,6 +51,12 @@ module.exports = {
             'required': false,
             'description': 'The color pallete to use',
             'choices': palatteChoices
+          },
+          {
+            'type': 'boolean',
+            'name': 'annotategames',
+            'required': false,
+            'description': 'Show the games played on the graph'
           }
         ]
       },
@@ -84,6 +90,12 @@ module.exports = {
             'required': false,
             'description': 'The color pallete to use',
             'choices': palatteChoices
+          },
+          {
+            'type': 'boolean',
+            'name': 'annotategames',
+            'required': false,
+            'description': 'Show the games played on the graph'
           }
         ]
       }

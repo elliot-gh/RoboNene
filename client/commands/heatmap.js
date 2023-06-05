@@ -12,6 +12,7 @@ const COMMAND = require('../command_data/heatmap');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
 const getEventData = require('../methods/getEventData');
+const heatmap = require('../command_data/heatmap');
 
 const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
@@ -133,7 +134,7 @@ function ensureASCII(str) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, eventData, offset, pallete, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, eventData, offset, pallete, annotategames, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -268,6 +269,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
       title: 'Day',
       type: 'category'
     },
+    annotations: [],
     legend: { title: { text: '<br>' } },
     autosize: true,
     colorway: ['#b3e2cd', '#fdcdac', '#cbd5e8', '#f4cae4', '#e6f5c9', '#fff2ae', '#f1e2cc', '#cccccc'], 
@@ -413,6 +415,38 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     showlegend: false
   };
 
+  if (annotategames) {
+    for (let x = 0; x < xValues.length; x++) {
+      for (let y = 0; y < yValues.length; y++) {
+        let currentVal = heatmapData[y][x];
+        var textColor;
+        if (currentVal < 1) {
+          textColor = 'white';
+        } else {
+          textColor = 'black';
+        }
+
+        let result = {};
+
+        if (currentVal !== null && currentVal !== undefined) {
+          result = {
+            x: xValues[x],
+            y: y,
+            text: currentVal,
+            font: {
+              family: 'Arial',
+              size: 20,
+              color: textColor
+            },
+            showarrow: false
+          };
+        }
+
+        layout.annotations.push(result);
+      }
+    }
+  }
+
   let data = {
     data: [trace1],
     layout: layout
@@ -448,7 +482,7 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, discordClient) {
+async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient) {
   
   let response = discordClient.cutoffdb.prepare('SELECT ID, score FROM cutoffs ' +
     'WHERE (Tier=@tier AND EventID=@eventID) ORDER BY SCORE DESC').all({
@@ -473,7 +507,7 @@ async function sendHistoricalTierRequest(eventData, tier, interaction, offset, p
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
 
-      postQuickChart(interaction, title, rankData, eventData, offset, pallete, discordClient);
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, discordClient);
 
     } else {
       noDataErrorMessage(interaction, discordClient);
@@ -481,7 +515,7 @@ async function sendHistoricalTierRequest(eventData, tier, interaction, offset, p
   }
 }
 
-async function sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient) {
+async function sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventData.id,
     targetRank: tier,
@@ -503,7 +537,7 @@ async function sendTierRequest(eventData, tier, interaction, offset, pallete, di
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       
-      postQuickChart(interaction, title, rankData, eventData, offset, pallete, discordClient);
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, discordClient);
       
     } else {
       noDataErrorMessage(interaction, discordClient);
@@ -529,6 +563,7 @@ module.exports = {
     const eventId = interaction.options.getInteger('event') || event.id;
     const palleteIndex = interaction.options.getInteger('pallete') || 0;
     let offset = interaction.options.getInteger('offset');
+    let annotategames = interaction.options.getBoolean('annotategames') || false;
 
     if (offset == null && offset != 0) offset = 18;
 
@@ -563,10 +598,10 @@ module.exports = {
         return;
       }
       else if (eventId < discordClient.getCurrentEvent().id) {
-        sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, discordClient);
+        sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient);
       }
       else {
-        sendTierRequest(eventData, tier, interaction, offset, pallete, discordClient);
+        sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient);
       }
     } else if (user) {
       try {
@@ -588,7 +623,7 @@ module.exports = {
           let name = user.username;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, annotategames, discordClient);
         }
         else
         {
