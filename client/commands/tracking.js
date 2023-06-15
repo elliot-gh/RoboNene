@@ -9,6 +9,8 @@ const COMMAND = require('../command_data/tracking');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
 
+const { PermissionFlagsBits } = require('discord.js');
+
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
@@ -22,7 +24,7 @@ module.exports = {
 
     const channelData = interaction.options._hoistedOptions[0];
 
-    if (channelData.channel.type !== 'GUILD_TEXT') {
+    if (!channelData.channel.isTextBased()) {
       await interaction.editReply({
         embeds: [
           generateEmbed({
@@ -37,8 +39,8 @@ module.exports = {
     }
 
     if (interaction.options._hoistedOptions[2].value) {
-      const perms = channelData.channel.guild.me.permissionsIn(channelData.channel);
-      if (!perms.has('SEND_MESSAGES') || !perms.has('EMBED_LINKS')) {
+      const perms = channelData.channel.permissionsFor(discordClient.client.user.id);
+      if (!perms.has(PermissionFlagsBits.SendMessages)) {
         await interaction.editReply({
           embeds: [
             generateEmbed({

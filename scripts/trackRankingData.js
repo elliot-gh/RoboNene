@@ -90,7 +90,7 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
     if (channel) {
       const guild = discordClient.client.guilds.cache.get(channel.guild.id);
       const perms = guild.members.me.permissionsIn(channel);
-      if (perms.has(PermissionFlagsBits.SendMessages) && perms.has(PermissionFlagsBits.EmbedLinks)) {
+      if (perms.has(PermissionFlagsBits.SendMessages)) {
         await channel.send({ embeds: [embed] });
         return;
       }
