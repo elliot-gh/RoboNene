@@ -330,13 +330,13 @@ async function getStocks(interaction, user, discordClient) {
     }
 
     if (message === '') {
-        message = `${user.username} has no stocks.`;
+        message = `${user.displayName} has no stocks.`;
     }
 
     await interaction.editReply({
         embeds: [
             generateEmbed({
-                name: `${user.username}'s Stocks`,
+                name: `${user.displayName}'s Stocks`,
                 content: {
                     'type': 'Stock',
                     'message': message

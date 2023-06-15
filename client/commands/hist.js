@@ -495,7 +495,7 @@ module.exports = {
             eventID: eventData.id
           });
         if (data.length > 0) {
-          let name = user.username;
+          let name = user.displayName;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
           let title = `${eventData.name} ${name} Event Points`;

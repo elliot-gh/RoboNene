@@ -620,7 +620,7 @@ module.exports = {
 
         if (data.length > 0)
         {
-          let name = user.username;
+          let name = user.displayName;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
           postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, annotategames, discordClient);

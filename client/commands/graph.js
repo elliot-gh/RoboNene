@@ -278,7 +278,7 @@ module.exports = {
           });
         if (data.length>0)
         {
-          let name = user.username;
+          let name = user.displayName;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: event.startAt, score: 0 });
           postQuickChart(interaction, `${eventName} ${name} Event Points`, rankData, discordClient);

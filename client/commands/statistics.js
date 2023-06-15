@@ -185,7 +185,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
                 let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
                 let peakSpeed = Math.max(...movingWindowSpeeds);
 
-                let title = `${user.username} Statistics`;
+                let title = `${user.displayName} Statistics`;
 
                 let embed = generateEmbed({
                     name: title,
