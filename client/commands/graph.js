@@ -244,7 +244,7 @@ module.exports = {
     const eventName = event.name;
 
     const tier = interaction.options.getInteger('tier');
-    const user = interaction.options.getUser('user');
+    const user = interaction.options.getMember('user');
 
     if(tier)
     {

@@ -406,7 +406,7 @@ module.exports = {
 
         else if (interaction.options.getSubcommand() === 'portfolio') {
 
-            const user = interaction.options.getUser('user') || interaction.user;
+            const user = interaction.options.getMember('user') || interaction.user;
 
             await getStocks(interaction, user, discordClient);
         }

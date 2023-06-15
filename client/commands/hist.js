@@ -437,7 +437,7 @@ module.exports = {
     const event = discordClient.getCurrentEvent();
 
     const tier = interaction.options.getInteger('tier');
-    const user = interaction.options.getUser('user');
+    const user = interaction.options.getMember('user');
     const binSize = interaction.options.getInteger('binsize');
     const min = interaction.options.getInteger('min');
     const max = interaction.options.getInteger('max');

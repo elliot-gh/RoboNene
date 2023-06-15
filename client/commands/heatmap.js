@@ -559,7 +559,7 @@ module.exports = {
     const event = discordClient.getCurrentEvent();
 
     const tier = interaction.options.getInteger('tier');
-    const user = interaction.options.getUser('user');
+    const user = interaction.options.getMember('user');
     const eventId = interaction.options.getInteger('event') || event.id;
     const palleteIndex = interaction.options.getInteger('pallete') || 0;
     let offset = interaction.options.getInteger('offset');

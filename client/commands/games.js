@@ -202,7 +202,7 @@ module.exports = {
 
         const event = discordClient.getCurrentEvent();
 
-        const user = interaction.options.getUser('user');
+        const user = interaction.options.getMember('user');
         const eventId = interaction.options.getInteger('event') || event.id;
 
         const eventData = getEventData(eventId);
