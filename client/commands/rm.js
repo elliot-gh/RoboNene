@@ -240,19 +240,26 @@ module.exports = {
                 }
 
             } else if (messageSplit.length > 0) {
-                await message.reply({
-                    embeds: [
-                        generateEmbed({
-                            name: COMMAND.INFO.name,
-                            content: {
-                                'type': 'error',
-                                'message': `Invalid arguments: ${message.content}`
-                            },
-                            client: discordClient.client
-                        })
-                    ]
-                });
-                return;
+                if (!isNaN(messageSplit.join(''))){
+                    await message.channel.send({
+                        embeds: [
+                            generateEmbed({
+                                name: COMMAND.INFO.name,
+                                content: {
+                                    'type': 'error',
+                                    'message': `Invalid arguments: ${message.content}`
+                                },
+                                client: discordClient.client
+                            })
+                        ]
+                    });
+                    return;
+                } else {
+                    let nameSplit = message.channel.name.split('-');
+
+                    let name = nameSplit[0];
+                    channelName = `${name}-xxxxx`;
+                }
             } else {
                 let nameSplit = message.channel.name.split('-');
 
