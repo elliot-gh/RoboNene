@@ -12,7 +12,7 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
 const getEventData = require('../methods/getEventData');
 
 const HOUR = 3600000;
-const SONGBIAS = 8.00; //Multiplier for Talent to get score
+const SONGBIAS = 7.00; //Multiplier for Talent to get score
 
 const energyBoost = [
     1,
@@ -54,9 +54,9 @@ function generateEnergyTable(eventPoints)
 
 function calculateEventPoints(score, multiscore, eventBoost, isCheerful)
 {
-    let scorePoints = score / 17500;
-    let multiPoints = Math.min(multiscore, 1100000) / 100000;
-    let cheerfulPoints = isCheerful ? 50 : 0;
+    let scorePoints = isCheerful ? score / 12500 : score / 17500;
+    let multiPoints = Math.min(multiscore, 1300000) / 100000;
+    let cheerfulPoints = isCheerful ? 40 : 0;
     return (114 + scorePoints + multiPoints + cheerfulPoints) * (1 + eventBoost);
 }
 
@@ -139,7 +139,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
 
                 let teamData = calculateTeam(profile, eventId);
                 let score = calculateScore(teamData.talent);
-                let multiscore = score * 5;
+                let multiscore = score;
                 let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
                 let pointTable = generateEnergyTable(eventPoints);
 
