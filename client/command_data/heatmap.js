@@ -18,12 +18,12 @@ module.exports = {
   'INFO': {
     'name': 'heatmap',
     'utilization': '/heatmap',
-    'description': 'Display a histogram displaying the historical amount of points for a user or tier',
+    'description': 'Display a heatmap displaying the games played every hour',
     'ephemeral': false,
     'subcommands': [
       {
         'name': 'cutoff',
-        'description': 'Get histogram of a tier cutoff over time',
+        'description': 'Get heatmap of a tier cutoff over time',
         'params' : [
           {
             'type': 'integer',
@@ -62,7 +62,7 @@ module.exports = {
       },
       {
         'name': 'user',
-        'description': 'Get histogram of a user over time',
+        'description': 'Get heatmap of a user over time',
         'params': [
           {
           'type': 'user',
