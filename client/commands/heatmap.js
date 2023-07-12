@@ -12,7 +12,6 @@ const COMMAND = require('../command_data/heatmap');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
 const getEventData = require('../methods/getEventData');
-const heatmap = require('../command_data/heatmap');
 
 const Plotly = require('plotly')(plotlyUser, plotlyKey);
 
