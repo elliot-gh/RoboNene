@@ -45,6 +45,10 @@ const generateOptions = (command, info) => {
           op.setChannelTypes(option.channelTypes);
         }
 
+        if (option.autocomplete) {
+          op.setAutoComplete(option.autocomplete);
+        }
+
         return op;
       };
 
