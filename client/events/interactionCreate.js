@@ -25,6 +25,19 @@ const INTERACTION_CONST = {
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction, discordClient) {
+    if (interaction.isAutocomplete()) {
+      const interactionIdx = discordClient.commands
+      .map(c => c.data.name)
+      .indexOf(interaction.commandName);
+      if (interactionIdx != -1) {
+        const command = discordClient.commands[interactionIdx];
+        try {
+            await command.autocomplete(interaction, discordClient);
+        } catch (error) {
+            console.error(error);
+        }
+      }
+    }
     if (!interaction.isCommand()) return;
 
     discordClient.logger.log({
@@ -42,6 +55,7 @@ module.exports = {
     const interactionIdx = discordClient.commands
       .map(c => c.data.name)
       .indexOf(interaction.commandName);
+      
     
     if (interactionIdx != -1) {
       const command = discordClient.commands[interactionIdx];

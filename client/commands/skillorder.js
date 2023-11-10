@@ -142,6 +142,26 @@ module.exports = {
         } catch (e) {
             console.log(e);
         } // Due to possible null values add a try catch
+    },
+    async autocomplete(interaction, discordClient) {
+        let focus = interaction.options.getFocused();
+        if (focus == '') {
+            await interaction.respond([
+                {name: 'Hitorinbo Envy', value: 74},
+                {name: 'Lost and Found', value: 226},
+                {name: 'Melt', value: 47},
+            ]);
+        }
+
+        let choices = Object.keys(musicData.musics).filter((key) => {
+            return musicData.musics[key].toLowerCase().includes(focus.toLowerCase());
+        });
+
+        choices = choices.slice(0, 25);
+
+        await interaction.respond(choices.map((key) => {
+                    return {name: musicData.musics[key], value: key};
+            }));
     }
 };
 

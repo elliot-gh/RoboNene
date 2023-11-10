@@ -46,7 +46,7 @@ const generateOptions = (command, info) => {
         }
 
         if (option.autocomplete) {
-          op.setAutoComplete(option.autocomplete);
+          op.setAutocomplete(option.autocomplete);
         }
 
         return op;
