@@ -28,9 +28,9 @@ loadGameData(0, async () => {
   client.loadMessageHandler();
   client.loadServerHandler();
 
+  await client.login();
   await client.loadSekaiClient();
   await client.runSekaiRequests();
-  await client.login();
 
   // Begin the scripts
   trackGameData(client);
