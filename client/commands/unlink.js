@@ -61,20 +61,6 @@ module.exports = {
     const db = discordClient.db;
     const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
 
-    if (!accountId) {
-      // Do something because there is an empty account id input
-      await interaction.editReply({
-        embeds: [
-          generateEmbed({
-            name:COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.BAD_ID_ERR, 
-            client: discordClient.client
-          })
-        ]
-      });
-      return;
-    }
-
     const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
       sekaiId: accountId
     });
@@ -107,6 +93,16 @@ module.exports = {
       });
       return;
     }
+
+    if (sekaiCheck[0].discord_id == interaction.user.id) {
+      db.prepare('DELETE FROM users WHERE sekai_id=@sekaiId').run({
+        sekaiId: accountId
+      });
+
+      await interaction.editReply('Unlinked your account!');
+      return;
+    }
+
 
     discordClient.addSekaiRequest('profile', {
       userId: accountId
