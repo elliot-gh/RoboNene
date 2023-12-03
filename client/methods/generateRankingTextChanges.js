@@ -7,6 +7,15 @@
 const { RESULTS_PER_PAGE } = require('../../constants');
 var MAXLENGTH = 42;
 
+const getTierChange = (change) => {
+    if(change > 0) {
+        return `(↑${change})`;
+    } else if(change < 0) {
+        return `(↓${change * -1})`;
+    }
+    return '(-)';
+};
+
 /**
  * Generates an ranking embed from the provided params
  * @param {Object} data a collection of player data on the leaderboard
@@ -16,7 +25,7 @@ var MAXLENGTH = 42;
  * @param {Boolean} mobile whether it's a mobile display or not
  * @return {MessageEmbed} a generated embed of the current leaderboard
  */
-const generateRankingText = (data, page, target, changes, mobile) => {
+const generateRankingText = (data, page, target, changes, tierChanges, mobile) => {
     let rankLabel = 'T';
     let nameLabel = 'Name';
     let scoreLabel = 'Score'; 
@@ -30,6 +39,7 @@ const generateRankingText = (data, page, target, changes, mobile) => {
     }
 
     let maxRankLength = rankLabel.length;
+    let maxRankChangeLength = 0;
     let maxNameLength = nameLabel.length;
     let maxScoreLength = scoreLabel.length;
     let maxChangeLength = changeLabel.length;
@@ -37,6 +47,9 @@ const generateRankingText = (data, page, target, changes, mobile) => {
     data.forEach((user, i) => {
         if (user.rank.toString().length > maxRankLength) {
             maxRankLength = user.rank.toString().length;
+        }
+        if (getTierChange(tierChanges[i]).length > maxRankChangeLength) {
+            maxRankChangeLength = getTierChange(tierChanges[i]).length;
         }
         if (user.name.length > maxNameLength) {
             maxNameLength = user.name.length;
@@ -49,11 +62,11 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         }
     });
 
-    let difference = Math.max(0, (maxRankLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH);
+    let difference = Math.max(0, (maxRankLength + maxRankChangeLength + maxNameLength + maxScoreLength + maxChangeLength) - MAXLENGTH);
     maxNameLength -= difference;
 
     let leaderboardText = '';
-    let rank = ' '.repeat(maxRankLength - rankLabel.length) + rankLabel;
+    let rank = ' '.repeat(maxRankLength + maxRankChangeLength - rankLabel.length) + rankLabel;
     let name = nameLabel + ' '.repeat(maxNameLength - nameLabel.length);
     let score = scoreLabel + ' '.repeat(maxScoreLength - scoreLabel.length);
     let change = ' '.repeat(maxChangeLength - changeLabel.length) + changeLabel;
@@ -66,6 +79,7 @@ const generateRankingText = (data, page, target, changes, mobile) => {
         }
 
         let rank = ' '.repeat(maxRankLength - data[i].rank.toString().length) + data[i].rank;
+        rank += getTierChange(tierChanges[i]) + ' '.repeat(maxRankChangeLength - getTierChange(tierChanges[i]).length);
         let nameStr = data[i].name.substring(0, maxNameLength).replace('`', '\'');
         let name = nameStr + ' '.repeat(maxNameLength - nameStr.length);
         let score = ' '.repeat(maxScoreLength - data[i].score.toLocaleString().length) +
