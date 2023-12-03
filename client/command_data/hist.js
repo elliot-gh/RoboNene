@@ -51,6 +51,12 @@ module.exports = {
             'name': 'hourly',
             'required': false,
             'description': 'Graph hourly instead of per game'
+          },
+          {
+            'type': 'boolean',
+            'name': 'games',
+            'required': false,
+            'description': 'Graph games instead of points'
           }
         ]
       },
@@ -93,6 +99,12 @@ module.exports = {
             'name': 'hourly',
             'required': false,
             'description': 'Graph hourly instead of per game'
+          },
+          {
+            'type': 'boolean',
+            'name': 'games',
+            'required': false,
+            'description': 'Graph games instead of points'
           }
         ]
       }

@@ -102,12 +102,14 @@ function ensureASCII(str) {
 }
 
 function getLastHour(sortedList, el) {
-  for (let i = 0; i < sortedList.length; i++) {
-    if (sortedList[i] >= el) {
-      return i;
-    }
+  if (sortedList.length === 0) {
+    return 0;
   }
-  return 0;
+  let val = sortedList.reduce(function (prev, curr) {
+    return (Math.abs(curr - el) < Math.abs(prev - el) ? curr : prev);
+  });
+
+  return Math.max(sortedList.indexOf(val), 0);
 }
 
 /**
@@ -118,7 +120,7 @@ function getLastHour(sortedList, el) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, binSize, min, max, hourly, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, binSize, min, max, hourly, showGames, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -154,14 +156,27 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
     let movingWindowSpeeds = [];
     let timestampIndex = 0;
 
-    rankData.slice(1).forEach((point) => {
+    rankData.slice(1).forEach((point, i) => {
       if (lastPoint < point.score && point.score - lastPoint >= 100) {
         let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
         timestamps = timestamps.slice(windowIndex);
         timestampIndex += windowIndex;
         let change = point.score - rankData[timestampIndex].score;
         if (change < highBound && change >= lowBound) {
-          movingWindowSpeeds.push(change);
+          if (showGames) {
+            let games = 0;
+            for (let j = timestampIndex; j < i; j++) {
+              if (j <= 0) {
+                continue;
+              }
+              if (rankData[j].score - rankData[j - 1].score >= 100) {
+                games++;
+              }
+            }
+            movingWindowSpeeds.push(games);
+          } else {
+            movingWindowSpeeds.push(change);
+          }
         }
       }
       lastPoint = point.score;
@@ -205,6 +220,10 @@ const postQuickChart = async (interaction, tier, rankData, binSize, min, max, ho
 
   if (hourly) {
     binsize = Math.max(1000, binSize || 10000);
+
+    if (showGames) {
+      binsize = 1;
+    }
   }
 
   const average = (pointsPerGame.reduce((a, b) => a + b) / pointsPerGame.length).toFixed(2);
@@ -369,10 +388,10 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
+async function sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient) {
   
   let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
-    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY SCORE DESC').all({
+    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY TIMESTAMP DESC').all({
       eventID: eventData.id,
       tier: tier
     });
@@ -388,7 +407,7 @@ async function sendHistoricalTierRequest(eventData, tier, binSize, min, max, hou
       let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
+      postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, showGames, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -398,7 +417,7 @@ async function sendHistoricalTierRequest(eventData, tier, binSize, min, max, hou
 }
 
 
-async function sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient) {
+async function sendTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventData.id,
     targetRank: tier,
@@ -416,7 +435,7 @@ async function sendTierRequest(eventData, tier, binSize, min, max, hourly, inter
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-      postQuickChart(interaction, `${eventData.name} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
+      postQuickChart(interaction, `${eventData.name} T${tier} ${response['rankings'][0]['name']} Cutoffs`, rankData, binSize, min, max, hourly, showGames, discordClient);
     } else {
       noDataErrorMessage(interaction, discordClient);
     }
@@ -443,6 +462,7 @@ module.exports = {
     const max = interaction.options.getInteger('max');
     const hourly = interaction.options.getBoolean('hourly') || false;
     const eventId = interaction.options.getInteger('event') || event.id;
+    const showGames = interaction.options.getBoolean('games') || false;
 
     const eventData = getEventData(eventId);
 
@@ -474,11 +494,11 @@ module.exports = {
         rankData.unshift({ timestamp: eventData.startAt, score: 0 });
         rankData.push({ timestamp: Date.now(), score: data[0].Score });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
-        postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, discordClient);
+        postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, showGames, discordClient);
       } else if (eventData.id < discordClient.getCurrentEvent().id) {
-        sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
+        sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient);
       } else {
-        sendTierRequest(eventData, tier, binSize, min, max, hourly, interaction, discordClient);
+        sendTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient);
       }
     } else if (user) {
       try {
@@ -499,7 +519,7 @@ module.exports = {
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
           let title = `${eventData.name} ${name} Event Points`;
-          postQuickChart(interaction, title, rankData, binSize, min, max, hourly, discordClient);
+          postQuickChart(interaction, title, rankData, binSize, min, max, hourly, showGames, discordClient);
         }
         else {
           interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
