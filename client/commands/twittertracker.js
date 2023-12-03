@@ -48,7 +48,7 @@ module.exports = {
             else if (username) {
 
                 let tweets = await getTweets(username);
-                if (recentTweet.length === 0) {
+                if (tweets.length === 0) {
                     await interaction.editReply(`No tweets found for ${username}`);
                     return;
                 };
