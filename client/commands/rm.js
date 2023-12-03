@@ -9,6 +9,7 @@ const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const { channel } = require('diagnostics_channel');
 
 const timeout = 600000;
 const channels = {};
@@ -284,13 +285,53 @@ module.exports = {
 
     async promptExecuteMessage(message, discordClient) {
         if (await verify(message.channel.name)) {
-            let code = parseInt(message.content);
+            let messageSplit = message.content.replace(/[^0-9]/g, '').split(/ +/);
+            let code = null;
+            let players = null;
+
+            for (let i = 0; i < messageSplit.length; i++) {
+                if (messageSplit[i].length == 5 &&
+                    code == null &&
+                    !isNaN(messageSplit[i]) &&
+                    parseInt(messageSplit[i]) >= 0 &&
+                    parseInt(messageSplit[i]) <= 99999) {
+                    code = messageSplit[i];
+                } else if (messageSplit[i].length == 1 &&
+                    players == null &&
+                    !isNaN(messageSplit[i]) &&
+                    parseInt(messageSplit[i]) >= 0 &&
+                    parseInt(messageSplit[i]) < 5) {
+                    players = messageSplit[i];
+                }
+            }
             let deleted = false;
+            let channelName = '';
+
+            if (code || players) {
+                let nameSplit = message.channel.name.split('-');
+
+                let name = nameSplit[0];
+                code = code || nameSplit[1];
+                code = pad(code, 5);
+                players = players || nameSplit[2];
+
+                if (parseInt(players) === 0) {
+                    players = 'f';
+                }
+
+                if (players) {
+                    channelName = `${name}-${code}-${players}`;
+                } else {
+                    channelName = `${name}-${code}`;
+                }
+            } else {
+                return;
+            }
 
             let prompt = new EmbedBuilder()
                 .setColor('#0099ff')
                 .setTitle('Room Change')
-                .setDescription(`Do you want to change the room code to ${pad(code, 5)}?`)
+                .setDescription(`Do you want to change the room code to ${channelName}?`)
                 .setFooter({text: 'This prompt will expire in 30 seconds'});
             
             const roomButtons = new ActionRowBuilder()
@@ -328,21 +369,6 @@ module.exports = {
             collector.on('collect', async (i) => {
 
                 if (i.customId === 'yes') {
-
-                    var channelName, players;
-                    let nameSplit = message.channel.name.split('-');
-
-                    let name = nameSplit[0];
-                    code = code || nameSplit[1];
-                    code = pad(code, 5);
-                    players = players || nameSplit[2];
-
-                    if (players) {
-                        channelName = `${name}-${code}-${players}`;
-                    } else {
-                        channelName = `${name}-${code}`;
-                    }
-
                     await message.channel.send(await changeName(message.channel, channelName, discordClient));
                     await message.delete();
                     deleted = true;

@@ -49,6 +49,7 @@ class DiscordClient {
     this.stockdb = null;
 
     this.prefix = '%';
+    this.changePlayers = '+';
 
     this.api = [];
     this.priorityApiQueue = [];
@@ -77,8 +78,32 @@ class DiscordClient {
 
         event.promptExecuteMessage(message, this);
       } 
+      else if (message.content.length === 2 && message.content.startsWith(this.changePlayers) &&
+        isNaN(message.content[1]) === false) {
+          const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+          event.promptExecuteMessage(message, this);
+        }
+
+      if (message.channel.id == '1135951698741964800') {
+        if (message.content.toUpperCase() === 'CAN I ENTER G1') {
+          if (message.author.id === '670399881990373422' || message.author.id == '1127443854644219914') {
+            message.channel.send('Yes');
+          } else {
+            message.channel.send('No');
+          }
+        }
+      }
+
+      if (message.content.toLowerCase().startsWith('oh magic ghostnenerobo')) {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/magicghostnene.js`);
+        this.logger.info(`Magic Ghostnene command called by ${message.author.username}`);
+        event.executeMessage(message, this);
+      }
+1
       if (!message.content.startsWith(this.prefix)) return;
       let command = message.content.slice(this.prefix.length).split(/ +/);
+      this.logger.info(`Command ${command[0]} called by ${message.author.username}`);
 
       if (command[0] === 'rm') {
         const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
@@ -320,9 +345,11 @@ class DiscordClient {
 
       // Sekai Api Init
       const apiClient = new SekaiClient(playerPrefs);
-      await apiClient.login();
       this.api.push(apiClient);
     }
+
+    //Await for all clients to be initialized
+    await Promise.all(this.api.map(client => client.login()));
   }
 
   /**
