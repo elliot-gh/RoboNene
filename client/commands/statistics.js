@@ -112,7 +112,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
         });
     let userData = discordClient.db.prepare('SELECT * FROM users ' +
         'WHERE (discord_id=@discord_id)').all({
-          discord_id: user.id,
+            discord_id: user.id,
         });
     if (data.length) {
         discordClient.addPrioritySekaiRequest('profile', {
@@ -286,6 +286,7 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
 async function tierStatisticsEmbed(rankData, title, discordClient, interaction) {
     let lastTimestamp = rankData[rankData.length - 1].timestamp;
     let timestamps = rankData.map(x => x.timestamp);
+
     let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
 
     let lastHour = rankData[lastHourIndex];
@@ -450,8 +451,8 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
 async function tierHistoricalStatistics(tier, eventId, eventData, discordClient, interaction) {
     
     let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
-        'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY Score DESC').all({
-            eventID: eventId,
+        'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY TIMESTAMP DESC').all({
+            eventID: eventData.id,
             tier: tier
         });
 
