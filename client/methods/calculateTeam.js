@@ -179,6 +179,8 @@ const getCharacterRanks = (cards, data) => {
     cards.forEach(card => {
         let rank = data.userCharacters.find(character => character.characterId == card.characterId).characterRank;
 
+        rank = Math.min(rank, 50);
+
         card.CRTalent += Math.floor(card.baseTalent * (rank / 1000.0));
     });
 };
