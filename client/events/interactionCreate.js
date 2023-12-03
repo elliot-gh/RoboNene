@@ -98,8 +98,15 @@ module.exports = {
           return;
         }
       }
-      
-      await command.execute(interaction, discordClient);
+      try {
+        await command.execute(interaction, discordClient);
+      } catch (error) {
+        console.error(error);
+        await interaction.reply({
+          content: 'There was an error while executing this command!',
+          ephemeral: true
+        });
+      }
     }
   }
 };
