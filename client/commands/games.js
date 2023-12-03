@@ -11,7 +11,7 @@ const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const getEventData = require('../methods/getEventData');
 
-const SONGBIAS = 7.00; //Multiplier for Talent to get score
+const SONGBIAS = 8.00; //Multiplier for Talent to get score
 
 const energyBoost = [
     1,
@@ -52,8 +52,8 @@ function generateEnergyTable(eventPoints) {
 
 function calculateEventPoints(score, multiscore, eventBoost, isCheerful) {
     let scorePoints = score / (isCheerful ? 12500 : 17500);
-    let multiPoints = Math.min(multiscore, 1100000) / 100000;
-    let cheerfulPoints = isCheerful ? 50 : 0;
+    let multiPoints = Math.min(multiscore, 1300000) / 100000;
+    let cheerfulPoints = isCheerful ? 40 : 0;
     return (114 + scorePoints + multiPoints + cheerfulPoints) * (1 + eventBoost);
 }
 
