@@ -15,7 +15,7 @@ const fs = require('fs');
 const generateSkillText = require('../methods/generateSkillText');
 
 //Required since Proseka Skill order is not 1 2 3 4 5
-const ProsekaSkillOrder = [2, 1, 4, 5, 3];
+const ProsekaSkillOrder = [2, 1, 4, 5, 3, 'E'];
 const Difficulties = ['easy', 'normal', 'hard', 'expert', 'master'];
 
 /**
@@ -58,7 +58,7 @@ class music {
             if(this.ids.has(music.music_id))
             {
                 //Slice from 0 to 5 since encore (5) doesn't matter
-                let skillScores = music.skill_score_multi.slice(0, 5);
+                let skillScores = music.skill_score_multi;
                 let skillScoreOrder = [];
                 let skillOrder = [];
 
@@ -98,7 +98,7 @@ class music {
 }
 
 function skillOrder(order){
-    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]}`;
+    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]} > ${order[5]}`;
 }
 
 function musicSkillOrder(song)
