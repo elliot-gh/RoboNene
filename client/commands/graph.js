@@ -11,6 +11,7 @@ const COMMAND = require('../command_data/graph');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed'); 
+const getEventData = require('../methods/getEventData');
 
 /**
  * Create a graph embed to be sent to the discord interaction
@@ -166,14 +167,14 @@ async function noDataErrorMessage(interaction, discordClient) {
 async function sendHistoricalTierRequest(eventId, eventName, eventData, tier, interaction, discordClient) {
   
   let data = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
-    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY Score DESC').all({
-      eventID: eventId,
+    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY TIMESTAMP DESC').all({
+      eventID: eventData.id,
       tier: tier
     });
 
   if (data.length > 0) {
     let userId = data[0]['ID'];//Get the last ID in the list
-    let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+    data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
         eventID: eventId
@@ -218,6 +219,22 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
   });
 }
 
+async function sendGraphByTierRequest(eventId, eventName, eventData, tier, interaction, discordClient) {
+  let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+    'WHERE (Tier=@tier AND EventID=@eventID)').all({
+      tier: tier,
+      eventID: eventId
+    });
+  if (data.length > 0) {
+    let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+    rankData.unshift({ timestamp: eventData.startAt, score: 0 });
+    rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
+    postQuickChart(interaction, `${eventName} T${tier} Cutoffs`, rankData, discordClient);
+  } else {
+    noDataErrorMessage(interaction, discordClient);
+  }
+}
+
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
@@ -226,25 +243,29 @@ module.exports = {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
     });
-    
-    const event = discordClient.getCurrentEvent();
+
+    let event = discordClient.getCurrentEvent();
+
+    const tier = interaction.options.getInteger('tier');
+    const user = interaction.options.getMember('user');
+    const eventid = interaction.options.getInteger('event') || event.id;
+    const graphTier = interaction.options.getBoolean('by_tier') || false;
+
+    event = getEventData(eventid);
+    const eventName = event.name;
+
     if (event.id === -1) {
       await interaction.editReply({
         embeds: [
           generateEmbed({
-            name: COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.NO_EVENT_ERR, 
+            name: COMMAND.INFO.name,
+            content: COMMAND.CONSTANTS.NO_EVENT_ERR,
             client: discordClient.client
           })
         ]
       });
       return;
     }
-
-    const eventName = event.name;
-
-    const tier = interaction.options.getInteger('tier');
-    const user = interaction.options.getMember('user');
 
     if(tier)
     {
@@ -254,9 +275,10 @@ module.exports = {
           eventID: event.id
         });
       if (data.length == 0) {
-          
         noDataErrorMessage(interaction, discordClient);
         return;
+      } else if (graphTier) {
+        sendGraphByTierRequest(event.id, eventName, event, tier, interaction, discordClient);
       } else if (event.id < discordClient.getCurrentEvent().id) {
         sendHistoricalTierRequest(event.id, eventName, event, tier, interaction, discordClient);
       } else {

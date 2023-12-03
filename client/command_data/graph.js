@@ -21,6 +21,18 @@ module.exports = {
             'name': 'tier',
             'required': true,
             'description': 'The cutoff tier specified',
+          },
+          {
+            'type': 'boolean',
+            'name': 'by_tier',
+            'required': false,
+            'description': 'Whether to graph by tier or by id (defaults to ID)',
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
           }
         ]
       },
@@ -33,6 +45,12 @@ module.exports = {
           'name': 'user',
           'required': true,
           'description': 'A linked User that has been tracked'
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
           }
         ]
       }
