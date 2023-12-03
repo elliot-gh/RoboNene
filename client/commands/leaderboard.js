@@ -142,12 +142,14 @@ module.exports = {
       let timestampIndex = timestamps[lastHourIndex];
 
       let lastHourCutoffs = [];
+      let tierChange = [];
       let GPH = [];
       let gamesPlayed = [];
       let userIds = [];
 
       for(let i = 0; i < rankingData.length; i++) {
         lastHourCutoffs.push(-1);
+        tierChange.push(0);
         gamesPlayed.push(-1);
         GPH.push(-1);
         userIds.push(rankingData[i].userId);
@@ -168,7 +170,7 @@ module.exports = {
       lastHourData.sort((a, b) => a.Tier - b.Tier);
       let currentGamesPlayed = {};
       currentData.forEach(x => {
-        currentGamesPlayed[x.ID] = {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0};
+        currentGamesPlayed[x.ID] = {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0, 'tier': x.Tier};
       });
 
       lastHourData.forEach((data) => {
@@ -178,6 +180,7 @@ module.exports = {
           let index = userIds.indexOf(data.ID);
           if (index === -1) return;
           lastHourCutoffs[index] = data.Score;
+          tierChange[index] = data.Tier - gamesPlayedData.tier;
           GPH[index] = Math.max(gamesPlayedData.games - data.GameNum, 0);
           gamesPlayed[index] = gamesPlayedData.games;
           if (rankingData[index].score >= gamesPlayedData.score + 100) {
@@ -190,9 +193,9 @@ module.exports = {
       let mobile = false;
       let alt = false;
       let offset = false;
-      var slice, sliceOffset, sliceGPH, sliceGamesPlayed;
+      var slice, sliceOffset, sliceTierChange, sliceGPH, sliceGamesPlayed;
 
-      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), mobile);
+      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), tierChange.slice(start, end), mobile);
       
       let leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
@@ -298,17 +301,19 @@ module.exports = {
         if(start > end) {
           slice = rankingData.slice(start, 120).concat(rankingData.slice(0, end));
           sliceOffset = lastHourCutoffs.slice(start, 120).concat(lastHourCutoffs.slice(0, end));
+          sliceTierChange = tierChange.slice(start, 120).concat(tierChange.slice(0, end));
           sliceGamesPlayed = gamesPlayed.slice(start, 120).concat(gamesPlayed.slice(0, end));
           sliceGPH = GPH.slice(start, 120).concat(GPH.slice(0, end));
         }
         else {
           slice = rankingData.slice(start, end);
           sliceOffset = lastHourCutoffs.slice(start, end);
+          sliceTierChange = tierChange.slice(start, end);
           sliceGamesPlayed = gamesPlayed.slice(start, end);
           sliceGPH = GPH.slice(start, end);
         }
         if (!alt) {
-          leaderboardText = generateRankingText(slice, page, target, sliceOffset, mobile);
+          leaderboardText = generateRankingText(slice, page, target, sliceOffset, sliceTierChange, mobile);
         }
         else {
           leaderboardText = generateAlternateRankingText(slice, page, target, sliceOffset, sliceGamesPlayed, sliceGPH, mobile);
