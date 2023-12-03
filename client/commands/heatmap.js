@@ -209,6 +209,14 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     }
   });
 
+  if (dayData.length >= 24) {
+    heatmapData.unshift(dayData);
+    dayData = [];
+  }
+  maxGamesPerHour = Math.max(maxGamesPerHour, gamesPerHour);
+  dayData.push(gamesPerHour);
+  gamesPerHour = 0;
+
   heatmapData.unshift(dayData);
 
   let xValues = [];
@@ -483,10 +491,10 @@ async function noDataErrorMessage(interaction, discordClient) {
 
 async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient) {
   
-  let response = discordClient.cutoffdb.prepare('SELECT ID, score FROM cutoffs ' +
-    'WHERE (Tier=@tier AND EventID=@eventID) ORDER BY SCORE DESC').all({
-      tier: tier,
-      eventID: eventData.id
+  let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
+    'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY TIMESTAMP DESC').all({
+      eventID: eventData.id,
+      tier: tier
     });
 
   if (response.length == 0) {
