@@ -64,7 +64,12 @@ module.exports = {
   
     'BAD_ACC_ERR': {
       'type': 'Error',
-      'message': 'Whoever you\'re trying to profile, the didn\'t link.'
+      'message': 'Whoever you\'re trying to profile, they didn\'t link.'
+    },
+
+    'PRIVATE' : {
+      'type': 'Error',
+      'message': 'This user has their profile set to private.'
     },
   
     'cool': '<:attCool:930717822756204575>',

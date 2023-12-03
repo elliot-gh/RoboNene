@@ -466,10 +466,6 @@ const getProfile = async (interaction, discordClient, userId) => {
       sekaiId: userId
     });
 
-    if (user.length && !user[0].private) {
-      private = false;
-    }
-
     const profileEmbed = await generateProfileEmbed(discordClient, userId, response, private);
     await interaction.editReply({
       embeds: [profileEmbed.embed],
@@ -515,10 +511,12 @@ module.exports = {
     });
 
     let accountId = '';
+    let self = false;
     var userid;
 
     if (interaction.options.getSubcommand() === 'self') {
       userid = interaction.user.id;
+      self = true;
     }
     else {
       userid = interaction.options.getMember('user')?.id;
@@ -541,6 +539,19 @@ module.exports = {
           ]
         });
         return;
+      }
+
+      if (user[0].private && !self) {
+          await interaction.editReply({
+            embeds: [
+              generateEmbed({
+                name: COMMAND.INFO.name,
+                content: COMMAND.CONSTANTS.PRIVATE,
+                client: discordClient.client
+              })
+            ]
+          });
+          return;
       }
       accountId = user[0].sekai_id;
     }
