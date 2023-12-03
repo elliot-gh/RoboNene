@@ -60,7 +60,6 @@ const sendTrackingEmbed = async (rankingData, event, timestamp, discordClient) =
         });
 
       lastHourData.forEach(data => {
-        // console.log(data.ID)
         let index = userIds.indexOf(data.ID);
 
         if (index != -1) {
@@ -272,7 +271,7 @@ const getRankingEvent = () => {
  */
 const trackRankingData = async (discordClient) => {
   // Identify current event from schedule
-  const event = getRankingEvent();
+  const event = discordClient.getCurrentEvent();
 
   // change later back to correct === -1
   if (event.id === -1) {
