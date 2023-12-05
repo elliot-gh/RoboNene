@@ -25,7 +25,7 @@ loadGameData(0, async () => {
   client.loadPrayerDb();
   client.loadStockDb();
   client.loadLogger();
-  client.loadMessageHandler();
+  // client.loadMessageHandler();
   client.loadServerHandler();
 
   await client.login();
