@@ -121,7 +121,7 @@ class DiscordClient {
     this.client.on(Events.GuildCreate, async guild => {
       this.logger.log({
         level: 'join', 
-        message: `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount}`
+        message: `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount} Total Guilds: ${this.client.guilds.cache.size} Timestamp: ${new Date().toUTCString()}`
       });
     });
   }
