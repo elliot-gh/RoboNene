@@ -64,23 +64,5 @@ module.exports = [
     'prompt': (card) => {
       return `Which is a valid prefix for the character: \`\`${getName(card)}\`\`?`;
     }
-  },
-  {
-    'attr': 'rarity',
-    'name': (card) => {
-      return getFullName(card);
-    },
-    'prompt': (card) => {
-      return `Which card is rarity \`\`${card.rarity}\`\` ⭐?`;
-    }
-  },
-  {
-    'attr': 'rarity',
-    'name': (card) => {
-      return `${card.rarity} ⭐`;
-    },
-    'prompt': (card) => {
-      return `What rarity is the card: \`\`${getFullName(card)}\`\`?`;
-    }
-  },
+  }
 ];
