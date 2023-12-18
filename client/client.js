@@ -61,8 +61,6 @@ class DiscordClient {
       intents: [
         GatewayIntentBits.Guilds, 
         GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
       ], 
       partials: [
         'CHANNEL'
