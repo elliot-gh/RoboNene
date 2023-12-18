@@ -133,7 +133,7 @@ function ensureASCII(str) {
  * @param {DiscordClient} client we are using to interact with discord
  * @error Status code of the http request
  */
-const postQuickChart = async (interaction, tier, rankData, eventData, offset, pallete, annotategames, discordClient) => {
+const postQuickChart = async (interaction, tier, rankData, eventData, offset, pallete, annotategames, bypoints, discordClient) => {
   if (!rankData) {
     await interaction.editReply({
       embeds: [
@@ -203,7 +203,11 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     if (point.score > lastPoint) {
       let gain = point.score - lastPoint;
       if (gain < 75000 && gain >= 100) {
-        gamesPerHour += 1;
+        if (bypoints) {
+          gamesPerHour += gain;
+        } else {
+          gamesPerHour += 1;
+        }
       }
       lastPoint = point.score;
     }
@@ -489,7 +493,7 @@ async function noDataErrorMessage(interaction, discordClient) {
   return;
 }
 
-async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient) {
+async function sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, bypoints, discordClient) {
   
   let response = discordClient.cutoffdb.prepare('SELECT ID, Score FROM cutoffs ' +
     'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY TIMESTAMP DESC').all({
@@ -514,7 +518,7 @@ async function sendHistoricalTierRequest(eventData, tier, interaction, offset, p
       rankData.unshift({ timestamp: eventData.startAt, score: 0 });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
 
-      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, discordClient);
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, bypoints, discordClient);
 
     } else {
       noDataErrorMessage(interaction, discordClient);
@@ -522,7 +526,7 @@ async function sendHistoricalTierRequest(eventData, tier, interaction, offset, p
   }
 }
 
-async function sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient) {
+async function sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, bypoints, discordClient) {
   discordClient.addPrioritySekaiRequest('ranking', {
     eventId: eventData.id,
     targetRank: tier,
@@ -544,7 +548,7 @@ async function sendTierRequest(eventData, tier, interaction, offset, pallete, an
       rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
       rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
       
-      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, discordClient);
+      postQuickChart(interaction, title, rankData, eventData, offset, pallete, annotategames, bypoints, discordClient);
       
     } else {
       noDataErrorMessage(interaction, discordClient);
@@ -571,6 +575,7 @@ module.exports = {
     const palleteIndex = interaction.options.getInteger('pallete') || 0;
     let offset = interaction.options.getInteger('offset');
     let annotategames = interaction.options.getBoolean('annotategames') || false;
+    let bypoints = interaction.options.getBoolean('bypoints') || false;
 
     if (offset == null && offset != 0) offset = 18;
 
@@ -605,10 +610,10 @@ module.exports = {
         return;
       }
       else if (eventId < discordClient.getCurrentEvent().id) {
-        sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient);
+        sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, bypoints, discordClient);
       }
       else {
-        sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, discordClient);
+        sendTierRequest(eventData, tier, interaction, offset, pallete, annotategames, bypoints, discordClient);
       }
     } else if (user) {
       try {
@@ -630,7 +635,7 @@ module.exports = {
           let name = user.displayName;
           let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
           rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, annotategames, discordClient);
+          postQuickChart(interaction, `${eventName} ${name} Heatmap`, rankData, eventData, offset, pallete, annotategames, bypoints, discordClient);
         }
         else
         {

@@ -56,7 +56,13 @@ module.exports = {
             'type': 'boolean',
             'name': 'annotategames',
             'required': false,
-            'description': 'Show the games played on the graph'
+            'description': 'Show the games played on the graph, if points will show points instead'
+          },
+          {
+            'type': 'boolean',
+            'name': 'bypoints',
+            'required': false,
+            'description': 'Show the points gained instead of games played'
           }
         ]
       },
@@ -96,6 +102,12 @@ module.exports = {
             'name': 'annotategames',
             'required': false,
             'description': 'Show the games played on the graph'
+          },
+          {
+            'type': 'boolean',
+            'name': 'bypoints',
+            'required': false,
+            'description': 'Show the points gained instead of games played'
           }
         ]
       }
