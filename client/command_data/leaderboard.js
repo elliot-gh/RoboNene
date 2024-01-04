@@ -45,7 +45,7 @@ module.exports = {
   
     'BAD_RANGE_ERR': {
       'type': 'Error',
-      'message': 'Please choose a rank within the range of 1 to 100'
+      'message': 'Please choose a rank within the range of 1 to 120'
     },
 
     'WRONG_USER_ERR': {
@@ -56,6 +56,9 @@ module.exports = {
     'INTERACTION_TIME': 60000,
   
     'LEFT': '⬅️',
-    'RIGHT': '➡️'
+    'RIGHT': '➡️',
+    'MOBILE': '📲',
+    'OFFSET': '🔃',
+    'ALT': '🔀'
   }
-}
+};

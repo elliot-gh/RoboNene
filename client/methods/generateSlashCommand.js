@@ -17,59 +17,85 @@ const generateOptions = (command, info) => {
       const setOp = (op) => {
         op.setName(option.name)
           .setDescription(option.description)
-          .setRequired(option.required)
+          .setRequired(option.required);
 
         if (option.choices) {
           option.choices.forEach(choice => {
-            op.addChoice(choice[0], choice[1])
-          })
+            op.addChoice(choice[0], choice[1]);
+          });
         }
 
-        return op
-      }
+        if (option.maxLength) {
+          op.setMaxLength(option.maxLength);
+        }
+
+        if (option.minLength) {
+          op.setMinLength(option.minLength);
+        }
+
+        if (option.maxValue) {
+          op.setMaxValue(option.maxValue);
+        }
+
+        if (option.minValue) {
+          op.setMinValue(option.minValue);
+        }
+
+        if (option.channelTypes) {
+          op.setChannelTypes(option.channelTypes);
+        }
+
+        if (option.autocomplete) {
+          op.setAutocomplete(option.autocomplete);
+        }
+
+        return op;
+      };
 
       if (option.type === 'string') {
-        command.addStringOption(setOp)
+        command.addStringOption(setOp);
       } else if (option.type === 'boolean') {
-        command.addBooleanOption(setOp)
+        command.addBooleanOption(setOp);
       } else if (option.type === 'number') {
-        command.addNumberOption(setOp)
+        command.addNumberOption(setOp);
       } else if (option.type === 'channel') {
-        command.addChannelOption(setOp)
+        command.addChannelOption(setOp);
       } else if (option.type === 'user') {
-        command.addUserOption(setOp)
+        command.addUserOption(setOp);
       } else if (option.type === 'integer') {
-        command.addIntegerOption(setOp)
+        command.addIntegerOption(setOp);
+      } else if (option.type === 'role') {
+        command.addRoleOption(setOp);
       }
-    })
+    });
   }
-}
+};
 
 /**
  * Builds a slash command using data provided
  * @param {Object} commandInfo command info provided
  */
 const generateSlashCommand = (commandInfo) => {
-  const slashCommand = new SlashCommandBuilder()
+  const slashCommand = new SlashCommandBuilder();
   
-  slashCommand.setName(commandInfo.name)
-  slashCommand.setDescription(commandInfo.description)
+  slashCommand.setName(commandInfo.name);
+  slashCommand.setDescription(commandInfo.description);
 
-  generateOptions(slashCommand, commandInfo)
+  generateOptions(slashCommand, commandInfo);
 
   if (commandInfo.subcommands) {
     commandInfo.subcommands.forEach(scInfo => {
       slashCommand.addSubcommand(sc => {
         sc.setName(scInfo.name)
-          .setDescription(scInfo.description)
-        generateOptions(sc, scInfo)
+          .setDescription(scInfo.description);
+        generateOptions(sc, scInfo);
 
-        return sc
-      })
-    })
+        return sc;
+      });
+    });
   }
 
-  return slashCommand
-}
+  return slashCommand;
+};
 
-module.exports = generateSlashCommand
+module.exports = generateSlashCommand;

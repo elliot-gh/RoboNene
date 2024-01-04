@@ -4,7 +4,7 @@
  * @author Ai0796
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 const { NENE_COLOR, FOOTER} = require('../../constants');
 
@@ -15,8 +15,8 @@ const fs = require('fs');
 const generateSkillText = require('../methods/generateSkillText');
 
 //Required since Proseka Skill order is not 1 2 3 4 5
-const ProsekaSkillOrder = [2, 1, 4, 5, 3];
-const Difficulties = ["easy", "normal", "hard", "expert", "master"];
+const ProsekaSkillOrder = [2, 1, 4, 5, 3, 'E'];
+const Difficulties = ['easy', 'normal', 'hard', 'expert', 'master'];
 
 /**
  * A class designed to store music data from JSON Files
@@ -42,6 +42,8 @@ class music {
                 this.musics[music.id] = music.title;
                 tempIDs.add(music.id);
             }
+            this.musics[226] = 'Lost and Found'; //Temp solution until song is brought to EN
+            tempIDs.add(226);
         });
 
         this.ids = this.getIntersection(this.ids, tempIDs);
@@ -56,7 +58,7 @@ class music {
             if(this.ids.has(music.music_id))
             {
                 //Slice from 0 to 5 since encore (5) doesn't matter
-                let skillScores = music.skill_score_multi.slice(0, 5);
+                let skillScores = music.skill_score_multi;
                 let skillScoreOrder = [];
                 let skillOrder = [];
 
@@ -96,7 +98,7 @@ class music {
 }
 
 function skillOrder(order){
-    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]}`;
+    return `${order[0]} > ${order[1]} > ${order[2]} > ${order[3]} > ${order[4]} > ${order[5]}`;
 }
 
 function musicSkillOrder(song)
@@ -126,12 +128,12 @@ module.exports = {
                 let skillOrderText = generateSkillText(Difficulties, musicSkillOrder(data));
 
                 //Generate Embed with given text
-                let skillOrderEmbed = new MessageEmbed()
+                let skillOrderEmbed = new EmbedBuilder()
                     .setColor(NENE_COLOR)
                     .setTitle(`${musicData.musics[id]}`)
                     .setTimestamp()
-                    .addField('Skill Orders', skillOrderText, false)
-                    .setFooter(FOOTER, interaction.user.displayAvatarURL());
+                    .addFields({name: 'Skill Orders', value: skillOrderText, inline: false})
+                    .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
 
                 await interaction.reply({
                     embeds: [skillOrderEmbed],
@@ -140,6 +142,26 @@ module.exports = {
         } catch (e) {
             console.log(e);
         } // Due to possible null values add a try catch
+    },
+    async autocomplete(interaction, discordClient) {
+        let focus = interaction.options.getFocused();
+        if (focus == '') {
+            await interaction.respond([
+                {name: 'Hitorinbo Envy', value: 74},
+                {name: 'Lost and Found', value: 226},
+                {name: 'Melt', value: 47},
+            ]);
+        }
+
+        let choices = Object.keys(musicData.musics).filter((key) => {
+            return musicData.musics[key].toLowerCase().includes(focus.toLowerCase());
+        });
+
+        choices = choices.slice(0, 25);
+
+        await interaction.respond(choices.map((key) => {
+                    return {name: musicData.musics[key], value: key};
+            }));
     }
 };
 

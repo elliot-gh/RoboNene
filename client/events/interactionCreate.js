@@ -6,25 +6,38 @@
  */
 
 const { DMChannel } = require('discord.js');
-const generateEmbed = require('../methods/generateEmbed') 
+const generateEmbed = require('../methods/generateEmbed'); 
 
 // General constants used to reply to standard interactions
 const INTERACTION_CONST = {
-  "NO_ACCESS_ADMIN": {
+  'NO_ACCESS_ADMIN': {
     type: 'Error',
-    message: "You can not access this command.\nPlease make sure you have " + 
-      "\`\`Administrator\`\` or \`\`Manage Server\`\` permissions."
+    message: 'You can not access this command.\nPlease make sure you have ' + 
+      '``Administrator`` or ``Manage Server`` permissions.'
   },
 
-  "NO_ACCESS_LINK": {
+  'NO_ACCESS_LINK': {
     type: 'Error',
-    message: "You can not access this command until you link your Discord to a Project Sekai account.\nUse /link to begin."
+    message: 'You can not access this command until you link your Discord to a Project Sekai account.\nUse /link to begin.'
   }
-}
+};
 
 module.exports = {
   name: 'interactionCreate',
   async execute(interaction, discordClient) {
+    if (interaction.isAutocomplete()) {
+      const interactionIdx = discordClient.commands
+      .map(c => c.data.name)
+      .indexOf(interaction.commandName);
+      if (interactionIdx != -1) {
+        const command = discordClient.commands[interactionIdx];
+        try {
+            await command.autocomplete(interaction, discordClient);
+        } catch (error) {
+            console.error(error);
+        }
+      }
+    }
     if (!interaction.isCommand()) return;
 
     discordClient.logger.log({
@@ -42,13 +55,14 @@ module.exports = {
     const interactionIdx = discordClient.commands
       .map(c => c.data.name)
       .indexOf(interaction.commandName);
+      
     
     if (interactionIdx != -1) {
-      const command = discordClient.commands[interactionIdx]
+      const command = discordClient.commands[interactionIdx];
 
       if (command.adminOnly) {
         // Check for server manager / administrate perms
-        let permissions = interaction.member.permissions
+        let permissions = interaction.member.permissions;
         if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_GUILD')) {
           await interaction.reply({
             embeds: [
@@ -60,7 +74,7 @@ module.exports = {
             ],
             ephemeral: true 
           });
-          return
+          return;
         }
       }
       
@@ -84,8 +98,15 @@ module.exports = {
           return;
         }
       }
-      
-      await command.execute(interaction, discordClient);
+      try {
+        await command.execute(interaction, discordClient);
+      } catch (error) {
+        console.error(error);
+        await interaction.reply({
+          content: 'There was an error while executing this command!',
+          ephemeral: true
+        });
+      }
     }
   }
 };

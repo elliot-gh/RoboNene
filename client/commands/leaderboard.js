@@ -4,16 +4,28 @@
  * @author Potor10
  */
 
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
 const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
-const COMMAND = require('../command_data/leaderboard')
+const COMMAND = require('../command_data/leaderboard');
 
-const MAX_PAGE = Math.ceil(100 / RESULTS_PER_PAGE) -1
+const MAX_PAGE = Math.ceil(120 / RESULTS_PER_PAGE) -1;
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateRankingText = require('../methods/generateRankingText')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateRankingText = require('../methods/generateRankingTextChanges');
+const generateAlternateRankingText = require('../methods/generateAlternateRankingText');
+const generateEmbed = require('../methods/generateEmbed'); 
+
+function getLastHour(sortedList, el) {
+  for (let i = 0; i < sortedList.length; i++) {
+    if (sortedList[i] > el) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+const HOUR = 3600000;
 
 module.exports = {
   ...COMMAND.INFO,
@@ -22,9 +34,9 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const event = discordClient.getCurrentEvent()
+    const event = discordClient.getCurrentEvent();
     // There is no event at the moment
     if (event.id === -1) {
       await interaction.editReply({
@@ -36,7 +48,7 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     // Ensure that the user has not surpassed the rate limit
@@ -51,49 +63,50 @@ module.exports = {
           },
           client: discordClient.client
         })]
-      })
-      return
+      });
+      return;
     }
 
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
-      targetRank: 1,
-      lowerLimit: 99
+      targetRank: 61,
+      lowerLimit: 59,
+      higherLimit: 60
     }, async (response) => {
       // Check if the response is valid
       if (!response.rankings) {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName, 
+              name: COMMAND.commandName, 
               content: COMMAND.CONSTANTS.NO_RESPONSE_ERR, 
               client: discordClient.client
             })
           ]
         });
-        return
+        return;
       } else if (response.rankings.length === 0) {
         await interaction.editReply({
           embeds: [
             generateEmbed({
-              name: commandName, 
+              name: COMMAND.commandName, 
               content: COMMAND.CONSTANTS.BAD_INPUT_ERROR, 
               client: discordClient.client
             })
           ]
         });
-        return
+        return;
       }
 
-      const rankingData = response.rankings
-      const timestamp = Date.now()
+      const rankingData = response.rankings;
+      const timestamp = Date.now();
 
       let target = 0;
       let page = 0;
 
       if (interaction.options._hoistedOptions.length) {
         // User has selected a specific rank to jump to
-          if (interaction.options._hoistedOptions[0].value > 100 || 
+          if (interaction.options._hoistedOptions[0].value > 120 || 
             interaction.options._hoistedOptions[0].value < 1) {
             await interaction.editReply({
               embeds: [
@@ -113,30 +126,113 @@ module.exports = {
 
       let start = page * RESULTS_PER_PAGE;
       let end = start + RESULTS_PER_PAGE;
-    
-      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target)
+
+      let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND ID=@id)').all({
+          id: response['rankings'][0]['userId'],
+          eventID: event.id
+        });
+
+      let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      let timestamps = rankData.map(x => x.timestamp);
+      timestamps.sort((a, b) => a - b);
+      let lastTimestamp = timestamps[timestamps.length - 1];
+
+      let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
+      let timestampIndex = timestamps[lastHourIndex];
+
+      let lastHourCutoffs = [];
+      let tierChange = [];
+      let GPH = [];
+      let gamesPlayed = [];
+      let userIds = [];
+
+      for(let i = 0; i < rankingData.length; i++) {
+        lastHourCutoffs.push(-1);
+        tierChange.push(0);
+        gamesPlayed.push(-1);
+        GPH.push(-1);
+        userIds.push(rankingData[i].userId);
+      }
+
+      let currentData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: lastTimestamp,
+        });
+
+      let lastHourData = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Timestamp=@timestamp)').all({
+          eventID: event.id,
+          timestamp: timestampIndex,
+        });
+
+      lastHourData.sort((a, b) => a.Tier - b.Tier);
+      let currentGamesPlayed = {};
+      currentData.forEach(x => {
+        currentGamesPlayed[x.ID] = {'id': x.ID, 'score': x.Score, 'games': x.GameNum || 0, 'tier': x.Tier};
+      });
+
+      lastHourData.forEach((data) => {
+        let gamesPlayedData = currentGamesPlayed[data.ID];
+
+        if (gamesPlayedData) {
+          let index = userIds.indexOf(data.ID);
+          if (index === -1) return;
+          lastHourCutoffs[index] = data.Score;
+          tierChange[index] = data.Tier - gamesPlayedData.tier;
+          GPH[index] = Math.max(gamesPlayedData.games - data.GameNum, 0);
+          gamesPlayed[index] = gamesPlayedData.games;
+          if (rankingData[index].score >= gamesPlayedData.score + 100) {
+            GPH[index]++;
+            gamesPlayed[index]++;
+          }
+        }
+      });
+
+      let mobile = false;
+      let alt = false;
+      let offset = false;
+      var slice, sliceOffset, sliceTierChange, sliceGPH, sliceGamesPlayed;
+
+      let leaderboardText = generateRankingText(rankingData.slice(start, end), page, target, lastHourCutoffs.slice(start, end), tierChange.slice(start, end), mobile);
       
-      let leaderboardEmbed = new MessageEmbed()
+      let leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
-        .addField(`Page ${page+1}`, leaderboardText, false)
+        .setDescription(`T120 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
+        .addFields({name: `Page ${page+1}`, value: leaderboardText, inline: false})
         .setThumbnail(event.banner)
         .setTimestamp()
-        .setFooter(FOOTER, interaction.user.displayAvatarURL());
+        .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
       
-      const leaderboardButtons = new MessageActionRow()
+      const leaderboardButtons = new ActionRowBuilder()
         .addComponents(
-          new MessageButton()
-            .setCustomId(`prev`)
+          new ButtonBuilder()
+            .setCustomId('prev')
             .setLabel('PREV')
-            .setStyle('SECONDARY')
+            .setStyle(ButtonStyle.Secondary)
             .setEmoji(COMMAND.CONSTANTS.LEFT),
-          new MessageButton()
-            .setCustomId(`next`)
+          new ButtonBuilder()
+            .setCustomId('next')
             .setLabel('NEXT')
-            .setStyle('SECONDARY')
-            .setEmoji(COMMAND.CONSTANTS.RIGHT))
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji(COMMAND.CONSTANTS.RIGHT),
+          new ButtonBuilder()
+            .setCustomId('mobile')
+            .setLabel('MOBILE')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji(COMMAND.CONSTANTS.MOBILE),
+          new ButtonBuilder()
+            .setCustomId('offset')
+            .setLabel('OFFSET')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji(COMMAND.CONSTANTS.OFFSET),
+          new ButtonBuilder()
+            .setCustomId('alt')
+            .setLabel('ALT')
+            .setStyle(ButtonStyle.Secondary)
+            .setEmoji(COMMAND.CONSTANTS.ALT));
 
       const leaderboardMessage = await interaction.editReply({ 
         embeds: [leaderboardEmbed], 
@@ -146,8 +242,12 @@ module.exports = {
 
       // Create a filter for valid responses
       const filter = (i) => {
-        return i.customId == `prev` || i.customId == `next`
-      }
+        return i.customId == 'prev' || 
+        i.customId == 'next' || 
+        i.customId == 'mobile' || 
+        i.customId == 'alt' ||
+        i.customId == 'offset';
+      };
 
       const collector = leaderboardMessage.createMessageComponentCollector({ 
         filter, 
@@ -166,43 +266,74 @@ module.exports = {
               })
             ],
             ephemeral: true
-          })
-          return
+          });
+          return;
         }
 
-        if (i.customId === `prev`) {
+        if (i.customId === 'prev') {
           if (page == 0) {
-            page = MAX_PAGE
+            page = MAX_PAGE;
           } else {
             page -= 1;
           }
-        } else if (i.customId === `next`) {
+        } else if (i.customId === 'next') {
           if (page == MAX_PAGE) {
-            page = 0
+            page = 0;
           } else {
             page += 1;
           }
+        } else if (i.customId === 'mobile') {
+          mobile = !mobile;
+        } else if (i.customId === 'alt') {
+          alt = !alt;
+        } else if (i.customId === 'offset') {
+          offset = !offset;
         }
 
         start = page * RESULTS_PER_PAGE;
         end = start + RESULTS_PER_PAGE;
-        leaderboardText = generateRankingText(rankingData.slice(start, end), page, target)
-        leaderboardEmbed = new MessageEmbed()
+        if (offset) {
+          start += 10;
+          end += 10;
+          end %= 120;
+        }
+
+        if(start > end) {
+          slice = rankingData.slice(start, 120).concat(rankingData.slice(0, end));
+          sliceOffset = lastHourCutoffs.slice(start, 120).concat(lastHourCutoffs.slice(0, end));
+          sliceTierChange = tierChange.slice(start, 120).concat(tierChange.slice(0, end));
+          sliceGamesPlayed = gamesPlayed.slice(start, 120).concat(gamesPlayed.slice(0, end));
+          sliceGPH = GPH.slice(start, 120).concat(GPH.slice(0, end));
+        }
+        else {
+          slice = rankingData.slice(start, end);
+          sliceOffset = lastHourCutoffs.slice(start, end);
+          sliceTierChange = tierChange.slice(start, end);
+          sliceGamesPlayed = gamesPlayed.slice(start, end);
+          sliceGPH = GPH.slice(start, end);
+        }
+        if (!alt) {
+          leaderboardText = generateRankingText(slice, page, target, sliceOffset, sliceTierChange, mobile);
+        }
+        else {
+          leaderboardText = generateAlternateRankingText(slice, page, target, sliceOffset, sliceGamesPlayed, sliceGPH, mobile);
+        }
+        leaderboardEmbed = new EmbedBuilder()
           .setColor(NENE_COLOR)
           .setTitle(`${event.name}`)
-          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp/1000)}>`)
-          .addField(`Page ${page+1} / ${MAX_PAGE+1}`, leaderboardText, false)
+          .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
+          .addFields({name: `Page ${page+1} / ${MAX_PAGE+1}`, value: leaderboardText, inline: false})
           .setThumbnail(event.banner)
           .setTimestamp()
-          .setFooter(FOOTER, interaction.user.displayAvatarURL());
+          .setFooter({text: FOOTER, iconURL: interaction.user.displayAvatarURL()});
 
         await i.update({ 
           embeds: [leaderboardEmbed], 
           components: [leaderboardButtons]
         });
-      })
+      });
 
-      collector.on('end', async (collected) => {
+      collector.on('end', async () => {
         await interaction.editReply({ 
           embeds: [leaderboardEmbed], 
           components: []
@@ -214,7 +345,7 @@ module.exports = {
         level: 'error',
         timestamp: Date.now(),
         message: err.toString()
-      })
+      });
 
       await interaction.editReply({
         embeds: [generateEmbed({
@@ -222,7 +353,7 @@ module.exports = {
           content: { type: 'error', message: err.toString() },
           client: discordClient.client
         })]
-      })
-    })
+      });
+    });
   }
 };

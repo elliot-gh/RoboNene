@@ -11,14 +11,36 @@ module.exports = {
     'utilization': '/profile',
     'description': 'Display your project sekai profile.',
     'ephemeral': false,
-    'params': [
+    'subcommands': [
       {
-        'type': 'string',
-        'name': 'id',
-        'required': false,
-        'description': 'An optional Project Sekai user ID target'
-      }
-    ],
+          'name': 'id',
+          'description': 'Get a profile by user id',
+          'params': [
+            {
+              'type': 'string',
+              'name': 'id',
+              'required': true,
+              'description': 'An optional Project Sekai user ID target'
+            }
+          ]
+      },
+      {
+          'name': 'user',
+          'description': 'Get a profile by discord user',
+          'params': [
+              {
+                  'type': 'user',
+                  'name': 'user',
+                  'required': true,
+                  'description': 'A linked User that has been linked to Ghost Nene'
+              }
+          ]
+      }, 
+      {
+        'name': 'self',
+        'description': 'Get a profile of yourself'
+    }
+  ],
 
     'requiresLink': true
   },
@@ -32,17 +54,22 @@ module.exports = {
 
     'NO_ACC_ERR': {
       'type': 'Error',
-      'message': 'This user does not have an account with the bot'
+      'message': 'Did you just try to profile yourself without ever linking your account?'
     },
   
     'BAD_ID_ERR': {
       'type': 'Error', 
-      'message': 'You have provided an invalid ID.'
+      'message': 'Have you ever heard of a valid ID? Because that\'s not one.'
     },
   
     'BAD_ACC_ERR': {
       'type': 'Error',
-      'message': 'There was an issue in finding this account. Please try again with the correct id'
+      'message': 'Whoever you\'re trying to profile, they didn\'t link.'
+    },
+
+    'PRIVATE' : {
+      'type': 'Error',
+      'message': 'This user has their profile set to private.'
     },
   
     'cool': '<:attCool:930717822756204575>',
@@ -52,4 +79,4 @@ module.exports = {
     'pure': '<:attPure:930717823414714438>',
     'BLANK_EMOJI': '<:blank:930716814986588170>'
   }
-}
+};

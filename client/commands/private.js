@@ -4,10 +4,10 @@
  * @author Potor10
  */
 
-const COMMAND = require('../command_data/private')
+const COMMAND = require('../command_data/private');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
-const generateEmbed = require('../methods/generateEmbed') 
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const generateEmbed = require('../methods/generateEmbed'); 
 
 module.exports = {
   ...COMMAND.INFO,
@@ -17,13 +17,13 @@ module.exports = {
     // { ephemeral: true }
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
-    const db = discordClient.db
+    const db = discordClient.db;
 
     const user = discordClient.db.prepare('SELECT * FROM users WHERE discord_id=@discordId').all({
       discordId: interaction.user.id
-    })
+    });
 
     if (!user.length) {
       await interaction.editReply({
@@ -35,7 +35,7 @@ module.exports = {
           })
         ]
       });
-      return
+      return;
     }
 
     db.prepare('UPDATE users SET private=@private WHERE discord_id=@discordId').run({
@@ -47,8 +47,8 @@ module.exports = {
       type: 'Success',
       message: `Private\nStatus: \`\`${(interaction.options._hoistedOptions[0].value) ? 'Enabled' : 'Disabled'}\`\`\n\n` +
         `You can ${(interaction.options._hoistedOptions[0].value) ? 'no longer' : 'now'} see \`Area Item\` and \`Card Level\`` +
-        `information when someone uses /profile on your ID`
-    }
+        'information when someone uses /profile on your ID'
+    };
 
     await interaction.editReply({
       embeds: [

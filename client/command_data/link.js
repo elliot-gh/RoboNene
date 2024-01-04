@@ -17,6 +17,12 @@ module.exports = {
         'name': 'id',
         'required': true,
         'description': 'The ID of the Project Sekai account you are trying to link.'
+      },
+      {
+        'type': 'string',
+        'name': 'discordid',
+        'required': false,
+        'description': 'The Discord ID of the account you are trying to link. (ADMIN ONLY)'
       }
     ]
   },
@@ -27,7 +33,7 @@ module.exports = {
     'LINK_INSTRUCTIONS': {
       'type': 'Instructions',
       'message': '1. Go to your profile in Project Sekai.\n' +
-        '2. Copy and paste the \`\`Link Code\`\` into your profile comment.\n' +
+        '2. Copy and paste the ``Link Code`` into your profile comment.\n' +
         '3. Press back to save the change to your profile.\n' +
         '4. Press the green ✅ Link button!'
     },
@@ -74,7 +80,7 @@ module.exports = {
         'type': 'Error',
         'message': `Invalid code \`\`${code}\`\` found on Project Sekai profile.\n` + 
           'Did you remember to press back on your profile to save the changes?'
-      }
+      };
     },
   
     'NO_CODE_ERR': {
@@ -82,7 +88,7 @@ module.exports = {
       'message': 'Please request a link code first.'
     },
 
-    'INTERACTION_TIME': 30000,
+    'INTERACTION_TIME': 180000,
     'LINK_EMOJI': '✅'
   }
-}
+};

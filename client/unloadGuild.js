@@ -17,6 +17,6 @@ rest.get(Routes.applicationGuildCommands(clientId, guildId))
     for (const command of data) {
       const deleteUrl = `${Routes.applicationGuildCommands(clientId, guildId)}/${command.id}`;
       await rest.delete(deleteUrl);
-      console.log(`deleted ${command.name} at ${deleteUrl}`)
+      console.log(`deleted ${command.name} at ${deleteUrl}`);
     }
 });

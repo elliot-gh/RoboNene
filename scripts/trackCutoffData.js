@@ -3,20 +3,11 @@
  * @author Ai0796
  */
 
-const { CUTOFF_INTERVAL, CUTOFF_DATA} = require('../constants');
+const { CUTOFF_INTERVAL } = require('../constants');
 const fs = require('fs');
 
 //Cutoffs we store
 const cutoffs = [
-    1,
-    2,
-    3,
-    10,
-    20,
-    30,
-    40,
-    50,
-    100,
     200,
     300,
     400,
@@ -53,15 +44,17 @@ async function getCutoffs(discordClient) {
             if (response['rankings'][0] != null && event != -1) {
                 let score = response['rankings'][0]['score'];
                 let rank = response['rankings'][0]['rank'];
-                let timestamp = new Date().toISOString();
+                let timestamp = Date.now();
+                let id = response['rankings'][0]['userId'];
 
                 discordClient.cutoffdb.prepare('INSERT INTO cutoffs ' +
-                    '(EventID, Tier, Timestamp, Score) ' + 
-                    'VALUES(@eventID, @tier, @timestamp, @score)').run({
+                    '(EventID, Tier, Timestamp, Score, ID) ' +
+                    'VALUES(@eventID, @tier, @timestamp, @score, @id)').run({
                         score: score,
                         eventID: event,
                         tier: rank,
-                        timestamp: timestamp
+                        timestamp: timestamp,
+                        id: id
                     });
             }
         } catch (e) {
@@ -103,7 +96,7 @@ const getRankingEvent = () => {
 
     for (let i = events.length - 1; i >= 0; i--) {
         //Time of Distribution + buffer time of 15 minutes to get final cutoff
-        if (events[i].startAt < currentTime && events[i].distributionStartAt + 900000 > currentTime) {
+        if (events[i].startAt < currentTime && events[i].aggregateAt > currentTime) {
             return {
                 id: events[i].id,
                 banner: 'https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' +

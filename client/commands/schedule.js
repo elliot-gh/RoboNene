@@ -4,13 +4,14 @@
  * @author Potor10
  */
 
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 const { NENE_COLOR, FOOTER } = require('../../constants');
 const fs = require('fs');
 
-const COMMAND = require('../command_data/schedule')
+const COMMAND = require('../command_data/schedule');
 
-const generateSlashCommand = require('../methods/generateSlashCommand')
+const generateSlashCommand = require('../methods/generateSlashCommand');
+const { DateTime } = require('luxon');
 
 /**
  * Obtains the time of the next daily reset in game
@@ -18,17 +19,22 @@ const generateSlashCommand = require('../methods/generateSlashCommand')
  * @return {Integer} the epochseconds of the next daily reset in game
  */
 const getNextReset = (currentDate) => {
-  const nextReset = new Date();
-  nextReset.setUTCHours(12);
-  nextReset.setUTCMilliseconds(0);
-  nextReset.setUTCMinutes(0);
-  nextReset.setUTCSeconds(0);
+
+  var nextReset = DateTime.now().setZone('America/Los_Angeles');
+  nextReset = nextReset.set({
+    hour: 4,
+    minutes: 0,
+    seconds: 0,
+    millisecond: 0
+  });
 
   if (nextReset < currentDate) {
-    nextReset.setDate(nextReset.getDate() + 1);
+    nextReset = nextReset.set({
+      day: nextReset.day + 1
+    });
   }
 
-  return Math.floor(nextReset.getTime() / 1000);
+  return Math.floor(nextReset.toSeconds());
 };
 
 /**
@@ -57,16 +63,15 @@ const createScheduleEmbed = (data, client) => {
     }
   }
 
-  let scheduleEmbed = new MessageEmbed()
+  let scheduleEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle('Event Schedule')
-    .setDescription('')
     .addFields(
       { name: '**__Next Daily Reset__**', value: `<t:${nextReset}> - <t:${nextReset}:R>` },
       { name: '** **', value: '** **' },
     )
     .setTimestamp()
-    .setFooter(FOOTER, client.user.avatar_url);
+    .setFooter({text: FOOTER, iconURL: client.user.avatar_url});
 
   // Determine if there is a event currently going on
   if (currentEventIdx !== -1) {
@@ -80,12 +85,12 @@ const createScheduleEmbed = (data, client) => {
     );
 
     scheduleEmbed.setThumbnail('https://sekai-res.dnaroma.eu/file/sekai-en-assets/event/' + 
-      `${data[currentEventIdx].assetbundleName}/logo_rip/logo.webp`)
+      `${data[currentEventIdx].assetbundleName}/logo_rip/logo.webp`);
   }
 
   // Determine if there is the next event in the future (closest)
   if (nextEventIdx !== -1) {
-    if (currentEventIdx !== -1) { scheduleEmbed.addField('** **','** **');}
+    if (currentEventIdx !== -1) { scheduleEmbed.addFields({name: '** **', value: '** **'});}
 
     let startTime = Math.floor(data[nextEventIdx].startAt / 1000);
     let aggregateTime = Math.floor(data[nextEventIdx].aggregateAt / 1000);
@@ -107,7 +112,7 @@ module.exports = {
   async execute(interaction, discordClient) {
     await interaction.deferReply({
       ephemeral: COMMAND.INFO.ephemeral
-    })
+    });
 
     const events = JSON.parse(fs.readFileSync('./sekai_master/events.json'));
     const scheduleEmbed = createScheduleEmbed(events, discordClient.client);

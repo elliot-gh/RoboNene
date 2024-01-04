@@ -9,38 +9,49 @@ module.exports = {
   'INFO': {
     'name': 'graph',
     'utilization': '/graph',
-    'description': 'Display a graph displaying the historical amount of points at a certain cutoff',
+    'description': 'Display a graph displaying the historical amount of points for this event',
     'ephemeral': false,
-    'params': [
+    'subcommands': [
       {
-        'type': 'integer',
-        'name': 'tier',
-        'required': true,
-        'description': 'The cutoff tier specified',
-        'choices': [
-          ['T1', 1],
-          ['T2', 2],
-          ['T3', 3],
-          ['T10', 10],
-          ['T20', 20],
-          ['T30', 30],
-          ['T40', 40],
-          ['T50', 50],
-          ['T100', 100],
-          ['T200', 200],
-          ['T300', 300],
-          ['T400', 400],
-          ['T500', 500],
-          ['T1000', 1000],
-          ['T2000', 2000],
-          ['T3000', 3000],
-          ['T4000', 4000],
-          ['T5000', 5000],
-          ['T10000', 10000],
-          ['T20000', 20000],
-          ['T30000', 30000],
-          ['T40000', 40000],
-          ['T50000', 50000]
+        'name': 'cutoff',
+        'description': 'Get graph of a tier cutoff over time',
+        'params' : [
+          {
+            'type': 'integer',
+            'name': 'tier',
+            'required': true,
+            'description': 'The cutoff tier specified',
+          },
+          {
+            'type': 'boolean',
+            'name': 'by_tier',
+            'required': false,
+            'description': 'Whether to graph by tier or by id (defaults to ID)',
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
+          }
+        ]
+      },
+      {
+        'name': 'user',
+        'description': 'Get graph of a user over time',
+        'params': [
+          {
+          'type': 'user',
+          'name': 'user',
+          'required': true,
+          'description': 'A linked User that has been tracked'
+          },
+          {
+            'type': 'integer',
+            'name': 'event',
+            'required': false,
+            'description': 'The event to display for',
+          }
         ]
       }
     ]
@@ -59,4 +70,4 @@ module.exports = {
   
     'SEKAI_BEST_HOST': 'api.sekai.best'
   }
-}
+};

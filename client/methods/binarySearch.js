@@ -26,6 +26,6 @@ const binarySearch = (id, property, data) => {
       end = mid - 1;
     }
   }
-}
+};
 
-module.exports = binarySearch
+module.exports = binarySearch;

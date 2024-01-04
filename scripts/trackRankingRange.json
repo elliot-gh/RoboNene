@@ -1,6 +1,7 @@
 [
   {
-    "targetRank": 1, 
-    "lowerLimit": 99
+    "targetRank": 61, 
+    "lowerLimit": 59,
+    "higherLimit": 60
   }
 ]

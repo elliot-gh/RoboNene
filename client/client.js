@@ -5,31 +5,34 @@
  */
 
 const { token, secretKey } = require('../config.json');
-const { Client, Intents, Guild } = require('discord.js');
+const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { SekaiClient } = require('sekapi');
-const { RATE_LIMIT, CUTOFF_DATA } = require('../constants');
-const https = require('https');
+const { RATE_LIMIT } = require('../constants');
 
 const winston = require('winston');
 const Database = require('better-sqlite3-multiple-ciphers');
+const { AceBase } = require('acebase');
 
 const fs = require('fs');
 const path = require('path');
 
-const generateEmbed = require('./methods/generateEmbed') 
-
 // Constants used to locate the directories of data
 const CLIENT_CONSTANTS = {
-  "CMD_DIR": path.join(__dirname, '/commands'),
-  "EVENT_DIR": path.join(__dirname, '/events'),
-  "LOG_DIR": path.join(__dirname, '../logs'),
-  "DB_DIR": path.join(__dirname, '../databases'),
-  "DB_NAME": "databases.db",
-  "CUTOFF_DB_DIR": path.join(__dirname, '../cutoff_data'),
-  "CUTOFF_DB_NAME": "cutoffs.db",
+  // eslint-disable-next-line no-undef
+  'CMD_DIR': path.join(__dirname, '/commands'),
+  'EVENT_DIR': path.join(__dirname, '/events'),
+  'LOG_DIR': path.join(__dirname, '../logs'),
+  'DB_DIR': path.join(__dirname, '../databases'),
+  'DB_NAME': 'databases.db',
+  'CUTOFF_DB_DIR': path.join(__dirname, '../cutoff_data'),
+  'CUTOFF_DB_NAME': 'cutoffs.db',
+  'PRAYER_DB_DIR': path.join(__dirname, '../prayer_data'),
+  'PRAYER_DB_NAME': 'prayers.db',
+  'STOCK_DB_DIR': path.join(__dirname, '../stock_data'),
+  'STOCK_DB_NAME': 'stocks',
 
-  "PREFS_DIR": path.join(__dirname, '../prefs')
-}
+  'PREFS_DIR': path.join(__dirname, '../prefs')
+};
 
 /**
  * A client designed to interface discord.js requests and provide
@@ -42,6 +45,11 @@ class DiscordClient {
     this.logger = null;
     this.db = null;
     this.cutoffdb = null;
+    this.prayerdb = null;
+    this.stockdb = null;
+
+    this.prefix = '%';
+    this.changePlayers = '+';
 
     this.api = [];
     this.priorityApiQueue = [];
@@ -50,7 +58,70 @@ class DiscordClient {
     this.rateLimit = {};
 
     this.client = new Client({ 
-      intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS], partials: ['CHANNEL'] });
+      intents: [
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessageReactions,
+      ], 
+      partials: [
+        'CHANNEL'
+      ] });
+  }
+
+  loadMessageHandler() {
+    this.client.on(Events.MessageCreate, async message => {
+      if (message.author.bot) return;
+
+      if (message.content.length === 5 && isNaN(message.content) === false) {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+        event.promptExecuteMessage(message, this);
+      } 
+      else if (message.content.length === 2 && message.content.startsWith(this.changePlayers) &&
+        isNaN(message.content[1]) === false) {
+          const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+          event.promptExecuteMessage(message, this);
+        }
+
+      if (message.channel.id == '1135951698741964800') {
+        if (message.content.toUpperCase() === 'CAN I ENTER G1') {
+          if (message.author.id === '670399881990373422' || message.author.id == '1127443854644219914') {
+            message.channel.send('Yes');
+          } else {
+            message.channel.send('No');
+          }
+        }
+      }
+
+      if (message.content.toLowerCase().startsWith('oh magic ghostnenerobo')) {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/magicghostnene.js`);
+        this.logger.info(`Magic Ghostnene command called by ${message.author.username}`);
+        event.executeMessage(message, this);
+      }
+1
+      if (!message.content.startsWith(this.prefix)) return;
+      let command = message.content.slice(this.prefix.length).split(/ +/);
+      this.logger.info(`Command ${command[0]} called by ${message.author.username}`);
+
+      if (command[0] === 'rm') {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/rm.js`);
+
+        event.executeMessage(message, this);
+      } else if (command[0] === 'pray') {
+        const event = require(`${CLIENT_CONSTANTS.CMD_DIR}/pray.js`);
+
+        event.executeMessage(message, this);
+      }
+    });
+  }
+
+  loadServerHandler() {
+    this.client.on(Events.GuildCreate, async guild => {
+      this.logger.log({
+        level: 'join', 
+        message: `Added to Guild: ${guild.name} Id: ${guild.id} Member Count: ${guild.memberCount} Total Guilds: ${this.client.guilds.cache.size} Timestamp: ${new Date().toUTCString()}`
+      });
+    });
   }
 
   /**
@@ -95,13 +166,19 @@ class DiscordClient {
   loadLogger(dir=CLIENT_CONSTANTS.LOG_DIR) {
     // Winston logger initialization
     this.logger = winston.createLogger({
-      level: 'info',
+      levels: {
+        'error': 2,
+        'join': 1,
+        'info': 2
+      },
       format: winston.format.json(),
       defaultMeta: { service: 'user-service' },
       transports: [
         // - Write all logs with level `error` and below to `error.log`
         // - Write all logs with level `info` and below to `combined.log`
+        // - Write all logs with level `join` and below to `joins.log`
         new winston.transports.File({ filename: `${dir}/error.log`, level: 'error' }),
+        new winston.transports.File({ filename: `${dir}/joins.log`, level: 'join' }),
         new winston.transports.File({ filename: `${dir}/combined.log` }),
       ],
     });
@@ -110,7 +187,7 @@ class DiscordClient {
       this.logger.log({
         level: 'error',
         message: `A websocket connection encountered an error: ${error}`
-      })
+      });
     });
 
     /* Uncomment this in production
@@ -133,10 +210,13 @@ class DiscordClient {
 
     // Read an encrypted database
     this.db.pragma(`key='${secretKey}'`);
+    this.db.pragma('journal_mode = DELETE');
 
-    this.db.prepare('CREATE TABLE IF NOT EXISTS users ' + 
-      '(discord_id TEXT PRIMARY KEY, sekai_id TEXT, private INTEGER DEFAULT 1, ' + 
+    this.db.prepare('CREATE TABLE IF NOT EXISTS users ' +
+      '(id INTEGER PRIMARY KEY, discord_id TEXT, sekai_id TEXT, private INTEGER DEFAULT 1, ' +
       'quiz_correct INTEGER DEFAULT 0, quiz_question INTEGER DEFAULT 0)').run();
+
+    this.db.prepare('CREATE INDEX IF NOT EXISTS IDs ON users (discord_id, id, quiz_correct)').run();
 
     // Initialize the tracking database instance
     this.db.prepare('CREATE TABLE IF NOT EXISTS tracking ' + 
@@ -160,11 +240,93 @@ class DiscordClient {
 
     // Read an encrypted database
     this.cutoffdb.pragma(`key='${secretKey}'`);
+    this.cutoffdb.pragma('journal_mode = DELETE');
 
     // Initialize the tracking database instance
     this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS cutoffs ' +
-      '(EventID INTEGER, Tier TEXT, Timestamp TEXT, Score INTEGER,' +
+      '(EventID INTEGER, Tier INTEGER, Timestamp INTEGER, Score INTEGER, ID INTEGER, GameNum INTEGER, ' +
       'PRIMARY KEY(EventID, Tier, Timestamp))').run();
+
+    //Add an index to cutoffs
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS IDs ON cutoffs (ID, Timestamp, Score)').run();
+
+    //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS userIndex ON cutoffs (EventId, ID)').run();
+
+    // //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS EventIDTier ON cutoffs (EventId, Tier)').run();
+
+    // //Add an index to cutoffs for user
+    this.cutoffdb.prepare('CREATE INDEX IF NOT EXISTS EventIDTimestamp ON cutoffs (EventId, Timestamp)').run();
+
+    // Initialize User Tracking
+    this.cutoffdb.prepare('CREATE TABLE IF NOT EXISTS users ' +
+      '(id INTEGER, Tier INTEGER, EventID INTEGER,' +
+      'Timestamp INTEGER, Score INTEGER,' +
+      'PRIMARY KEY(id, EventID, Timestamp))').run();
+  }
+
+  /**
+   * Initializes the prayer databases (if it does not already exist) and loads
+   * the databases for usage.
+   */
+  loadPrayerDb(dir = CLIENT_CONSTANTS.PRAYER_DB_DIR) {
+    this.prayerdb = new Database(`${dir}/${CLIENT_CONSTANTS.PRAYER_DB_NAME}`);
+
+    // Read an encrypted database
+    this.prayerdb.pragma(`key='${secretKey}'`);
+    this.prayerdb.pragma('journal_mode = DELETE');
+
+    // Initialize the prayer database table
+    this.prayerdb.prepare('CREATE TABLE IF NOT EXISTS prayers ' +
+    '(id STRING PRIMARY KEY, luck REAL, prays INTEGER, lastTimestamp INTEGER, totalLuck REAL)').run();
+
+    if (!fs.existsSync('prayers.json')) return;
+    let data = JSON.parse(fs.readFileSync('prayers.json'));
+    
+    data.forEach((prayer) => {
+      let result = this.prayerdb.prepare('SELECT * FROM prayers WHERE id = ?').get(prayer.id);
+      if (result.length > 0 && result[0].luck > prayer.luck) return;
+      this.prayerdb.prepare('INSERT OR REPLACE INTO prayers (id, luck, prays, lastTimestamp, totalLuck) ' +
+        'VALUES (@id, @luck, @prays, @lastTimestamp, @totalLuck)').run({
+          id: prayer.id,
+          luck: prayer.luck * 1.0,
+          prays: prayer.prays,
+          lastTimestamp: prayer.lastTimestamp,
+          totalLuck: prayer.totalLuck * 1.0,
+        });
+    });
+    
+      // this.prayerdb.prepare('ALTER TABLE prayers MODIFY luck REAL').run();
+    // this.prayerdb.prepare('ALTER TABLE prayers MODIFY totalLuck REAL').run();
+  }
+
+  /**
+   * Initializes the Stock AceBase NoSQL database (if it does not already exist) and loads
+   * the databases for usage.
+   */
+  async loadStockDb(dir = CLIENT_CONSTANTS.STOCK_DB_DIR) {
+    const options = { storage: { path: dir } };
+    this.stockdb = new AceBase(`${CLIENT_CONSTANTS.STOCK_DB_NAME}`, options);
+
+    await this.stockdb.ready();
+  }
+
+  /**
+   * 
+   * @param {string} discord_id users discord ID
+   * @returns {int} users unique database ID
+   */
+  getId(discord_id) {
+    let data = this.db.prepare('SELECT * FROM users ' +
+      'WHERE (discord_id=@discord_id)').all({
+        discord_id: discord_id,
+      });
+    if (data.length > 0) {
+      return data[0].id;
+    } else {
+      return -1;
+    }
   }
 
   /**
@@ -181,9 +343,11 @@ class DiscordClient {
 
       // Sekai Api Init
       const apiClient = new SekaiClient(playerPrefs);
-      await apiClient.login();
       this.api.push(apiClient);
     }
+
+    //Await for all clients to be initialized
+    await Promise.all(this.api.map(client => client.login()));
   }
 
   /**
@@ -198,16 +362,16 @@ class DiscordClient {
       this.rateLimit[userId] = {
         timestamp: Date.now() + 3600000,
         usage: 0
-      }
+      };
     }
 
-    console.log(this.rateLimit)
+    console.log(this.rateLimit);
     if (this.rateLimit[userId].usage + 1 > RATE_LIMIT) {
-      return false
+      return false;
     } 
 
-    this.rateLimit[userId].usage++
-    return true
+    this.rateLimit[userId].usage++;
+    return true;
   }
 
   /**
@@ -216,7 +380,7 @@ class DiscordClient {
    * @return {Integer} timestamp in epochsecond when the rate limit will reset
    */
   getRateLimitRemoval(userId) {
-    return this.rateLimit[userId].timestamp
+    return this.rateLimit[userId].timestamp;
   }
 
   /**
@@ -232,7 +396,7 @@ class DiscordClient {
       params: params,
       callback: callback,
       error: error
-    })
+    });
   }
 
   /**
@@ -248,7 +412,7 @@ class DiscordClient {
       params: params,
       callback: callback,
       error: error
-    })
+    });
   }
 
   /**
@@ -258,7 +422,7 @@ class DiscordClient {
   async runSekaiRequests(rate=10) {
     const runRequest = async (apiClient, request) => {
       if (request.type === 'profile') {
-        const response = await apiClient.userProfile(request.params.userId, request.error);
+        const response = await apiClient.userProfile(request.params.userId);
 
         // If our response is valid we run the callback
         if (response) {
@@ -268,9 +432,15 @@ class DiscordClient {
         const queryParams = {...request.params};
         delete queryParams.eventId;
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams, request.error)
+        const response = await apiClient.eventRanking(request.params.eventId, queryParams);
 
         // If our response is valid we run the callback
+        if (response) {
+          request.callback(response);
+        }
+      } else if (request.type === 'master') {
+        const response = await apiClient.master();
+
         if (response) {
           request.callback(response);
         }
@@ -285,7 +455,7 @@ class DiscordClient {
       } else if (this.apiQueue.length > 0) {
         runRequest(apiClient, this.apiQueue.pop());
       } else {
-        setTimeout(() => {runClient(apiClient, rate)}, rate);
+        setTimeout(() => {runClient(apiClient, rate);}, rate);
       }
     };
 
@@ -313,7 +483,7 @@ class DiscordClient {
           aggregateAt: events[i].aggregateAt,
           closedAt: events[i].closedAt,
           eventType: events[i].eventType
-        }
+        };
       }
     }
 

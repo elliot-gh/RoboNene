@@ -27,7 +27,7 @@ module.exports = {
     'UNLINK_INSTRUCTIONS': {
       'type': 'Instructions',
       'message': '1. Go to your profile in Project Sekai.\n' +
-        '2. Copy and paste the \`\`Unlink Code\`\` into your profile comment.\n' +
+        '2. Copy and paste the ``Unlink Code`` into your profile comment.\n' +
         '3. Press back to save the change to your profile.\n' +
         '4. Press the red ❌ Unlink button!'
     },
@@ -48,7 +48,7 @@ module.exports = {
         'type': 'Error',
         'message': `Invalid code \`\`${code}\`\` found on Project Sekai profile.\n` + 
           'Did you remember to press back on your profile to save the changes?'
-      }
+      };
     },
   
     'NO_CODE_ERR': {
@@ -84,4 +84,4 @@ module.exports = {
     'INTERACTION_TIME': 30000,
     'UNLINK_EMOJI': '❌'
   }
-}
+};

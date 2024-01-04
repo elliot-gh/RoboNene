@@ -10,51 +10,38 @@ const fs = require('fs');
 
 // The location we pull from and data modules we pull 
 const GAME_CONSTANTS = {
-  "HOST": "raw.githubusercontent.com",
-  "PATH": "/Sekai-World/sekai-master-db-en-diff/main/",
-  "JSON": [
-    "gameCharacters",
-    "characterProfiles",
-    "areas",
-    "areaItems",
-    "areaItemLevels",
-    "events",
-    "eventCards",
-    "cards"
+  'HOST': 'raw.githubusercontent.com',
+  'PATH': '/Sekai-World/sekai-master-db-en-diff/main/',
+  'JSON': [
+    'gameCharacters',
+    'gameCharacterUnits',
+    'characterProfiles',
+    'areas',
+    'areaItems',
+    'areaItemLevels',
+    'events',
+    'eventCards',
+    'cards',
+    'cardEpisodes',
+    'musics',
+    'eventDeckBonuses'
   ]
-}
+};
 
 /**
  * Downloads all the requested data one by one
  */
-const getData = () => {
-  GAME_CONSTANTS.JSON.forEach((filename) => {
-    const options = {
-      host: GAME_CONSTANTS.HOST,
-      path: `${GAME_CONSTANTS.PATH}${filename}.json`,
-      headers: {'User-Agent': 'request'}
-    };
-  
-    https.get(options, (res) => {
-      let json = '';
-      res.on('data', (chunk) => {
-        json += chunk;
-      });
-      res.on('end', async () => {
-        if (res.statusCode === 200) {
-          try {
-            fs.writeFileSync(`${DIR_DATA}/${filename}.json`, JSON.stringify(JSON.parse(json)));
-            console.log(`${filename}.json Retrieved`)
-          } catch (err) {
-            // Error parsing JSON: ${err}`
-          }
-        } else {
-          // Error retrieving via HTTPS. Status: ${res.statusCode}
-        }
-      });
-    }).on('error', (err) => {});
-  })
-}
+const getData = (discordClient) => {
+  discordClient.addPrioritySekaiRequest('master', {}, async (response) => {
+    if (response) {
+      for (const key in response) {
+        if (GAME_CONSTANTS.JSON.indexOf(key) === -1) continue;
+        fs.writeFileSync(`${DIR_DATA}/${key}.json`, JSON.stringify(response[key]));
+        console.log(`${key}.json Retrieved`);
+      }
+    }
+  });
+};
 
 /**
  * Enables the tracking of the game database, and requests game data once every two hours
@@ -62,10 +49,10 @@ const getData = () => {
  */
 const trackGameData = async (discordClient) => {
   // Obtain the game data
-  getData();
+  getData(discordClient);
 
-  console.log('Game Data Requested, Pausing For 2 Hours')
-  setTimeout(() => {trackGameData(discordClient)}, 7200000);
-}
+  console.log('Game Data Requested, Pausing For 2 Hours');
+  setTimeout(() => {trackGameData(discordClient);}, 7200000);
+};
 
 module.exports = trackGameData;

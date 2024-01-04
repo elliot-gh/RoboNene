@@ -15,17 +15,17 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
  * @return {MessageEmbed} the embed of the deferred response
  */
 const generateDeferredResponse = (commandName, discordClient) => {
-  const botAvatarURL = discordClient.client.user.displayAvatarURL()
+  const botAvatarURL = discordClient.client.user.displayAvatarURL();
 
   const deferredResponse = new MessageEmbed()
     .setColor(NENE_COLOR)
-    .setTitle(`Loading...`)
+    .setTitle('Loading...')
     .setDescription(`Requesting command: \`\`${commandName}\`\`\nPlease be patient`)
     .setThumbnail(botAvatarURL)
     .setTimestamp()
     .setFooter(FOOTER, botAvatarURL);
 
-  return deferredResponse
-}
+  return deferredResponse;
+};
 
-module.exports = generateDeferredResponse
+module.exports = generateDeferredResponse;
