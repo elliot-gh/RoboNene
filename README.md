@@ -19,6 +19,7 @@ Additionally this command shows the last 6 games played, the timestamp of when t
 #### Graph
 ##### Use
 /graph cutoff(tier, by_tier=None, event=None)
+
 /graph user(user, event=None)
 
 ##### Description
@@ -33,6 +34,7 @@ This is a simple line graph of your event points over time, it's useful to see y
 #### Heatmap
 ##### Use
 /heatmap cutoff(tier, offset=None, event=None, pallete=None, annotategames=None, bypoints=None)
+
 /heatmap user(user, offset=None, event=None, pallete=None, annotategames=None, bypoints=None)
 
 ##### Description
@@ -47,6 +49,7 @@ additionally it can be configured in the settings with a different color palette
 #### Histogram
 ##### Use
 /hist cutoff(tier, binsize=None, min=None, max=None, event=None, hourly=None, games=None)
+
 /hist user(user, binsize=None, min=None, max=None, event=None, hourly=None, games=None)
 
 ##### Description
@@ -61,6 +64,7 @@ This can also be configured to show event points per hour, and games played per 
 #### Bar
 ##### Use
 /bar cutoff(tier, hour, event=None)
+
 /bar user(tier, hour, event=None)
 
 ##### Description
