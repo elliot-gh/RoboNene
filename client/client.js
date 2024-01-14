@@ -98,7 +98,6 @@ class DiscordClient {
         this.logger.info(`Magic Ghostnene command called by ${message.author.username}`);
         event.executeMessage(message, this);
       }
-1
       if (!message.content.startsWith(this.prefix)) return;
       let command = message.content.slice(this.prefix.length).split(/ +/);
       this.logger.info(`Command ${command[0]} called by ${message.author.username}`);
