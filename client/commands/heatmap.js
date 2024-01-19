@@ -86,13 +86,23 @@ const miraclePaint = formatPallete([
   '#04186d'
 ]);
 
+const emu = formatPallete([
+  '#fde4f2',
+  '#f9cee7',
+  '#f4b8da',
+  '#eea1cd',
+  '#e68bbe',
+  '#ff66bc'
+]);
+
 const palettes = [
   standard,
   legacy,
   ankoha,
   cinema,
   shinonome,
-  miraclePaint
+  miraclePaint,
+  emu
 ];
 
 

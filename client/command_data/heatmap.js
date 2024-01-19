@@ -11,7 +11,8 @@ const palatteChoices = [
   ['Ankoha', 2],
   ['Cinema', 3],
   ['Shinonome', 4],
-  ['Miracle Paint', 5]
+  ['Miracle Paint', 5],
+  ['Emu', 6]
 ];
 
 module.exports = {
