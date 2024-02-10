@@ -7,6 +7,7 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { NENE_COLOR } = require('../constants');
 const RANKING_RANGE = require('./trackRankingRange.json');
+const RANKING_RANGE_V2 = require('./trackRankingRangeV2.json');
 const fs = require('fs');
 const generateRankingText = require('../client/methods/generateRankingTextChanges');
 
