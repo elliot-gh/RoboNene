@@ -431,7 +431,8 @@ class DiscordClient {
         const queryParams = {...request.params};
         delete queryParams.eventId;
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams);
+        // Hardcode for now since there's no other tracking anymore
+        const response = await apiClient.eventRankingV2(request.params.eventId, {'rankingViewType': 'top100'});
 
         // If our response is valid we run the callback
         if (response) {
