@@ -6,6 +6,8 @@ const fs = require('fs');
 
 const COMMAND = require('../command_data/track');
 
+const { PermissionsBitField } = require('discord.js');
+
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 
@@ -102,8 +104,6 @@ module.exports = {
         const tier = interaction.options.getInteger('tier');
         const cutoff = interaction.options.getInteger('cutoff');
 
-        console.log(cutoff);
-
         if(tier > 100000) {
             await interaction.editReply({
                 embeds: [
@@ -140,6 +140,11 @@ module.exports = {
                             'message': `Starting to track tier ${tier} for ${mention}\nCutoff: ${score.toLocaleString() }`
                         };
 
+                        let warning = {
+                            'type': 'Warning',
+                            'message': 'The bot does not have access to message in this channel'
+                        };
+
                         await interaction.editReply({
                             embeds: [
                                 generateEmbed({
@@ -149,6 +154,19 @@ module.exports = {
                                 })
                             ]
                         });
+
+                        if (!interaction.channel.permissionsFor(interaction.guild.members.me).has(PermissionsBitField.Flags.SendMessages)) {
+                            await interaction.followUp({
+                                embeds: [
+                                    generateEmbed({
+                                        name: COMMAND.INFO.name,
+                                        content: warning,
+                                        client: discordClient.client
+                                    })
+                                ],
+                                ephemeral: true
+                            });
+                        }
                     } catch (e) {
                         console.log('Error occured while adding tracking data: ', e);
                     }
