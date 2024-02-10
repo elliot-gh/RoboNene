@@ -118,7 +118,11 @@ async function getCutoffs(discordClient) {
                         if (users != undefined) {
                             users.forEach((pair) => {
                                 let channel = discordClient.client.channels.cache.get(pair[0]);
-                                channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score.toLocaleString()} EP\nYou tracked ${parseInt(oldScore).toLocaleString() }`);
+                                try {
+                                    channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score.toLocaleString()} EP\nYou tracked ${parseInt(oldScore).toLocaleString() }`);
+                                } catch (e) {
+                                    console.log('Error occured while sending message: ', e);
+                                }
                             });
                         }
                     }
