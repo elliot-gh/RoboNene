@@ -8,7 +8,7 @@ const COMMAND = require('../command_data/statistics');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const calculateTeam = require('../methods/calculateTeam');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
+const { NENE_COLOR, FOOTER, LOCKED_EVENT_ID } = require('../../constants');
 const getEventData = require('../methods/getEventData');
 
 const HOUR = 3600000;
@@ -115,171 +115,13 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
             discord_id: user.id,
         });
     if (data.length) {
-        discordClient.addPrioritySekaiRequest('profile', {
-            userId: userData[0].sekai_id
-        }, async (profile) => {
-            let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-            discordClient.addPrioritySekaiRequest('ranking', {
-                eventId: eventId,
-                targetUserId: userData[0].sekai_id,
-                lowerLimit: 0
-            }, async (response) => {
-                rankData.unshift({ timestamp: eventData.startAt, score: 0});
-                try {
-                    rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
-                } catch (e) {
-                    null;
-                }
-                let lastTimestamp = rankData[rankData.length - 1].timestamp;
-                let timestamps = rankData.map(x => x.timestamp);
-                let lastHourIndex = getLastHour(timestamps, lastTimestamp - HOUR);
 
-                let lastHour = rankData[lastHourIndex];
-                let scoreLastHour = rankData[rankData.length - 1].score - lastHour.score;
-
-                let teamData = calculateTeam(profile, eventId);
-                let score = calculateScore(teamData.talent);
-                let multiscore = score;
-                let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
-                let pointTable = generateEnergyTable(eventPoints);
-
-                let lastPoint = rankData[0].score;
-
-                let energyUsed = 0;
-                let gamesPlayed = 0;
-                let energyUsedHr = 0;
-                let gamesPlayedHr = 0;
-                let pointsPerGame = [];
-                let timestampIndex = 0;
-                let movingWindowSpeeds = [];
-
-                rankData.slice(1).forEach((point, i) => {
-                    if (point.score - lastPoint >= 100) {
-                        let tempEnergyTable = [];
-                        let gain = point.score - lastPoint;
-                        let windowIndex = getLastHour(timestamps, point.timestamp - HOUR);
-                        timestamps = timestamps.slice(windowIndex);
-                        timestampIndex += windowIndex;
-                        movingWindowSpeeds.push(point.score - rankData[Math.max(timestampIndex - 1, 0)].score);
-                        energyBoost.forEach((x, i) => {
-                            if (gain % x == 0) {
-                                tempEnergyTable.push([i, pointTable[i]]);
-                            }
-                        });
-                        let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
-                        energyUsed += energyUsedGame;
-                        gamesPlayed++;
-                        pointsPerGame.push({points: gain, energy: energyUsedGame, timestamp: parseInt(point.timestamp/1000)});
-                        if (i >= lastHourIndex) {
-                            energyUsedHr += energyUsedGame;
-                            gamesPlayedHr++;
-                        }
-                    }
-                    lastPoint = point.score;
-                });
-
-                let timestamp = parseInt(rankData[rankData.length - 1].timestamp / 1000);
-
-                let sanity = sanityLost(gamesPlayed, rankData[rankData.length - 1].score);
-
-                let scorePerGame = parseFloat(scoreLastHour / gamesPlayedHr).toFixed(2);
-                let peakSpeed = Math.max(...movingWindowSpeeds);
-
-                let title = `${user.displayName} Statistics`;
-
-                let embed = generateEmbed({
-                    name: title,
-                    client: discordClient.client
-                });
-
-                //Ignore this entire section
-                embed.addFields(
-                    { name: 'Current Event Points', value: rankData[rankData.length - 1].score.toLocaleString() },
-                    { name: 'Event Points Gained in the Last Hour', value: scoreLastHour.toLocaleString() },
-                    { name: 'Games Played in the Last Hour', value: `${gamesPlayedHr.toLocaleString()}`, inline: true },
-                    { name: 'Total Games Played', value: `${gamesPlayed.toLocaleString()}`, inline: true },
-                    { name: 'Average Score per Game over the hour', value: scorePerGame.toLocaleString() },
-                    { name: 'Energy Used in the Last Hour', value: energyUsedHr.toLocaleString(), inline: true },
-                    { name: 'Total Energy Used', value: energyUsed.toLocaleString(), inline: true },
-                    { name: 'Peak Speed over an hour', value: peakSpeed.toLocaleString() },
-                    { name: 'Estimated Talent', value: `${Math.round(teamData.talent).toLocaleString()}`, inline: true },
-                    { name: 'Estimated Event Bonus', value: `${teamData.eventBonusText}`, inline: true },
-                    { name: 'Estimated Base Event Points', value: `${eventPoints.toLocaleString()}`, inline: true },
-                    { name: 'Sanity Lost', value: `${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>` }
-                );
-
-                for (let i = 1; i < Math.min(7, pointsPerGame.length + 1); i++) {
-                    let game = pointsPerGame[pointsPerGame.length - i];
-                    embed.addFields({ name: `**Game ${i}:**`, value: `${game.points} **x${game.energy}**\n<t:${game.timestamp}:R>`, inline: true });
-                }
-
-                embed.addFields({ name: 'Updated:', value: `<t:${timestamp}:R>` });
-
-                if (user.id == '475083312772415489' || user.id == '327997209666912256') {
-                    embed.addFields({ name: 'People Kiled:', value: '1' });
-                }
-
-                else if (user.id == '530650499465216000') {
-                    embed.addFields({ name: 'Hearts Broken:', value: '6' });
-                }
-
-                else if (user.id == '178294808429723648') {
-                    embed.addFields({ name: 'Broken Hearts', value: '6' });
-                }
-
-                let reply = `Current Event Points: ${rankData[rankData.length - 1].score.toLocaleString()}\n` +
-                    `Event Points Gained in the Last Hour: ${scoreLastHour}\n` +
-                    `Games Played in the Last Hour: ${gamesPlayedHr} (${gamesPlayed} Total)\n` +
-                    'Average Score per Game over the hour: ' + scorePerGame + '\n' +
-                    `Estimated Energy used over the hour: ${energyUsedHr} (${energyUsed} Total)\n` +
-                    `Peak Speed over an hour: ${peakSpeed}\n` +
-                    `Sanity Lost: ${sanity.sanity}e${sanity.suffix} <:sparkles:1012729567615656066>\n` +
-                    `Estimated Talent: ${Math.round(teamData.talent)}\n` +
-                    `Estimated Event Bonus: ${teamData.eventBonusText}\n` +
-                    `Estimated Base Event Points: ${eventPoints.toLocaleString()}\n` +
-                    'Last 5 Games:\n';
-
-                var game;
-                for (let i = 1; i < Math.min(6, pointsPerGame.length + 1); i++) {
-                    game = pointsPerGame[pointsPerGame.length - i];
-                    reply += `**Game ${i}:** ${game.points} <t:${game.timestamp}:R> (Energy Used: ${game.energy})\n`;
-                }
-
-                reply += `Updated: <t:${timestamp}:R>`;
-
-                if (user.id == '475083312772415489' || user.id == '327997209666912256') {
-                    reply += '\nPeople Killed: 1';
-                }
-
-                else if (user.id == '530650499465216000') {
-                    reply += '\nHearts Broken: 6';
-                }
-
-                else if (user.id == '178294808429723648') {
-                    reply += '\nBroken Hearts: 6';
-                }
-
-                let mobileEmbed = generateEmbed({
-                    name: title,
-                    client: discordClient.client
-                });
-
-                mobileEmbed.addFields(
-                    { name: title, value: reply }
-                );
-
-                sendEmbed(interaction, embed, mobileEmbed);
-            },
-                (err) => {
-                    discordClient.logger.log({
-                        level: 'error',
-                        message: err.toString()
-                    });
-                });
-        });
+        let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+        let title = `${user.displayName} Statistics`;
+        tierStatisticsEmbed(rankData, title, discordClient, interaction);
     }
     else {
-        interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
+        interaction.editReply({ content: 'Discord User found but no data logged (If after Kick it Up a Notch this command won\'t work)' });
     }
 }
 
@@ -400,12 +242,12 @@ async function tierStatistics(tier, eventId, eventData, discordClient, interacti
     }, async (response) => {
         let data = discordClient.cutoffdb.prepare('SELECT Timestamp, Score FROM cutoffs ' +
             'WHERE (EventID=@eventID AND ID=@id)').all({
-                id: response['rankings'][0]['userId'],
+                id: response['rankings'][tier-1]['userId'],
                 eventID: eventId
             });
 
         if (data.length == 0) {
-            let reply = 'Please input a tier in the range 1-100 or input 200, 300, 400, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000, 30000, 40000, or 50000';
+            let reply = 'Please input a tier in the range 1-100';
             let title = 'Tier Not Found';
 
             await interaction.editReply({
@@ -606,7 +448,7 @@ module.exports = {
 
         else if (tier) {
             try {
-                if (eventId < event.id) {
+                if (eventId < event.id || event.id > LOCKED_EVENT_ID) {
                     tierHistoricalStatistics(tier, eventId, eventData, discordClient, interaction);
                 } else {
                     tierStatistics(tier, eventId, eventData, discordClient, interaction);

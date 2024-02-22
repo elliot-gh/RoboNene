@@ -4,7 +4,7 @@
  */
 
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
+const { NENE_COLOR, FOOTER, LOCKED_EVENT_ID } = require('../../constants');
 const { plotlyKey, plotlyUser } = require('../../config.json');
 
 const COMMAND = require('../command_data/heatmap');
@@ -634,7 +634,7 @@ module.exports = {
         noDataErrorMessage(interaction, discordClient);
         return;
       }
-      else if (eventId < discordClient.getCurrentEvent().id) {
+      else if (eventId < discordClient.getCurrentEvent().id || event.id > LOCKED_EVENT_ID) {
         sendHistoricalTierRequest(eventData, tier, interaction, offset, pallete, annotategames, bypoints, discordClient);
       }
       else {

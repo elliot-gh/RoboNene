@@ -4,7 +4,7 @@
  */
 
 const { EmbedBuilder } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
+const { NENE_COLOR, FOOTER, LOCKED_EVENT_ID } = require('../../constants');
 const https = require('https');
 
 const COMMAND = require('../command_data/graph');
@@ -199,7 +199,7 @@ async function sendTierRequest(eventId, eventName, eventData, tier, interaction,
     lowerLimit: 0
   }, async (response) => {
 
-    let userId = response['rankings'][0]['userId'];//Get the last ID in the list
+    let userId = response['rankings'][tier-1]['userId'];//Get the last ID in the list
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({
         id: userId,
@@ -279,7 +279,7 @@ module.exports = {
         return;
       } else if (graphTier) {
         sendGraphByTierRequest(event.id, eventName, event, tier, interaction, discordClient);
-      } else if (event.id < discordClient.getCurrentEvent().id) {
+      } else if (event.id < discordClient.getCurrentEvent().id || event.id > LOCKED_EVENT_ID) {
         sendHistoricalTierRequest(event.id, eventName, event, tier, interaction, discordClient);
       } else {
         sendTierRequest(event.id, eventName, event, tier, interaction, discordClient);

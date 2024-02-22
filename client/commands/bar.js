@@ -495,7 +495,7 @@ async function sendTierRequest(eventData, tier, interaction, hour, discordClient
     lowerLimit: 0
   }, async (response) => {
 
-    let userId = response['rankings'][0]['userId']; //Get the last ID in the list
+    let userId = response['rankings'][tier-1]['userId']; //Get the specific tier's userID
     
     let data = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
       'WHERE (ID=@id AND EventID=@eventID)').all({

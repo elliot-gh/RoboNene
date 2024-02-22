@@ -4,7 +4,7 @@
  */
 
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
-const { NENE_COLOR, FOOTER } = require('../../constants');
+const { NENE_COLOR, FOOTER, LOCKED_EVENT_ID } = require('../../constants');
 const { plotlyKey, plotlyUser } = require('../../config.json');
 
 const COMMAND = require('../command_data/hist');
@@ -495,7 +495,7 @@ module.exports = {
         rankData.push({ timestamp: Date.now(), score: data[0].Score });
         rankData.sort((a, b) => (a.timestamp > b.timestamp) ? 1 : (b.timestamp > a.timestamp) ? -1 : 0);
         postQuickChart(interaction, `${eventData.name} T${tier} Cutoffs`, rankData, binSize, min, max, hourly, showGames, discordClient);
-      } else if (eventData.id < discordClient.getCurrentEvent().id) {
+      } else if (eventData.id < discordClient.getCurrentEvent().id || event.id > LOCKED_EVENT_ID) {
         sendHistoricalTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient);
       } else {
         sendTierRequest(eventData, tier, binSize, min, max, hourly, showGames, interaction, discordClient);
