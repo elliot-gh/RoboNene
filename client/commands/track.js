@@ -104,7 +104,7 @@ module.exports = {
         const tier = interaction.options.getInteger('tier');
         const cutoff = interaction.options.getInteger('cutoff');
 
-        if(tier > 100000) {
+        if(tier > 100) {
             await interaction.editReply({
                 embeds: [
                     generateEmbed({
@@ -124,7 +124,7 @@ module.exports = {
                     lowerLimit: 0
                 }, async (response) => {
                     try {
-                        let score = response['rankings'][0]['score'];
+                        let score = response['rankings'][tier-1]['score'];
                         if(cutoff != undefined){
                             score = cutoff;
                         } else {
