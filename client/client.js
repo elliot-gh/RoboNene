@@ -426,13 +426,12 @@ class DiscordClient {
     const runRequest = async (apiClient, request) => {
       // Profile disabled as of now
       if (request.type === 'profile') {
-        return null;
-        // const response = await apiClient.userProfile(request.params.userId);
+        const response = await apiClient.userProfile(request.params.userId);
 
-        // // If our response is valid we run the callback
-        // if (response) {
-        //   request.callback(response);
-        // }
+        // If our response is valid we run the callback
+        if (response) {
+          request.callback(response);
+        }
       } else if (request.type === 'ranking') {
 
         const response = await apiClient.eventRankingT100(request.params.eventId);
