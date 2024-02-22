@@ -229,8 +229,7 @@ const requestRanking = async (event, discordClient) => {
   for(const idx in RANKING_RANGE) {
     // Make Priority Requests (We Need These On Time)
     discordClient.addPrioritySekaiRequest('ranking', {
-      eventId: event.id,
-      ...RANKING_RANGE[idx]
+      eventId: event.id
     }, retrieveResult, (err) => {
       discordClient.logger.log({
         level: 'error',

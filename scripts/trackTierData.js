@@ -107,25 +107,28 @@ async function getCutoffs(discordClient) {
         try {
             let event = getRankingEvent().id;
             if (response['rankings'][0] != null && event != -1) {
-                let score = response['rankings'][0]['score'];
-                let rank = response['rankings'][0]['rank'];
-                let scoreList = readScores(rank);
+                let tiers = readTiers();
+                tiers.forEach((tier) => {
+                    let score = response['rankings'][tier-1]['score'];
+                    let rank = response['rankings'][tier-1]['rank'];
+                    let scoreList = readScores(rank);
 
-                scoreList.forEach((oldScore) => {
-                    if (score >= parseInt(oldScore)) {
-                        let users = getUsers(rank, oldScore);
+                    scoreList.forEach((oldScore) => {
+                        if (score >= parseInt(oldScore)) {
+                            let users = getUsers(rank, oldScore);
 
-                        if (users != undefined) {
-                            users.forEach((pair) => {
-                                let channel = discordClient.client.channels.cache.get(pair[0]);
-                                try {
-                                    channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score.toLocaleString()} EP\nYou tracked ${parseInt(oldScore).toLocaleString() }`);
-                                } catch (e) {
-                                    console.log('Error occured while sending message: ', e);
-                                }
-                            });
+                            if (users != undefined) {
+                                users.forEach((pair) => {
+                                    let channel = discordClient.client.channels.cache.get(pair[0]);
+                                    try {
+                                        channel.send(`${pair[1]} T${rank} Has started moving, they are now at ${score.toLocaleString()} EP\nYou tracked ${parseInt(oldScore).toLocaleString() }`);
+                                    } catch (e) {
+                                        console.log('Error occured while sending message: ', e);
+                                    }
+                                });
+                            }
                         }
-                    }
+                    });
                 });
             }
         } catch (e) {
@@ -139,16 +142,15 @@ async function getCutoffs(discordClient) {
             return -1;
         } else {
             let tiers = readTiers();
-            tiers.forEach(cutoff => {
-                discordClient.addPrioritySekaiRequest('ranking', {
-                    eventId: event,
-                    targetRank: cutoff,
-                    lowerLimit: 0
-                }, checkResults, (err) => {
-                    discordClient.logger.log({
-                        level: 'error',
-                        message: err.toString()
-                    });
+            if (tiers.length == 0) {
+                return -1;
+            }
+            discordClient.addPrioritySekaiRequest('ranking', {
+                eventId: event,
+            }, checkResults, (err) => {
+                discordClient.logger.log({
+                    level: 'error',
+                    message: err.toString()
                 });
             });
         }
