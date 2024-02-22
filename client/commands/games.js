@@ -91,92 +91,69 @@ async function userStatistics(user, eventId, eventData, discordClient, interacti
             discord_id: user.id,
         });
     if (data.length) {
-        discordClient.addPrioritySekaiRequest('profile', {
-            userId: userData[0].sekai_id
-        }, async (profile) => {
-            let rankData = data.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-            discordClient.addPrioritySekaiRequest('ranking', {
-                eventId: eventId,
-                targetUserId: userData[0].sekai_id,
-                lowerLimit: 0
-            }, async (response) => {
-                rankData.unshift({ timestamp: eventData.startAt, score: 0 });
-                try {
-                    rankData.push({ timestamp: Date.now(), score: response['rankings'][0]['score'] });
-                } catch (e) {
-                    null;
-                }
 
-                let teamData = calculateTeam(profile, eventId);
-                let score = calculateScore(teamData.talent);
-                let multiscore = score * 5;
-                let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
-                let pointTable = generateEnergyTable(eventPoints);
+        let teamData = calculateTeam(profile, eventId);
+        let score = calculateScore(teamData.talent);
+        let multiscore = score * 5;
+        let eventPoints = calculateEventPoints(score, multiscore, teamData.eventBonus + 1, eventData.eventType === 'cheerful_carnival');
+        let pointTable = generateEnergyTable(eventPoints);
 
-                let lastPoint = rankData[0].score;
+        let lastPoint = rankData[0].score;
 
-                let energyUsed = 0;
-                let energyCounts = energyBoost.map(() => 0);
+        let energyUsed = 0;
+        let energyCounts = energyBoost.map(() => 0);
 
-                rankData.slice(1).forEach((point) => {
-                    if (point.score - lastPoint >= 100) {
-                        let tempEnergyTable = [];
-                        let gain = point.score - lastPoint;
-                        energyBoost.forEach((x, i) => {
-                            if (gain % x == 0) {
-                                tempEnergyTable.push([i, pointTable[i]]);
-                            }
-                        });
-                        let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
-                        energyCounts[energyUsedGame]++;
-                        energyUsed += energyUsedGame;
+        rankData.slice(1).forEach((point) => {
+            if (point.score - lastPoint >= 100) {
+                let tempEnergyTable = [];
+                let gain = point.score - lastPoint;
+                energyBoost.forEach((x, i) => {
+                    if (gain % x == 0) {
+                        tempEnergyTable.push([i, pointTable[i]]);
                     }
-                    lastPoint = point.score;
                 });
-
-                let title = `${user.username} Games`;
-
-                let embed = generateEmbed({
-                    name: title,
-                    client: discordClient.client
-                });
-
-                let energyLabel = 'Cost';
-                let gamesLabel = 'Games';
-
-                let energyLength = energyLabel.length;
-                let gamesLength = gamesLabel.length;
-
-                for (let i = 0; i < energyBoost.length; i++) {
-                    if (`x${i}`.length > energyLength) {
-                        energyLength = `x${i}`.length;
-                    }
-                    if (`${energyCounts[i]}`.length > gamesLength) {
-                        gamesLength = `${energyCounts[i]}`.length;
-                    }
-                }
-
-                let embedStr = `\`${energyLabel} ${' '.repeat(energyLength - energyLabel.length)} ${' '.repeat(gamesLength - gamesLabel.length)}${gamesLabel}\`\n`;
-
-                for (let i = 0; i < energyBoost.length; i++) {
-                    embedStr += `\`${i}x ${' '.repeat(energyLength - `${i}x`.length)} ${' '.repeat(gamesLength - `${energyCounts[i]}`.length)}${energyCounts[i]}\`\n`;
-                }
-
-                //Ignore this entire section
-                embed.addFields(
-                    { name: 'Energy Usage', value: embedStr },
-                    { name: 'Total Energy Used', value: `${energyUsed}` },
-                );
-
-                sendEmbed(interaction, embed);
-            },
-                (err) => {
-                    discordClient.logger.log({
-                        level: 'error',
-                        message: err.toString()
-                    });
-                });
+                let energyUsedGame = getEnergyPerGame(tempEnergyTable, gain);
+                energyCounts[energyUsedGame]++;
+                energyUsed += energyUsedGame;
+            }
+            lastPoint = point.score;
         });
+
+        let title = `${user.username} Games`;
+
+        let embed = generateEmbed({
+            name: title,
+            client: discordClient.client
+        });
+
+        let energyLabel = 'Cost';
+        let gamesLabel = 'Games';
+
+        let energyLength = energyLabel.length;
+        let gamesLength = gamesLabel.length;
+
+        for (let i = 0; i < energyBoost.length; i++) {
+            if (`x${i}`.length > energyLength) {
+                energyLength = `x${i}`.length;
+            }
+            if (`${energyCounts[i]}`.length > gamesLength) {
+                gamesLength = `${energyCounts[i]}`.length;
+            }
+        }
+
+        let embedStr = `\`${energyLabel} ${' '.repeat(energyLength - energyLabel.length)} ${' '.repeat(gamesLength - gamesLabel.length)}${gamesLabel}\`\n`;
+
+        for (let i = 0; i < energyBoost.length; i++) {
+            embedStr += `\`${i}x ${' '.repeat(energyLength - `${i}x`.length)} ${' '.repeat(gamesLength - `${energyCounts[i]}`.length)}${energyCounts[i]}\`\n`;
+        }
+
+        //Ignore this entire section
+        embed.addFields(
+            { name: 'Energy Usage', value: embedStr },
+            { name: 'Total Energy Used', value: `${energyUsed}` },
+        );
+
+        sendEmbed(interaction, embed);
     }
     else {
         interaction.editReply({ content: 'Discord User found but no data logged (have you recently linked or event ended?)' });
@@ -193,7 +170,7 @@ async function sendEmbed(interaction, embed) {
 
 module.exports = {
     ...COMMAND.INFO,
-    data: generateSlashCommand(COMMAND.INFO),
+    data: null,
 
     async execute(interaction, discordClient) {
         await interaction.deferReply({
