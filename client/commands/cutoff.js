@@ -398,85 +398,37 @@ module.exports = {
       return;
     }
 
-    discordClient.addSekaiRequest('ranking', {
-      eventId: event.id,
-      targetRank: tier,
-      lowerLimit: 0
-    }, async (response) => {
-      // Check if the response is valid
-      if (!response.rankings) {
-        await interaction.editReply({
-          embeds: [
-            generateEmbed({
-              name: COMMAND.commandName,
-              content: COMMAND.CONSTANTS.NO_RESPONSE_ERR,
-              client: discordClient.client
-            })
-          ]
+    const timestamp = Date.now();
+
+    let paramCount = interaction.options._hoistedOptions.length;
+    let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value;
+
+    try {
+
+      let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+        'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY').all({
+          eventID: event.id,
+          tier: tier
         });
-        return;
-      } else if (response.rankings.length === 0) {
-        await interaction.editReply({
-          embeds: [
-            generateEmbed({
-              name: COMMAND.commandName,
-              content: COMMAND.CONSTANTS.BAD_INPUT_ERROR,
-              client: discordClient.client
-            })
-          ]
-        });
-        return;
-      }
+      let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+      generateCutoff({
+        interaction: interaction,
+        event: event,
+        timestamp: timestamp,
+        tier: tier,
+        score: rankData[rankData.length-1].score,
+        rankData: rankData,
+        detailed: detailed,
+        discordClient: discordClient
+      });
 
-      const timestamp = Date.now();
-      const score = response.rankings[0].score;
-
-      let paramCount = interaction.options._hoistedOptions.length;
-      let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value;
-
-      try {
-
-        let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-          'WHERE (EventID=@eventID AND Tier=@tier)').all({
-            eventID: event.id,
-            tier: tier
-          });
-        let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-        console.log('Data Read, Generating Internal cutoff');
-        generateCutoff({
-          interaction: interaction,
-          event: event,
-          timestamp: timestamp,
-          tier: tier,
-          score: score,
-          rankData: rankData,
-          detailed: detailed,
-          discordClient: discordClient
-        });
-
-      } catch (err) {
-        console.log(err);
-        discordClient.logger.log({
-          level: 'error',
-          timestamp: Date.now(),
-          message: `Error parsing JSON data from cutoff: ${err}`
-        });
-      }
-    }, async (err) => {
-      // Log the error
+    } catch (err) {
+      console.log(err);
       discordClient.logger.log({
         level: 'error',
         timestamp: Date.now(),
-        message: err.toString()
+        message: `Error parsing JSON data from cutoff: ${err}`
       });
-
-      await interaction.editReply({
-        embeds: [generateEmbed({
-          name: COMMAND.INFO.name,
-          content: { type: 'error', message: err.toString() },
-          client: discordClient.client
-        })]
-      });
-    });
+    }
   }
 };
