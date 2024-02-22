@@ -503,7 +503,7 @@ const getProfile = async (interaction, discordClient, userId) => {
 
 module.exports = {
   ...COMMAND.INFO,
-  data: null,
+  data: generateSlashCommand(COMMAND.INFO),
 
   async execute(interaction, discordClient) {
     await interaction.deferReply({

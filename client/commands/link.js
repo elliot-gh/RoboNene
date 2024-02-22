@@ -59,7 +59,7 @@ function isAdmin(msg) {
 
 module.exports = {
   ...COMMAND.INFO,
-  data: null,
+  data: generateSlashCommand(COMMAND.INFO),
   
   async execute(interaction, discordClient) {
     await interaction.deferReply({

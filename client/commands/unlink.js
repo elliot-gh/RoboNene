@@ -10,7 +10,7 @@ const { NENE_COLOR, FOOTER } = require('../../constants');
 const COMMAND = require('../command_data/unlink');
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
-const generateEmbed = require('../methods/generateEmbed'); 
+const generateEmbed = require('../methods/generateEmbed');
 
 /**
  * Generates the embed that is used when users request a link
@@ -21,28 +21,28 @@ const generateEmbed = require('../methods/generateEmbed');
  * @param {DiscordClient} client we are using to interact with disc
  * @return {EmbedBuilder} embed that we recieve to display to the user
  */
-const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
+const generateUnlinkEmbed = ({ code, accountId, expires, content, client }) => {
   const unlinkInformation = {
     type: 'Unlink Information',
-    message: `Unlink Code: \`${code}\`\n` + 
-      `Account ID: \`${accountId}\`\n` + 
-      `Expires: <t:${Math.floor(expires/1000)}>`
+    message: `Unlink Code: \`${code}\`\n` +
+      `Account ID: \`${accountId}\`\n` +
+      `Expires: <t:${Math.floor(expires / 1000)}>`
   };
 
   const unlinkEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
     .setTitle(COMMAND.INFO.name.charAt(0).toUpperCase() + COMMAND.INFO.name.slice(1))
     .addFields(
-      {name: unlinkInformation.type, value: unlinkInformation.message},
-      {name: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.type, value: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.message}
+      { name: unlinkInformation.type, value: unlinkInformation.message },
+      { name: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.type, value: COMMAND.CONSTANTS.UNLINK_INSTRUCTIONS.message }
     )
     .setImage(COMMAND.CONSTANTS.UNLINK_IMG)
     .setThumbnail(client.user.displayAvatarURL())
     .setTimestamp()
-    .setFooter({text: FOOTER, iconURL: client.user.displayAvatarURL()});
+    .setFooter({ text: FOOTER, iconURL: client.user.displayAvatarURL() });
 
   if (content) {
-    unlinkEmbed.addFields({name: content.type, value: content.message});
+    unlinkEmbed.addFields({ name: content.type, value: content.message });
   }
 
   return unlinkEmbed;
@@ -51,7 +51,7 @@ const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
 module.exports = {
   ...COMMAND.INFO,
   data: generateSlashCommand(COMMAND.INFO),
-  
+
   async execute(interaction, discordClient) {
     // { ephemeral: true }
     await interaction.deferReply({
@@ -59,19 +59,19 @@ module.exports = {
     });
 
     const db = discordClient.db;
-    const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g,'');
+    const accountId = (interaction.options._hoistedOptions[0].value).replace(/\D/g, '');
 
     const sekaiCheck = db.prepare('SELECT * FROM users WHERE sekai_id=@sekaiId').all({
       sekaiId: accountId
     });
 
     // User exists in the database
-    if (!sekaiCheck.length) { 
+    if (!sekaiCheck.length) {
       await interaction.editReply({
         embeds: [
           generateEmbed({
-            name: COMMAND.INFO.name, 
-            content: COMMAND.CONSTANTS.NO_SEKAI_ERR, 
+            name: COMMAND.INFO.name,
+            content: COMMAND.CONSTANTS.NO_SEKAI_ERR,
             client: discordClient.client
           })
         ]
@@ -83,9 +83,9 @@ module.exports = {
       await interaction.editReply({
         embeds: [generateEmbed({
           name: COMMAND.INFO.name,
-          content: { 
-            type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type, 
-            message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message + 
+          content: {
+            type: COMMAND.CONSTANTS.RATE_LIMIT_ERR.type,
+            message: COMMAND.CONSTANTS.RATE_LIMIT_ERR.message +
               `\n\nExpires: <t:${Math.floor(discordClient.getRateLimitRemoval(interaction.user.id) / 1000)}>`
           },
           client: discordClient.client
