@@ -8,6 +8,8 @@
 const { DMChannel } = require('discord.js');
 const generateEmbed = require('../methods/generateEmbed'); 
 
+const { PermissionsBitField } = require('discord.js');
+
 // General constants used to reply to standard interactions
 const INTERACTION_CONST = {
   'NO_ACCESS_ADMIN': {
@@ -63,7 +65,7 @@ module.exports = {
       if (command.adminOnly) {
         // Check for server manager / administrate perms
         let permissions = interaction.member.permissions;
-        if (!permissions.has('ADMINISTRATOR') && !permissions.has('MANAGE_GUILD')) {
+        if (!permissions.has(PermissionsBitField.Flags.Administrator) && !permissions.has(PermissionsBitField.Flags.ManageGuild)) {
           await interaction.reply({
             embeds: [
               generateEmbed({
