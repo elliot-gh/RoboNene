@@ -9,7 +9,7 @@ const { NENE_COLOR, FOOTER, RESULTS_PER_PAGE } = require('../../constants');
 
 const COMMAND = require('../command_data/leaderboard');
 
-const MAX_PAGE = Math.ceil(120 / RESULTS_PER_PAGE) -1;
+const MAX_PAGE = Math.ceil(100 / RESULTS_PER_PAGE) -1;
 
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateRankingText = require('../methods/generateRankingTextChanges');
@@ -69,9 +69,6 @@ module.exports = {
 
     discordClient.addSekaiRequest('ranking', {
       eventId: event.id,
-      targetRank: 61,
-      lowerLimit: 59,
-      higherLimit: 60
     }, async (response) => {
       // Check if the response is valid
       if (!response.rankings) {
@@ -106,7 +103,7 @@ module.exports = {
 
       if (interaction.options._hoistedOptions.length) {
         // User has selected a specific rank to jump to
-          if (interaction.options._hoistedOptions[0].value > 120 || 
+          if (interaction.options._hoistedOptions[0].value > 100 || 
             interaction.options._hoistedOptions[0].value < 1) {
             await interaction.editReply({
               embeds: [
@@ -200,7 +197,7 @@ module.exports = {
       let leaderboardEmbed = new EmbedBuilder()
         .setColor(NENE_COLOR)
         .setTitle(`${event.name}`)
-        .setDescription(`T120 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
+        .setDescription(`T100 Leaderboard at <t:${Math.floor(timestamp / 1000)}>\nChange since <t:${Math.floor(timestampIndex / 1000)}>`)
         .addFields({name: `Page ${page+1}`, value: leaderboardText, inline: false})
         .setThumbnail(event.banner)
         .setTimestamp()
