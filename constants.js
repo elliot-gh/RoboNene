@@ -39,4 +39,7 @@ module.exports = {
 
   // Source of game data
   'DIR_DATA': './sekai_master',
+
+  // Event ID of last event access
+  'LOCKED_EVENT_ID': 84,
 };
