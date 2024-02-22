@@ -420,18 +420,18 @@ class DiscordClient {
    */
   async runSekaiRequests(rate=10) {
     const runRequest = async (apiClient, request) => {
+      // Profile disabled as of now
       if (request.type === 'profile') {
-        const response = await apiClient.userProfile(request.params.userId);
+        return null;
+        // const response = await apiClient.userProfile(request.params.userId);
 
-        // If our response is valid we run the callback
-        if (response) {
-          request.callback(response);
-        }
+        // // If our response is valid we run the callback
+        // if (response) {
+        //   request.callback(response);
+        // }
       } else if (request.type === 'ranking') {
-        const queryParams = {...request.params};
-        delete queryParams.eventId;
 
-        const response = await apiClient.eventRanking(request.params.eventId, queryParams);
+        const response = await apiClient.eventRankingT100(request.params.eventId);
 
         // If our response is valid we run the callback
         if (response) {
