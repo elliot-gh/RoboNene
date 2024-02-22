@@ -406,7 +406,7 @@ module.exports = {
     try {
 
       let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-        'WHERE (EventID=@eventID AND Tier=@tier) ORDER BY').all({
+        'WHERE (EventID=@eventID AND Tier=@tier)').all({
           eventID: event.id,
           tier: tier
         });
