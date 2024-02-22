@@ -50,7 +50,7 @@ const generateUnlinkEmbed = ({code, accountId, expires, content, client}) => {
 
 module.exports = {
   ...COMMAND.INFO,
-  data: generateSlashCommand(COMMAND.INFO),
+  data: null,
   
   async execute(interaction, discordClient) {
     // { ephemeral: true }
