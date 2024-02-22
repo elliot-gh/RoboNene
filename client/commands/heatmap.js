@@ -105,6 +105,12 @@ const palettes = [
   emu
 ];
 
+const labels = [
+  "",
+  "K",
+  "M",
+  "B"
+];
 
 /**
  * Create a graph embed to be sent to the discord interaction
@@ -450,13 +456,22 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
         let result = {};
 
         if (currentVal !== null && currentVal !== undefined) {
+          let size = 20
+          if (bypoints) {
+
+            let labelIndex = Math.floor((currentVal.toString().length - 1) / 3);
+            let ending = labels[labelIndex];
+            let num = (currentVal / (1000 ** labelIndex)).toFixed(1);
+            currentVal = `${num}${ending}`;
+            size = 10;
+          }
           result = {
             x: xValues[x],
             y: y,
             text: currentVal,
             font: {
               family: 'Arial',
-              size: 20,
+              size: size,
               color: textColor
             },
             showarrow: false
