@@ -133,6 +133,10 @@ class DiscordClient {
 
     for (const file of commandFiles) {
       const command = require(`${dir}/${file}`);
+      if (command.data === null || command.data === undefined) {
+        console.log(`Command ${file} does not have a data object, Skipping Load.`);
+        continue;
+      }
       console.log(`Loaded command ${command.data.name} from ${file}`);
       this.commands.push(command);
     }
