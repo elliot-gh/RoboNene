@@ -7,6 +7,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { DIR_DATA, NENE_COLOR, FOOTER } = require('../../constants');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const regression = require('regression');
 
@@ -15,6 +16,7 @@ const COMMAND = require('../command_data/cutoff');
 const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 const binarySearch = require('../methods/binarySearch');
+const { parse } = require('csv-parse');
 
 /**
  * Operates on a http request and returns the current rate being hosted on GH actions.
@@ -356,6 +358,10 @@ const generateCutoff = async ({ interaction, event,
   await interaction.editReply({
     embeds: [cutoffEmbed]
   });
+
+  if (tier > 100) {
+    await interaction.followUp('**WARNING**: The data used for this prediction is predicted through a machine learning model and may not be accurate. Use at your own risk.');
+  }
 };
 
 module.exports = {
@@ -404,24 +410,58 @@ module.exports = {
     let detailed = (paramCount === 1) ? false : interaction.options._hoistedOptions[1].value;
 
     try {
-
-      let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
-        'WHERE (EventID=@eventID AND Tier=@tier)').all({
-          eventID: event.id,
-          tier: tier
+      // Use online predicted database
+      if (tier > 100) {
+        let fp = `http://localhost:8080/predictData/${event.id}/${tier}.csv`;
+        let cutoffs = await new Promise((resolve, reject) => {
+          http.get(fp, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              resolve(data);
+            });
+          }).on('error', (err) => {
+            reject(err);
+          });
         });
-      let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
-      generateCutoff({
-        interaction: interaction,
-        event: event,
-        timestamp: timestamp,
-        tier: tier,
-        score: rankData[rankData.length-1].score,
-        rankData: rankData,
-        detailed: detailed,
-        discordClient: discordClient
-      });
-
+        parse(cutoffs, {
+          skip_empty_lines: true
+        }, (err, output) => {
+          cutoffs = output;
+          let rankData = cutoffs.map(x => ({ timestamp: x[0], score: x[1] }));
+          generateCutoff({
+            interaction: interaction,
+            event: event,
+            timestamp: timestamp,
+            tier: tier,
+            score: rankData[rankData.length - 1].score,
+            rankData: rankData,
+            detailed: detailed,
+            discordClient: discordClient
+          });
+        });
+      }
+      // Otherwise use internal data 
+      else {
+        let cutoffs = discordClient.cutoffdb.prepare('SELECT * FROM cutoffs ' +
+          'WHERE (EventID=@eventID AND Tier=@tier)').all({
+            eventID: event.id,
+            tier: tier
+          });
+        let rankData = cutoffs.map(x => ({ timestamp: x.Timestamp, score: x.Score }));
+        generateCutoff({
+          interaction: interaction,
+          event: event,
+          timestamp: timestamp,
+          tier: tier,
+          score: rankData[rankData.length - 1].score,
+          rankData: rankData,
+          detailed: detailed,
+          discordClient: discordClient
+        });
+      }
     } catch (err) {
       console.log(err);
       discordClient.logger.log({

@@ -48,7 +48,6 @@ module.exports = {
       discord_id: interaction.user.id,
       discord_name: `${interaction.user.username}#${interaction.user.discriminator}`,
       guild_id: interaction.guildId,
-      guild_name: interaction.channel.type === ChannelType.DM ? interaction.channel.recipient.username : interaction.member.guild.name,
       command: interaction.commandName,
       subcommand: interaction.options._subcommand,
       inputs: interaction.options._hoistedOptions
@@ -104,10 +103,6 @@ module.exports = {
         await command.execute(interaction, discordClient);
       } catch (error) {
         console.error(error);
-        await interaction.reply({
-          content: 'There was an error while executing this command!',
-          ephemeral: true
-        });
       }
     }
   }

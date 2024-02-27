@@ -244,7 +244,14 @@ const calculateTeam = (data, eventID) => {
     const episodes = JSON.parse(fs.readFileSync('./sekai_master/cardEpisodes.json'));
     const gameCharacters = JSON.parse(fs.readFileSync('./sekai_master/gameCharacterUnits.json'));
 
-    var cardData = data.userCards;
+    let order = [
+        data.userDeck.member1,
+        data.userDeck.member2,
+        data.userDeck.member3,
+        data.userDeck.member4,
+        data.userDeck.member5,
+    ];
+    let cardData = order.map(cardId => data.userCards.find(card => card.id === cardId));
     cardData = cardData.map(card => readCardTalent(card, cards, episodes, gameCharacters));
 
     cardData.forEach(card => {
