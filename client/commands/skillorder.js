@@ -160,8 +160,8 @@ module.exports = {
         choices = choices.slice(0, 25);
 
         await interaction.respond(choices.map((key) => {
-                    return {name: musicData.musics[key], value: key};
-            }));
+            return {name: musicData.musics[key], value: key};
+        }));
     }
 };
 
