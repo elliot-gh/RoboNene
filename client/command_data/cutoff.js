@@ -76,6 +76,7 @@ module.exports = {
 
     'PRED_WARNING': 'You are trying to view predictions for a tier that is lower than 100. These tiers are highly volatile and thus it is highly not recommended to use the following cutoff predictions!',
     'PRED_DESC': 'Fits data into a least squares regression line to generate a prediction.',
+    'WEIGHT_PRED_DESC': 'Uses weighted model that squares time for each data point. This model will tend to predict with more recent data',
     'SMOOTH_PRED_DESC': 'Uses a weighted average of estimations from previous models. Generally, smoothed estimates are more resilient to sudden changes in point gain.',
 
     'NAIVE_DESC': 'Current Score + (Average Points Per Hour \\* Hours Left)',

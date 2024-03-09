@@ -17,6 +17,7 @@ const generateSlashCommand = require('../methods/generateSlashCommand');
 const generateEmbed = require('../methods/generateEmbed');
 const binarySearch = require('../methods/binarySearch');
 const { parse } = require('csv-parse');
+const weightedLinearRegression = require('../methods/weightedLinearRegression');
 
 /**
  * Operates on a http request and returns the current rate being hosted on GH actions.
@@ -122,11 +123,14 @@ const generateCutoff = async ({ interaction, event,
   // Estimate texts used in the embed
   let noSmoothingEstimate = 'N/A';
   let smoothingEstimate = 'N/A';
+  let weightedEstimate = 'N/A';
+  let weightedErrorStr = 'N/A';
   let noSmoothingError = 'N/A';
   let smoothingError = 'N/A';
 
   // The string we show that highlights the equation we use in detailed
   let linEquationStr = '';
+  let weightedEquationStr = '';
 
   // Saved indices of critical timestamps
   let oneDayIdx = -1;
@@ -238,6 +242,20 @@ const generateCutoff = async ({ interaction, event,
     linEquationStr = `\n*${+(model.equation[0]).toFixed(5)} \\* ` +
       `${+(finalRate).toFixed(2)} \\* ms into event + ${+(model.equation[1]).toFixed(2)}*`;
 
+    // Create weighted linear regression model
+    const weightedModel = weightedLinearRegression(points, points.map((x) => (x[0]/86400000)**2));
+    const weightedPredicted = (weightedModel.equation[0] * finalRate * duration) + weightedModel.equation[1];
+
+    // Calculate Weighted Model Error
+    const weightedError = stdError(points, weightedModel, finalRate) * (duration / points[points.length - 1][0]);
+
+    // Final weighted model
+    weightedEstimate = Math.round(weightedPredicted).toLocaleString();
+    weightedErrorStr = Math.round(weightedError).toLocaleString();
+
+    weightedEquationStr = `\n*${+(weightedModel.equation[0]).toFixed(5)} \\* ` +
+      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(weightedModel.equation[1]).toFixed(2)}*`;
+
     // Calculate smoothed result
     let totalWeight = 0;
     let totalTime = 0;
@@ -277,8 +295,6 @@ const generateCutoff = async ({ interaction, event,
       if (smoothingPoints.length > 0) {
         amtThrough = (smoothingPoints[smoothingPoints.length - 1][0]) / duration;
       }
-
-      // console.log(`last point ts ${smoothingPoints[smoothingPoints.length-1][0]}`)
 
       // Total score of all of our estimates with account to weight
       if(!isNaN(predictedSmoothed))
@@ -333,6 +349,9 @@ const generateCutoff = async ({ interaction, event,
     value: `Estimated Points: \`\`${noSmoothingEstimate}` +
     ` ± ${noSmoothingError}\`\`\n` +
     ((detailed) ? `*${COMMAND.CONSTANTS.PRED_DESC}*${linEquationStr}\n\n` : '') +
+    `Estimated Points (Weighted): \`\`${weightedEstimate}` +
+    ` ± ${weightedErrorStr}\`\`\n` +
+    ((detailed) ? `*${COMMAND.CONSTANTS.WEIGHT_PRED_DESC}*${weightedEquationStr}\n\n` : '') +
     `Estimated Points (Smoothing): \`\`${smoothingEstimate}` +
     ` ± ${smoothingError}\`\`\n` +
     ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : '')
