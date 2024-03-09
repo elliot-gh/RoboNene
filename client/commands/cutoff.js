@@ -239,8 +239,8 @@ const generateCutoff = async ({ interaction, event,
     noSmoothingError = Math.round(error).toLocaleString();
 
     // Generate the string for the equation
-    linEquationStr = `\n*${+(model.equation[0]).toFixed(5)} \\* ` +
-      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(model.equation[1]).toFixed(2)}*`;
+    linEquationStr = `\n*${+(model.equation[0] + finalRate * 1000).toFixed(2)} \\* ` +
+      `\\* seconds into event + ${+(model.equation[1]).toFixed(2)}*`;
 
     // Create weighted linear regression model
     const weightedModel = weightedLinearRegression(points, points.map((x) => (x[0]/86400000)**2));
@@ -253,8 +253,8 @@ const generateCutoff = async ({ interaction, event,
     weightedEstimate = Math.round(weightedPredicted).toLocaleString();
     weightedErrorStr = Math.round(weightedError).toLocaleString();
 
-    weightedEquationStr = `\n*${+(weightedModel.equation[0]).toFixed(5)} \\* ` +
-      `${+(finalRate).toFixed(2)} \\* ms into event + ${+(weightedModel.equation[1]).toFixed(2)}*`;
+    weightedEquationStr = `\n*${+(weightedModel.equation[0] * finalRate * 1000).toFixed(2)} \\* ` +
+      `\\* seconds into event + ${+(weightedModel.equation[1]).toFixed(2)}*`;
 
     // Calculate smoothed result
     let totalWeight = 0;
