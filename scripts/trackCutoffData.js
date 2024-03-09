@@ -29,8 +29,6 @@ const cutoffs = [
  * @param {Object} response from project sekai client
 */
 
-
-
 /**
  * Recurvsively adds cutoff tracks to queue
  * @param {Integer} target index of cutoff in a cutoff list
