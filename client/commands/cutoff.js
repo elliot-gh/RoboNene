@@ -113,10 +113,10 @@ const generateCutoff = async ({ interaction, event,
     score: score
   };
 
-  // Every point is spaced by 1 minute intervals (assuming that there isn't any downtime)
+  // Every point is spaced by 2 minute intervals (assuming that there isn't any downtime)
   // Otherwise there maybe a difference of 1-2 minutes, but that's still generally ok for calculating
-  if (rankData.length > 60) {
-    lastHourPt = rankData[rankData.length - 60];
+  if (rankData.length > 30) {
+    lastHourPt = rankData[rankData.length - 30];
   }
 
   // Estimate texts used in the embed
@@ -360,7 +360,7 @@ const generateCutoff = async ({ interaction, event,
   });
 
   if (tier > 100) {
-    await interaction.followUp('**WARNING**: The data used for this prediction is predicted through a machine learning model and may not be accurate. Use at your own risk.');
+    await interaction.followUp('# WARNING The data used for this prediction is predicted through a machine learning model and may not be accurate. Use at your own risk.');
   }
 };
 
@@ -430,7 +430,7 @@ module.exports = {
           skip_empty_lines: true
         }, (err, output) => {
           cutoffs = output;
-          let rankData = cutoffs.map(x => ({ timestamp: x[0], score: x[1] }));
+          let rankData = cutoffs.map(x => ({ timestamp: parseInt(x[0].trim()), score: parseInt(x[1].trim()) }));
           generateCutoff({
             interaction: interaction,
             event: event,
