@@ -368,7 +368,6 @@ class DiscordClient {
       };
     }
 
-    console.log(this.rateLimit);
     if (this.rateLimit[userId].usage + 1 > RATE_LIMIT) {
       return false;
     } 
