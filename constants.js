@@ -32,7 +32,7 @@ module.exports = {
   'RATE_LIMIT': 120,
 
   //Amount of Time between Cutoff data in milliseconds
-  'CUTOFF_INTERVAL': 90000,
+  'CUTOFF_INTERVAL': 60000,
 
   //Amount of Time between Twitter calls
   'TWITTER_INTERVAL': 120000,
