@@ -114,10 +114,10 @@ const generateCutoff = async ({ interaction, event,
     score: score
   };
 
-  // Every point is spaced by 2 minute intervals (assuming that there isn't any downtime)
+  // Every point is spaced by 1 minute intervals (assuming that there isn't any downtime)
   // Otherwise there maybe a difference of 1-2 minutes, but that's still generally ok for calculating
-  if (rankData.length > 30) {
-    lastHourPt = rankData[rankData.length - 30];
+  if (rankData.length > 60) {
+    lastHourPt = rankData[rankData.length - 60];
   }
 
   // Estimate texts used in the embed
