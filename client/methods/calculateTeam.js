@@ -251,7 +251,7 @@ const calculateTeam = (data, eventID) => {
         data.userDeck.member4,
         data.userDeck.member5,
     ];
-    let cardData = order.map(cardId => data.userCards.find(card => card.id === cardId));
+    let cardData = order.map(cardId => data.userCards.find(card => card.cardId === cardId)).filter(card => card != undefined);
     cardData = cardData.map(card => readCardTalent(card, cards, episodes, gameCharacters));
 
     cardData.forEach(card => {
