@@ -18,6 +18,10 @@ const generateEmbed = require('../methods/generateEmbed');
 const binarySearch = require('../methods/binarySearch');
 const { parse } = require('csv-parse');
 const weightedLinearRegression = require('../methods/weightedLinearRegression');
+const bisectLeft = require('../methods/bisect');
+
+const fp = './JSONs/weights.json';
+const weights = JSON.parse(fs.readFileSync(fp, 'utf-8'));
 
 /**
  * Operates on a http request and returns the current rate being hosted on GH actions.
@@ -310,14 +314,29 @@ const generateCutoff = async ({ interaction, event,
     smoothingError = Math.round(errorSmoothed).toLocaleString();
   }
 
+  const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100);
+
+  //weight consists of 3 lists, percentage, std_dev, and mean
+  const weight = weights[tier.toString()];
+  let percentage = weight[0];
+  let std_dev = weight[1];
+  let mean = weight[2];
+
+  let i = bisectLeft(percentage, eventPercentage / 100);
+
+  if (i == percentage.length) {
+    i--;
+  }
+
+  let sigma = (score - mean[i]) / std_dev[i];
+  let polynomialEstimate = Math.round((sigma * std_dev[std_dev.length - 1]) + mean[mean.length - 1]);
+
   // Generate the cutoff embed
   const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime();
   const lastHourPtTime = (timestamp > event.aggregateAt) ? Math.floor(timestamp / 1000) :
     Math.floor(lastHourPtTimeMs / 1000);
   const lastHourPtSpeed = (timestamp > event.aggregateAt) ? 0 :
     Math.round((score - lastHourPt.score) * 3600000 / (timestamp - lastHourPtTimeMs));
-
-  const eventPercentage = Math.min((timestamp - event.startAt) * 100 / duration, 100);
 
   const cutoffEmbed = new EmbedBuilder()
     .setColor(NENE_COLOR)
@@ -354,7 +373,9 @@ const generateCutoff = async ({ interaction, event,
     ((detailed) ? `*${COMMAND.CONSTANTS.WEIGHT_PRED_DESC}*${weightedEquationStr}\n\n` : '') +
     `Estimated Points (Smoothing): \`\`${smoothingEstimate}` +
     ` ± ${smoothingError}\`\`\n` +
-    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : '')
+    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : '') +
+    `Estimated Points (Polynomial Regression): \`\`${polynomialEstimate.toLocaleString()}\`\`\n` +
+    ((detailed) ? `*${COMMAND.CONSTANTS.POLY_PRED_DESC}*\n` : '')
     });
 
 

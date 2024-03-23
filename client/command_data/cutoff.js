@@ -78,6 +78,7 @@ module.exports = {
     'PRED_DESC': 'Fits data into a least squares regression line to generate a prediction.',
     'WEIGHT_PRED_DESC': 'Uses weighted model that squares time for each data point. This model will tend to predict with more recent data',
     'SMOOTH_PRED_DESC': 'Uses a weighted average of estimations from previous models. Generally, smoothed estimates are more resilient to sudden changes in point gain.',
+    'POLY_PRED_DESC': 'Uses a polynomial regression to predict the cutoff. This model only predicts with the current data point and may make better predictions for high scoring events.',
 
     'NAIVE_DESC': 'Current Score + (Average Points Per Hour \\* Hours Left)',
     'NAIVE_LAST_HR_DESC': 'Current Score + (Average Points Per Hour [Last Hour] \\* Hours Left)'
