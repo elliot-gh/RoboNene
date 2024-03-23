@@ -69,7 +69,7 @@ function readScores(tier) {
 function getUserTrackFile() {
     try {
         if (!fs.existsSync(userFp)) {
-            return new Object();
+            return [];
         }
         else {
             return JSON.parse(fs.readFileSync(userFp, 'utf8'));
