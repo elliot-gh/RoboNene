@@ -433,7 +433,12 @@ class DiscordClient {
         }
       } else if (request.type === 'ranking') {
 
-        const response = await apiClient.eventRankingT100(request.params.eventId);
+        let eventId = request.params.eventId || this.getCurrentEvent().id;
+        if (eventId === -1) {
+          request.error('No event is currently running');
+          return;
+        }
+        const response = await apiClient.eventRankingT100(eventId);
 
         // If our response is valid we run the callback
         if (response) {
