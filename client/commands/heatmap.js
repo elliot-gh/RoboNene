@@ -106,10 +106,10 @@ const palettes = [
 ];
 
 const labels = [
-  "",
-  "K",
-  "M",
-  "B"
+  '',
+  'K',
+  'M',
+  'B'
 ];
 
 /**
