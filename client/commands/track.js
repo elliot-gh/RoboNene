@@ -14,6 +14,8 @@ const generateEmbed = require('../methods/generateEmbed');
 const fp = './JSONs/track.json';
 const userFp = './JSONs/userTrack.json';
 
+const userTrackFile = getUserTrackFile();
+
 function checkIsAdmin(msg) {
     try {
         return msg.member.permissionsIn(msg.channel).has('Administrator');
@@ -83,7 +85,6 @@ function saveUserTrackFile(object) {
 async function sendUserTrack(discordClient, interaction) {
     try {
         let serverid = interaction.guild.id;
-        let userTrackFile = getUserTrackFile()[serverid] || [];
         
         let isAdmin = checkIsAdmin(interaction.member);
         let userId = interaction.member.user.id;
@@ -91,7 +92,7 @@ async function sendUserTrack(discordClient, interaction) {
         let count = 0;
         userTrackFile.forEach((trackObject) => {
             if (trackObject.serverid == serverid && (isAdmin || trackObject.userId == userId)) {
-                message += `${++count}\n${formatTrackMessage(trackObject)}\n`;
+                message += `\`Tracked User ${++count}\`\n${formatTrackMessage(trackObject)}\n`;
             }
         });
         if (message === '') {
@@ -117,7 +118,11 @@ async function sendUserTrack(discordClient, interaction) {
 function formatTrackMessage(trackObject) {
     let settingsText = '';
 
-    settingsText += `Added tracking for ${trackObject.name} ${trackObject.currentTier} with cutoff ${trackObject.cutoff.toLocaleString()}\n`;
+    settingsText += `Added tracking for ${trackObject.name} ${trackObject.currentTier}\n`;
+
+    if (trackObject.cutoff) {
+        settingsText += `Cutoff: ${trackObject.cutoff.toLocaleString()}\n`;
+    }
 
     if (trackObject.min > 100) {
         settingsText += `Min: ${trackObject.min.toLocaleString()}\n`;
@@ -132,8 +137,8 @@ function formatTrackMessage(trackObject) {
 
 async function addUserTrack(discordClient, interaction) {
     discordClient.addPrioritySekaiRequest('ranking', {}, async (response) => {
+        console.log(response);
         try {
-            let userTrackFile = getUserTrackFile();
             let tier = interaction.options.getInteger('tier');
 
             if(tier > 100) {
@@ -156,7 +161,6 @@ async function addUserTrack(discordClient, interaction) {
             let min = interaction.options.getInteger('min') || 100;
             let max = interaction.options.getInteger('max') || Number.MAX_SAFE_INTEGER;
             let trackId = response['rankings'][tier - 1]['userId'];
-            userTrackFile = userTrackFile || [];
             
             let trackObject = {
                 userId: userId,
@@ -197,21 +201,20 @@ async function addUserTrack(discordClient, interaction) {
 async function removeUserTrack(discordClient, interaction) {
     try {
         let serverid = interaction.guild.id;
-        let userTrackFile = getUserTrackFile();
         let num = interaction.options.getInteger('num');
         let userId = interaction.member.user.id;
         let isAdmin = checkIsAdmin(interaction.member);
         let tracks = [];
         let index = 0;
         userTrackFile.forEach(trackObject => {
-            console.log(JSON.stringify(trackObject));
+            console.log(trackObject.serverid, serverid, isAdmin, trackObject.userId, userId);
             if (trackObject.serverid == serverid && (isAdmin || trackObject.userId == userId)) {
                 tracks.push(index);
             }
             index++;
         });
 
-        if (num < 0 || num >= tracks.length) {
+        if (num < 1 || num > tracks.length) {
             await interaction.editReply({
                 embeds: [
                     generateEmbed({
@@ -228,7 +231,7 @@ async function removeUserTrack(discordClient, interaction) {
         }
 
         let track = tracks[num-1];
-        userTrackFile[serverid].splice(track - 1, 1);
+        userTrackFile.splice(track - 1, 1);
         saveUserTrackFile(userTrackFile);
 
         await interaction.editReply({
@@ -288,6 +291,8 @@ module.exports = {
         await interaction.deferReply({
             ephemeral: COMMAND.INFO.ephemeral
         });
+
+        console.log(interaction.options.getSubcommand());
 
         if (interaction.options.getSubcommand() === 'list') {
             await sendUserTrack(discordClient, interaction);

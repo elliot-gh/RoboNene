@@ -136,15 +136,13 @@ async function getCutoffs(discordClient) {
             let tiers = readTiers();
             let trackFile = getUserTrackFile();
             let userTrack = {};
-            for (const value of Object.entries(trackFile)) {
-                value.forEach((track) => {
-                    if (track.trackId in userTrack) {
-                        userTrack[track.trackId].push(track);
-                    } else {
-                        userTrack[track.trackId] = [track];
-                    }
-                });
-            }
+            trackFile.forEach((track) => {
+                if (track.trackId in userTrack) {
+                    userTrack[track.trackId].push(track);
+                } else {
+                    userTrack[track.trackId] = [track];
+                }
+            });
             response['rankings'].forEach((tier, i) => {
                 let rank = i+1;
                 let score = tier.score;
