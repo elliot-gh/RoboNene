@@ -137,7 +137,6 @@ function formatTrackMessage(trackObject) {
 
 async function addUserTrack(discordClient, interaction) {
     discordClient.addPrioritySekaiRequest('ranking', {}, async (response) => {
-        console.log(response);
         try {
             let tier = interaction.options.getInteger('tier');
 
@@ -207,7 +206,6 @@ async function removeUserTrack(discordClient, interaction) {
         let tracks = [];
         let index = 0;
         userTrackFile.forEach(trackObject => {
-            console.log(trackObject.serverid, serverid, isAdmin, trackObject.userId, userId);
             if (trackObject.serverid == serverid && (isAdmin || trackObject.userId == userId)) {
                 tracks.push(index);
             }
@@ -231,6 +229,7 @@ async function removeUserTrack(discordClient, interaction) {
         }
 
         let track = tracks[num-1];
+        let message = `Removed tracking for:\n${formatTrackMessage(userTrackFile[track])}`;
         userTrackFile.splice(track - 1, 1);
         saveUserTrackFile(userTrackFile);
 
@@ -240,7 +239,7 @@ async function removeUserTrack(discordClient, interaction) {
                     name: COMMAND.INFO.name,
                     content: {
                         type: 'Success',
-                        message: `Removed tracking for:\n${formatTrackMessage(track)}`
+                        message: message
                     },
                     client: discordClient.client
                 })
@@ -291,8 +290,6 @@ module.exports = {
         await interaction.deferReply({
             ephemeral: COMMAND.INFO.ephemeral
         });
-
-        console.log(interaction.options.getSubcommand());
 
         if (interaction.options.getSubcommand() === 'list') {
             await sendUserTrack(discordClient, interaction);
