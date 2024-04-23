@@ -65,7 +65,12 @@ function getUserTrackFile() {
             return [];
         }
         else {
-            return JSON.parse(fs.readFileSync(userFp, 'utf8'));
+            let data = JSON.parse(fs.readFileSync(userFp, 'utf8'));
+            if (Array.isArray(data)) {
+                return data;
+            } else {
+                return [];
+            }
         }
     } catch (e) {
         console.log('Error occured while reading user tracking: ', e);
