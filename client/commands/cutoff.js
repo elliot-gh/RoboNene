@@ -243,8 +243,8 @@ const generateCutoff = async ({ interaction, event,
     noSmoothingError = Math.round(error).toLocaleString();
 
     // Generate the string for the equation
-    linEquationStr = `\n*${+(model.equation[0] + finalRate * 1000).toFixed(2)} \\* ` +
-      `\\* seconds into event + ${+(model.equation[1]).toFixed(2)}*`;
+    linEquationStr = `\n\`${+(model.equation[0] + finalRate * 1000).toFixed(2)} \\* ` +
+      `seconds into event + ${+(model.equation[1]).toFixed(2)}\``;
 
     // Create weighted linear regression model
     const weightedModel = weightedLinearRegression(points, points.map((x) => (x[0]/86400000)**2));
@@ -257,8 +257,8 @@ const generateCutoff = async ({ interaction, event,
     weightedEstimate = Math.round(weightedPredicted).toLocaleString();
     weightedErrorStr = Math.round(weightedError).toLocaleString();
 
-    weightedEquationStr = `\n*${+(weightedModel.equation[0] * finalRate * 1000).toFixed(2)} \\* ` +
-      `\\* seconds into event + ${+(weightedModel.equation[1]).toFixed(2)}*`;
+    weightedEquationStr = `\n\`${+(weightedModel.equation[0] * finalRate * 1000).toFixed(2)} \\*` +
+      ` seconds into event + ${+(weightedModel.equation[1]).toFixed(2)}\``;
 
     // Calculate smoothed result
     let totalWeight = 0;
@@ -322,14 +322,18 @@ const generateCutoff = async ({ interaction, event,
   let std_dev = weight[1];
   let mean = weight[2];
 
-  let i = bisectLeft(percentage, eventPercentage / 100);
+  let i = bisectLeft(percentage, eventPercentage / 100.0);
 
   if (i == percentage.length) {
     i--;
   }
 
+  console.log(`Using weight index ${i}/${percentage.length} for tier ${tier}`);
+
   let sigma = (score - mean[i]) / std_dev[i];
-  let polynomialEstimate = Math.round((sigma * std_dev[std_dev.length - 1]) + mean[mean.length - 1]);
+  let NormalEstimate = Math.round((sigma * std_dev[std_dev.length - 1]) + mean[mean.length - 1]);
+
+  let regEquationStr = `\n\`${sigma.toFixed(2)} * ${std_dev[std_dev.length - 1].toFixed(2)} + ${mean[mean.length - 1].toFixed(2)}\``;
 
   // Generate the cutoff embed
   const lastHourPtTimeMs = new Date(lastHourPt.timestamp).getTime();
@@ -373,9 +377,9 @@ const generateCutoff = async ({ interaction, event,
     ((detailed) ? `*${COMMAND.CONSTANTS.WEIGHT_PRED_DESC}*${weightedEquationStr}\n\n` : '') +
     `Estimated Points (Smoothing): \`\`${smoothingEstimate}` +
     ` ± ${smoothingError}\`\`\n` +
-    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n` : '') +
-    `Estimated Points (Polynomial Regression): \`\`${polynomialEstimate.toLocaleString()}\`\`\n` +
-    ((detailed) ? `*${COMMAND.CONSTANTS.POLY_PRED_DESC}*\n` : '')
+    ((detailed) ? `*${COMMAND.CONSTANTS.SMOOTH_PRED_DESC}*\n\n` : '') +
+    `Estimated Points (Normal Dist): \`\`${NormalEstimate.toLocaleString()}\`\`\n` +
+    ((detailed) ? `*${COMMAND.CONSTANTS.NORM_PRED_DESC}*${regEquationStr}\n` : '')
     });
 
 
