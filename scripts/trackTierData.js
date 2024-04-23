@@ -72,7 +72,12 @@ function getUserTrackFile() {
             return [];
         }
         else {
-            return JSON.parse(fs.readFileSync(userFp, 'utf8'));
+            let data = JSON.parse(fs.readFileSync(userFp, 'utf8'));
+            if (Array.isArray(data)) {
+                return data;
+            } else {
+                return [];
+            }
         }
     } catch (e) {
         console.log('Error occured while reading user tracking: ', e);
@@ -143,6 +148,9 @@ async function getCutoffs(discordClient) {
                     userTrack[track.trackId] = [track];
                 }
             });
+
+            let changed = false;
+
             response['rankings'].forEach((tier, i) => {
                 let rank = i+1;
                 let score = tier.score;
@@ -177,6 +185,7 @@ async function getCutoffs(discordClient) {
                             return;
                         }
                         track.lastScore = currentScore;
+                        changed = true;
 
                         if (track.cutoff) {
                             if (currentScore >= track.cutoff) {
@@ -194,7 +203,7 @@ async function getCutoffs(discordClient) {
                                 try {
                                     let minStr = track.min ? `Min: ${track.min.toLocaleString()}` : '';
                                     let maxStr = track.max == Number.MAX_SAFE_INTEGER ? 'Max: Infinte' : `Max: ${track.max.toLocaleString()}`;
-                                    channel.send(`T${track.currentTier} ${track.name} had a game with ${(currentScore - lastScore).toLocaleString()} EP (${minStr} ${maxStr})`);
+                                    channel.send(`T${track.currentTier} ${track.name} had a game with ${(currentScore - lastScore).toLocaleString()} EP. Current EP: ${score.toLocaleString()} EP (${minStr} ${maxStr})`);
                                 } catch (e) {
                                     console.log('Error occured while sending message: ', e);
                                 }
@@ -204,7 +213,7 @@ async function getCutoffs(discordClient) {
                 }
             });
 
-            saveUserTrackFile(userTrack);
+            if (changed) saveUserTrackFile(userTrack);
         } catch (e) {
             console.log('Error occured while adding cutoffs: ', e);
         }
