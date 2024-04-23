@@ -98,6 +98,11 @@ function sanityLost(gamesPlayed, finalPoint)
 
 async function userStatistics(user, eventId, eventData, discordClient, interaction) {
 
+    if (eventData.id > LOCKED_EVENT_ID) {
+        interaction.editReply({ content: `Event ID is past ${LOCKED_EVENT_ID}, User data is unable to be stored after this event and cannot be displayed` });
+        return;
+    }
+
     let id = discordClient.getId(user.id);
 
     if(id == -1) {

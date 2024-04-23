@@ -262,6 +262,21 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
     yValues.unshift(`${daysofweek[i]} Day ${i + 1}`);
   }
 
+  if (eventData.id == 48 && tier.includes('T1')) {
+    let i = 0;
+    console.log("Valentines Event")
+
+    heatmapData.forEach(row => {
+      i++;
+      row.forEach((cell, j) => {
+        if (i % 2 == 1) {
+          row[j] = 0;
+        }
+        i++;
+      });
+    });
+  }
+
   let trace1 = {
     mode: 'markers',
     type: 'heatmap',
@@ -456,7 +471,7 @@ const postQuickChart = async (interaction, tier, rankData, eventData, offset, pa
         let result = {};
 
         if (currentVal !== null && currentVal !== undefined) {
-          let size = 20
+          let size = 20;
           if (bypoints) {
 
             let labelIndex = Math.floor((currentVal.toString().length - 1) / 3);
@@ -642,6 +657,10 @@ module.exports = {
       }
     } else if (user) {
       try {
+        if (eventData.id > LOCKED_EVENT_ID) {
+          interaction.editReply({ content: `Event ID is past ${LOCKED_EVENT_ID}, User data is unable to be stored after this event and cannot be displayed` });
+          return;
+        }
         let id = discordClient.getId(user.id);
 
         if (id == -1) {
